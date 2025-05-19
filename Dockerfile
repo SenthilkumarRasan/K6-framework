@@ -1,5 +1,8 @@
 FROM grafana/k6:latest
 
+# Install Node.js (example: Node 18)
+RUN apk add --no-cache nodejs npm
+
 # Set the working directory
 WORKDIR /app
 
@@ -14,4 +17,7 @@ RUN chmod +x /app/run_k6_tests.sh
 USER k6
 
 # Set the entrypoint to the shell script
-ENTRYPOINT ["./run_k6_tests.sh"]
+ENTRYPOINT ["/app/run_k6_tests.sh"]
+
+# Default command (can be overridden at runtime)
+CMD ["--help"]

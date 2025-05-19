@@ -1,7 +1,9 @@
-import { htmlReport } from '../utils/bundle.js';
+const { htmlReport } = require('../utils/bundle.js');
 
-export function handleSummary(data) {
-  return {
-    'summary.html': htmlReport(data),
-  };
-}
+module.exports = {
+  generateSummary: function(data) {
+    return {
+      'summary.html': htmlReport(data),
+    };
+  }
+};

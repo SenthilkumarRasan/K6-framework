@@ -1,5 +1,5 @@
 {
-  "name": "dee-qe-perf-template",
+  "name": "k6-perf-template",
   "version": "1.0.0",
   "description": "K6 based Performance Test framework template",
   "main": "index.js",

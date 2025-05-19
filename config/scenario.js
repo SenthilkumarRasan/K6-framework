@@ -1,4 +1,5 @@
-const buildCustomScenario = (type, rampingStages) => {
+// Utility to build custom scenario configs for custom-tps and custom-vus
+const buildCustomScenario = (type, rampingStages, timeUnit = '1s') => {
   const stages = rampingStages.split(',').map(stage => {
     const [duration, target] = stage.split(':');
     return { duration, target: parseInt(target, 10) };
@@ -8,8 +9,9 @@ const buildCustomScenario = (type, rampingStages) => {
     return {
       executor: 'ramping-arrival-rate',
       stages: stages,
+      timeUnit: timeUnit, // Can be '1s', '1m', '1h' for per second, minute, or hour
       preAllocatedVUs: 1,
-      maxVUs: 100,
+      maxVUs: 500,
     };
   } else if (type === 'custom-vus') {
     return {
@@ -20,89 +22,65 @@ const buildCustomScenario = (type, rampingStages) => {
   return null;
 };
 
-const scenarios = {
-  API: {
-    smoke: {
-      executor: "ramping-arrival-rate",
-      stages: [
-        { duration: "1m", target: 1 },
-        { duration: "1m", target: 1 }, // Adjust duration as needed
-        { duration: "30s", target: 0 }
-      ],
-      preAllocatedVUs: 1,
-      maxVUs: 10
-    },
-    spiketest: {
-      executor: "ramping-arrival-rate",
-      stages: [
-        { duration: "1m", target: 10 },
-        { duration: "30s", target: 100 },
-        { duration: "2m", target: 100 },
-        { duration: "30s", target: 0 }
-      ],
-      preAllocatedVUs: 1,
-      maxVUs: 1000
-    },
-    loadtest: {
-      executor: "ramping-arrival-rate",
-      stages: [
-        { duration: "1m", target: 5 },
-        { duration: "5m", target: 5 },
-        { duration: "30s", target: 0 }
-      ],
-      preAllocatedVUs: 1,
-      maxVUs: 100
-    },
-    stresstest: {
-      executor: "ramping-arrival-rate",
-      stages: [
-        { duration: "2m", target: 2 },
-        { duration: "2m", target: 2 },
-        { duration: "2m", target: 2 },
-        { duration: "2m", target: 2 },
-        { duration: "2m", target: 2 },
-        { duration: "2m", target: 2 },
-        { duration: "2m", target: 2 },
-        { duration: "2m", target: 2 },
-        { duration: "2m", target: 2 },
-        { duration: "2m", target: 2 }
-      ],
-      preAllocatedVUs: 1,
-      maxVUs: 100
-    },
-    endurancetest: {
-      executor: "ramping-arrival-rate",
-      stages: [
-        { duration: "1m", target: 2 },
-        { duration: "1h", target: 2 },
-        { duration: "30s", target: 0 }
-      ],
-      preAllocatedVUs: 1,
-      maxVUs: 100
-    }
+// Common scenarios for API and PROTOCOL
+const apiProtocolScenarios = {
+  smoke: {
+    executor: "ramping-arrival-rate",
+    stages: [
+      { duration: "1m", target: 1 },
+      { duration: "1m", target: 1 },
+      { duration: "30s", target: 0 }
+    ],
+    preAllocatedVUs: 1,
+    maxVUs: 10
   },
-  BROWSER: {
-    smoke: {
-      executor: 'constant-vus',
-      vus: 1,
-      duration: '1m',
-      options: {
-        browser: {
-          type: 'chromium',
-        },
-      },
-    },
-    loadtest: {
-      executor: 'constant-vus',
-      vus: 5,
-      duration: '2m',
-      options: {
-        browser: {
-          type: 'chromium',
-        },
-      },
-    }
+  spiketest: {
+    executor: "ramping-arrival-rate",
+    stages: [
+      { duration: "1m", target: 10 },
+      { duration: "30s", target: 100 },
+      { duration: "2m", target: 100 },
+      { duration: "30s", target: 0 }
+    ],
+    preAllocatedVUs: 10,
+    maxVUs: 100
+  },
+  loadtest: {
+    executor: "ramping-arrival-rate",
+    stages: [
+      { duration: "2m", target: 10 },
+      { duration: "5m", target: 50 },
+      { duration: "2m", target: 0 }
+    ],
+    preAllocatedVUs: 10,
+    maxVUs: 100
   }
+  // Add more scenarios as needed
+};
+
+// Scenarios for BROWSER
+const browserScenarios = {
+  smoke: {
+    executor: "per-vu-iterations",
+    vus: 1,
+    iterations: 1
+  },
+  loadtest: {
+    executor: "ramping-vus",
+    stages: [
+      { duration: "1m", target: 2 },
+      { duration: "2m", target: 5 },
+      { duration: "1m", target: 0 }
+    ]
+  }
+  // Add more browser-specific scenarios as needed
+};
+
+// Exported scenarios object for all test types
+const scenarios = {
+  API: apiProtocolScenarios,
+  PROTOCOL: apiProtocolScenarios,
+  BROWSER: browserScenarios
 };
 
 const thresholds = {
@@ -110,18 +88,26 @@ const thresholds = {
     checks: ['rate == 1.00'],
     http_req_failed: [{ threshold: 'rate <= 0.02', abortOnFail: false }],
     http_req_duration: [
-      { threshold: 'p(95) < 1000', abortOnFail: false }, // 95th percentile response time < 1000ms
-      { threshold: 'p(90) < 500', abortOnFail: false } // 90th percentile response time < 500ms
+      { threshold: 'p(95) < 1000', abortOnFail: false },
+      { threshold: 'p(90) < 500', abortOnFail: false }
+    ]
+  },
+  PROTOCOL: {
+    checks: ['rate == 1.00'],
+    http_req_failed: [{ threshold: 'rate <= 0.02', abortOnFail: false }],
+    http_req_duration: [
+      { threshold: 'p(95) < 1000', abortOnFail: false },
+      { threshold: 'p(90) < 500', abortOnFail: false }
     ]
   },
   BROWSER: {
     checks: ['rate == 1.00'],
     http_req_failed: [{ threshold: 'rate <= 0.02', abortOnFail: false }],
     http_req_duration: [
-      { threshold: 'p(95) < 2000', abortOnFail: false }, // 95th percentile response time < 2000ms
-      { threshold: 'p(90) < 1000', abortOnFail: false } // 90th percentile response time < 1000ms
+      { threshold: 'p(95) < 2000', abortOnFail: false },
+      { threshold: 'p(90) < 1000', abortOnFail: false }
     ]
   }
 };
 
-module.exports = { scenarios, thresholds, buildCustomScenario };
+export { buildCustomScenario, scenarios, thresholds };

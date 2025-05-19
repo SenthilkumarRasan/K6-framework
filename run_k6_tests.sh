@@ -9,6 +9,18 @@ SCENARIO_TYPE="smoke"
 # Default headless browser mode
 HEADLESS_BROWSER=false
 
+# Default base URL (can be overridden)
+BASE_URL=""
+
+# Default vertical (CSV file name without extension)
+VERTICAL="allrecipes"
+
+# Default time unit for arrival rate
+TIME_UNIT="1s"
+
+# Default selection mode for CSV data
+SELECTION_MODE="global_sequential"
+
 # Function to validate environment
 validate_environment() {
   if [ -z "$1" ]; then
@@ -31,6 +43,14 @@ validate_test_type() {
   local valid_test_types="BROWSER,API,PROTOCOL,MULTI"
   if ! echo "$valid_test_types" | grep -q "$1"; then
     echo "Invalid test type: $1. Valid options are: $valid_test_types"
+    exit 1
+  fi
+}
+
+# Function to validate vertical
+validate_vertical() {
+  if [ -z "$1" ]; then
+    echo "Invalid vertical value: $1. Expected a non-empty string."
     exit 1
   fi
 }
@@ -58,6 +78,19 @@ while [ $# -gt 0 ]; do
     --ramping-stages=*)
       RAMPING_STAGES="${1#*=}"
       ;;
+    --base-url=*)
+      BASE_URL="${1#*=}"
+      ;;
+    --vertical=*)
+      VERTICAL="${1#*=}"
+      validate_vertical "$VERTICAL"
+      ;;
+    --time-unit=*)
+      TIME_UNIT="${1#*=}"
+      ;;
+    --selection-mode=*)
+      SELECTION_MODE="${1#*=}"
+      ;;
     *)
       echo "Unknown parameter: $1"
       exit 1
@@ -66,11 +99,35 @@ while [ $# -gt 0 ]; do
   shift
 done
 
+# Validate required parameters
+if [ -z "$SCRIPT_TO_RUN" ]; then
+  echo "Error: --script parameter is required"
+  exit 1
+fi
+
+if [ -z "$ENVIRONMENT" ]; then
+  echo "Error: --environment parameter is required"
+  exit 1
+fi
+
+if [ -z "$TEST_TYPE" ]; then
+  echo "Error: --test-type parameter is required"
+  exit 1
+fi
+if [ -z "$BASE_URL" ]; then
+  echo "Error: --base-url parameter is required"
+  exit 1
+fi
+
 # Export environment variables
 export ENVIRONMENT
 export SCENARIO_TYPE
 export HEADLESS_BROWSER
 export RAMPING_STAGES
+export BASE_URL
+export CSV_FILENAME="${VERTICAL}.csv"
+export TIME_UNIT
+export SELECTION_MODE
 
 # Set K6_BROWSER_HEADLESS based on the parameter
 export K6_BROWSER_HEADLESS=$HEADLESS_BROWSER
@@ -82,6 +139,27 @@ validate_scenario_type "$SCENARIO_TYPE"
 # Set the tests folder based on the test type
 TESTS_FOLDER="tests/$(echo $TEST_TYPE | tr '[:upper:]' '[:lower:]')"
 
-# Run the specified script
-echo "Executing $K6_COMMAND $TESTS_FOLDER/$SCRIPT_TO_RUN"
-eval "$K6_COMMAND $TESTS_FOLDER/$SCRIPT_TO_RUN"
+# Create the results directory if it doesn't exist
+mkdir -p results
+
+# Create screenshots directory if running browser tests
+if [ "$TEST_TYPE" = "BROWSER" ]; then
+  mkdir -p screenshots
+  echo "Created screenshots directory for browser tests"
+fi
+
+# Construct the k6 command
+k6 run \
+  -e STACK="$ENVIRONMENT" \
+  -e SCENARIO="$SCENARIO_TYPE" \
+  -e RAMPING_STAGES="$RAMPING_STAGES" \
+  -e BASE_URL="$BASE_URL" \
+  -e CSV_FILENAME="$CSV_FILENAME" \
+  -e TIME_UNIT="$TIME_UNIT" \
+  -e HEADLESS_BROWSER="$HEADLESS_BROWSER" \
+  -e SELECTION_MODE="$SELECTION_MODE" \
+  $TESTS_FOLDER/$SCRIPT_TO_RUN  --out json=results/results.json
+
+# Process results with appropriate metrics based on test type
+echo "Processing results for $TEST_TYPE test..."
+node utils/process-k6-results.js results/results.json $TEST_TYPE
