@@ -1,5 +1,6 @@
 import { group, sleep } from "k6"
-import { loadCsvFile, createCsvIterator } from '../../utils/csvReader.js';
+import { createCsvIterator, parseCsvWithHeaders } from '../../utils/csvReader.js';
+import { SharedArray } from 'k6/data';
 import { get } from '../../utils/httpClient.js';
 import { scenarios, thresholds, buildCustomScenario } from '../../config/scenario.js';
 
@@ -26,7 +27,7 @@ export const options = {
   summaryTrendStats: ['avg', 'min', 'med', 'max', 'p(50)', 'p(90)', 'p(95)', 'p(99)'],
 };
 
-const baseUrl = "https://www-allrecipes-carbon-pe.a-ue1.allrecipes.com";
+const baseUrl = __ENV.BASE_URL || 'http://localhost:3000';
 
 // Get CSV filename from environment variable or use default
 const csvFilename = __ENV.CSV_FILENAME || 'vertical.csv';
@@ -35,70 +36,101 @@ const csvFilePath = `../../testdata/${csvFilename}`;
 // Extract the vertical name from the CSV filename (remove .csv extension)
 const vertical = csvFilename.replace('.csv', '');
 
-// Read the CSV file directly in the test script to avoid path resolution issues
-const csvContent = open(csvFilePath);
-
-// Load CSV data with the new utility, passing the content directly
-const csvData = loadCsvFile(csvContent, {
-  name: `${vertical}_urls`,
-  filter: item => item && item.templatename && item.urlpath,
-  transform: (item) => {
-    const templateName = item.templatename.trim();
-    const urlPath = item.urlpath.trim();
-    const queryString = item.querystring ? item.querystring.trim() : '';
-    const fullGetUrl = `${baseUrl}${urlPath}${queryString ? '?' + queryString : ''}`;
-    return {
-      templateName,
-      fullGetUrl,
-      urlPath
-    };
+// Load and process CSV data using SharedArray for efficient sharing across VUs
+const processedCsvData = new SharedArray(`${vertical}_data`, function () {
+  const csvFileContent = open(csvFilePath);
+  if (!csvFileContent) {
+    console.error(`Critical error: Failed to open CSV file at path: ${csvFilePath}. Returning empty array.`);
+    return [];
   }
+  const rawParsedData = parseCsvWithHeaders(csvFileContent);
+
+  // Data is now raw, filtering and transformation will happen in the default function
+  if (rawParsedData.length === 0) { // Log once during init if no data results
+    console.warn(`Warning: CSV file ${csvFilename} is empty or could not be parsed. Check CSV content.`);
+  }
+  return rawParsedData; // Return raw parsed data
 });
+
+// Create a global shared iterator for URL data
+const urlIterator = createCsvIterator(processedCsvData, { selectionMode: __ENV.SELECTION_MODE });
 
 // Set selection mode from environment variable or use default
 const selectionMode = __ENV.SELECTION_MODE || 'sequential';
 
-// Create an iterator with the specified selection mode
-const urlIterator = createCsvIterator(csvData, { selectionMode });
-
 export default function() {
-  // Get the next URL from the iterator
-  const urlData = urlIterator.next();
+  // Get the next raw URL data from the iterator
+  const rawUrlData = urlIterator.next();
   
-  if (!urlData) {
-    console.error('No URL data available. Check if CSV file is properly loaded.');
+  if (!rawUrlData) {
+    // console.log('No more raw URL data to process or CSV was empty.');
+    sleep(1); // Optional: sleep if no data
     return;
   }
+
+  // **1. Filter Data**
+  // Ensure essential fields are present
+  if (!(rawUrlData.templatename && rawUrlData.urlpath)) {
+    console.warn(`Skipping iteration: templatename or urlpath missing for item: ${JSON.stringify(rawUrlData)}`);
+    return;
+  }
+
+  // **2. Transform Data**
+  const templateName = rawUrlData.templatename.trim();
+  const urlPath = rawUrlData.urlpath.trim();
+  const queryString = rawUrlData.querystring ? rawUrlData.querystring.trim() : '';
+  const fullGetUrl = `${baseUrl}${urlPath}${queryString ? '?' + queryString : ''}`;
   
-  // Create a single tags object with both template name and environment
-  const tags = { 
-    template: urlData.templateName,
+  // 'vertical' is already available from the outer scope
+  const k6MetricTags = { // Renamed to avoid confusion with HTTP headers/tags
+    template: templateName,
     environment: environment,
     vertical: vertical
   };
 
-  group(urlData.templateName, function () {
+  // Define the HTTP request parameters, including the crucial headers
+  const requestParams = {
+      headers: {
+          "accept": "text/html,application/xhtml+xml",
+          "accept-encoding": "gzip, deflate",
+          // Add any other headers you want to test, e.g.:
+          // "User-Agent": "MyK6TestScript/1.0", 
+      },
+      tags: k6MetricTags // These are k6 metric tags
+  };
+
+  // --- LOGGING REQUEST DETAILS ---
+ // console.log(`[VU: ${__VU}, Iter: ${__ITER}] REQUEST URL: ${fullGetUrl}`);
+ // console.log(`[VU: ${__VU}, Iter: ${__ITER}] REQUEST PARAMS: ${JSON.stringify(requestParams)}`);
+  // Note: For GET requests, body is typically not sent, so not logging it here.
+
+  group(templateName, function () { // Use transformed templateName for group
     let getResp;
     try {
       getResp = get(
-        urlData.fullGetUrl,
-        {
-          headers: {
-            "accept": "text/html,application/xhtml+xml",
-            "accept-encoding": "gzip, deflate",
-          },
-          tags
-        },
-        {
-          name: `GET ${urlData.templateName}`,
-          tags
+        fullGetUrl, // Use transformed fullGetUrl
+        requestParams, // Pass the comprehensive requestParams object
+        { // These are options for the processResponse function in httpClient.js
+          name: `GET ${templateName}`, // This name is used for k6 checks
+          tags: k6MetricTags // These tags are also for k6 checks
         }
       );
-      if (getResp.status !== 200) {
-        console.error(`GET failed with status ${getResp.status} for ${urlData.fullGetUrl}`);
+
+      // --- LOGGING RESPONSE DETAILS ---
+      if (getResp) {
+        //console.log(`[VU: ${__VU}, Iter: ${__ITER}] RESPONSE STATUS: ${getResp.status} for ${fullGetUrl}`);
+        //console.log(`[VU: ${__VU}, Iter: ${__ITER}] RESPONSE HEADERS: ${JSON.stringify(getResp.headers)}`);
+       // const bodySnippet = getResp.body ? getResp.body.substring(0, 200) : "(empty body)"; // Log first 200 chars
+        //console.log(`[VU: ${__VU}, Iter: ${__ITER}] RESPONSE BODY SNIPPET: ${bodySnippet}... (length: ${getResp.body ? getResp.body.length : 0})`);
+
+        if (getResp.status !== 200) {
+          console.error(`[VU: ${__VU}, Iter: ${__ITER}] GET failed with status ${getResp.status} for ${fullGetUrl}. Full Body: ${getResp.body}`);
+        }
+      } else {
+        console.error(`[VU: ${__VU}, Iter: ${__ITER}] No response object received for ${fullGetUrl}`);
       }
     } catch (error) {
-      console.error(`Error during GET request: ${error}`);
+      console.error(`[VU: ${__VU}, Iter: ${__ITER}] Error during GET request for ${fullGetUrl}: ${error}`);
     }
     sleep(1);
   });

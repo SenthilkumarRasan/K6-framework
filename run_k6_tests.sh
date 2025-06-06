@@ -161,5 +161,9 @@ k6 run \
   $TESTS_FOLDER/$SCRIPT_TO_RUN  --out json=results/results.json
 
 # Process results with appropriate metrics based on test type
+echo "Setting K6_REPORT_TEST_TYPE for Node.js script to: $TEST_TYPE"
+export K6_REPORT_TEST_TYPE="$TEST_TYPE"
+
 echo "Processing results for $TEST_TYPE test..."
+# In run_k6_tests.sh, before calling the node script:
 node utils/process-k6-results.js results/results.json $TEST_TYPE

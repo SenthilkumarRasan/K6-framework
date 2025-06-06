@@ -1,167 +1,80 @@
-import { Trend, Counter } from 'k6/metrics';
+/**
+ * Collects Core Web Vitals (LCP, FCP, CLS, TTFB) from the page using PerformanceObserver.
+ * @param {import('k6/experimental/browser').Page} page - The k6 browser page object.
+ * @returns {Promise<{lcp: number|null, fcp: number|null, cls: number|null, ttfb: number|null}>}
+ */
+export async function collectCoreWebVitals(page) {
+  try {
+    const metrics = await page.evaluate(() => {
+      return new Promise((resolve) => {
+        const result = { lcp: null, fcp: null, cls: 0, ttfb: null }; 
+        let ttfbReportedByObserver = false;
 
- 
-
-export function createMetricsGroup(name) {
-
-    return {
-
-        lcp: new Trend(`${name}_lcp`, ['name:' + name]),
-
-        inp: new Trend(`${name}_inp`, ['name:' + name]),
-
-        cls: new Trend(`${name}_cls`, ['name:' + name]),
-
-        responseTime: new Trend(`${name}_response_time`, ['name:' + name]),
-
-        count: new Counter(`${name}_count`, ['name:' + name]),
-
-    };
-
-}
-
- 
-
-export async function captureCoreWebVitals(page, groupMetrics) {
-
-    const vitals = await page.evaluate(() => {
-
-        return new Promise((resolve, reject) => {
-
-            const metrics = { lcp: 0, inp: 0, cls: 0 };
-
-            let lcpObserved = false;
-
-            let inpObserved = false;
-
-            let clsObserved = false;
-
- 
-
-            const observeLCP = new PerformanceObserver((list) => {
-
-                const entries = list.getEntries();
-
-                if (entries.length > 0) {
-
-                    metrics.lcp = entries[entries.length - 1].startTime;
-
-                    lcpObserved = true;
-
-                    if (inpObserved && clsObserved) {
-
-                        resolve(metrics);
-
-                        observeLCP.disconnect();
-
-                        observeINP.disconnect();
-
-                        observeCLS.disconnect();
-
-                    }
-
+        const observer = new PerformanceObserver((entryList) => {
+          for (const entry of entryList.getEntries()) {
+            switch (entry.entryType) {
+              case 'largest-contentful-paint':
+                result.lcp = entry.startTime;
+                break;
+              case 'paint':
+                if (entry.name === 'first-contentful-paint') {
+                  result.fcp = entry.startTime;
                 }
-
-            });
-
-            observeLCP.observe({ type: 'largest-contentful-paint', buffered: true });
-
- 
-
-            const observeINP = new PerformanceObserver((list) => {
-
-                const entries = list.getEntries();
-
-                if (entries.length > 0) {
-
-                    metrics.inp = entries[entries.length - 1].processingStart;
-
-                    inpObserved = true;
-
-                    if (lcpObserved && clsObserved) {
-
-                        resolve(metrics);
-
-                        observeLCP.disconnect();
-
-                        observeINP.disconnect();
-
-                        observeCLS.disconnect();
-
-                    }
-
+                break;
+              case 'layout-shift':
+                // @ts-ignore
+                if (!entry.hadRecentInput) {
+                  // @ts-ignore
+                  result.cls += entry.value;
                 }
-
-            });
-
-            observeINP.observe({ type: 'interaction', buffered: true });
-
- 
-
-            const observeCLS = new PerformanceObserver((list) => {
-
-                const entries = list.getEntries();
-
-                if (entries.length > 0) {
-
-                    metrics.cls = entries.reduce((total, entry) => total + entry.value, 0);
-
-                    clsObserved = true;
-
-                    if (lcpObserved && inpObserved) {
-
-                        resolve(metrics);
-
-                        observeLCP.disconnect();
-
-                        observeINP.disconnect();
-
-                        observeCLS.disconnect();
-
-                    }
-
-                }
-
-            });
-
-            observeCLS.observe({ type: 'layout-shift', buffered: true });
-
- 
-
-            setTimeout(() => {
-
-                resolve(metrics);
-
-                observeLCP.disconnect();
-
-                observeINP.disconnect();
-
-                observeCLS.disconnect();
-
-            }, 10000); // Increased timeout to 10000ms
-
- 
-
-            window.addEventListener('error', (e) => {
-
-                reject(e.message);
-
-            });
-
+                break;
+              case 'navigation':
+                // @ts-ignore
+                result.ttfb = entry.responseStart - entry.requestStart;
+                ttfbReportedByObserver = true;
+                break;
+            }
+          }
         });
 
+        try {
+          observer.observe({
+            entryTypes: ['largest-contentful-paint', 'paint', 'layout-shift', 'navigation'],
+            buffered: true
+          });
+        } catch (e) {
+          console.error('[CWV EVAL] Error setting up PerformanceObserver:', e.message);
+          // Resolve with potentially empty/partial results if observer setup fails, to avoid hanging
+          setTimeout(() => resolve(result), 0); 
+          return;
+        }
+
+        // Fallback for TTFB if observer didn't report it (e.g., if 'navigation' type observation is unreliable)
+        // This timeout allows buffered entries to be processed by the observer first.
+        setTimeout(() => {
+          if (!ttfbReportedByObserver) {
+            try {
+              const navEntries = performance.getEntriesByType('navigation');
+              if (navEntries.length > 0) {
+                const navEntry = navEntries[0];
+                // @ts-ignore
+                result.ttfb = navEntry.responseStart - navEntry.requestStart;
+              }
+            } catch (e) { /* ignore if Navigation Timing API also fails */ }
+          }
+        }, 100); // Short delay to allow observer to pick up buffered navigation entry first
+        
+        // Resolve after a timeout to allow metrics to be collected.
+        // LCP and CLS can change over time. 5 seconds is a common window.
+        setTimeout(() => {
+          observer.disconnect();
+          resolve(result);
+        }, 5000); // 5-second observation window
+      });
     });
-
- 
-
-    groupMetrics.lcp.add(vitals.lcp);
-
-    groupMetrics.inp.add(vitals.inp);
-
-    groupMetrics.cls.add(vitals.cls);
-
- 
-
-    console.log(`Core Web Vitals - LCP: ${vitals.lcp}ms, INP: ${vitals.inp}ms, CLS: ${vitals.cls}`);
-
+    return metrics;
+  } catch (e) {
+    console.error(`[K6 BROWSER CWV] Error in collectCoreWebVitals page.evaluate: ${e.message}`);
+    return { lcp: null, fcp: null, cls: 0, ttfb: null }; // Return nulls/zero on error
+  }
 }

@@ -20,37 +20,44 @@ function simpleCsvParse(csv) {
 }
 
 /**
- * Loads and parses CSV content as an array of objects, shared across all VUs.
+ * Parses CSV string content into an array of objects.
+ * The first line of the CSV string is used as headers for the object keys.
+ * @param {string} csvString - The raw CSV data as a string.
+ * @returns {Array<Object>} An array of objects representing the CSV rows.
  */
-export function loadCsvFile(csvContent, options = {}) {
-    const {
-        transform = row => row,
-        filter = row => true,
-        name = 'csvData'
-    } = options;
+export function parseCsvWithHeaders(csvString) {
+  if (!csvString || typeof csvString !== 'string') {
+    console.error('[CSV PARSER] Input is not a valid string.');
+    return [];
+  }
 
-    return new SharedArray(name, function() {
-        try {
-            if (!csvContent || csvContent.length === 0) {
-                console.error('CSV data is empty or could not be read');
-                return [];
-            }
-            const parsedData = simpleCsvParse(csvContent);
-            if (!parsedData || parsedData.length === 0) {
-                console.error('No data found in CSV');
-                return [];
-            }
-            const filteredData = parsedData
-                .filter(row => row && filter(row))
-                .map(transform);
+  const lines = csvString.trim().split('\n');
+  if (lines.length < 2) {
+    console.error('[CSV PARSER] CSV must have at least two lines (headers + one data row).');
+    return []; // Need at least a header and one data row
+  }
 
-            console.log(`Loaded ${filteredData.length} rows from CSV`);
-            return filteredData;
-        } catch (error) {
-            console.error(`Error processing CSV: ${error.message}`);
-            return [];
-        }
+  const headers = lines[0].split(',').map(header => header.trim());
+  const result = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue; // Skip empty lines
+
+    // Basic CSV value splitting, may not handle complex cases like commas within quotes perfectly.
+    // For more robust parsing, a dedicated CSV library (like papaparse if available in k6 modules) would be better.
+    const values = line.split(',').map(value => value.trim());
+    
+    // If a line has fewer values than headers, pad with empty strings
+    // If it has more, extra values are ignored by this simple zip
+    const obj = {};
+    headers.forEach((header, index) => {
+      obj[header] = values[index] !== undefined ? values[index] : '';
     });
+    result.push(obj);
+  }
+
+  return result;
 }
 
 export function createCsvIterator(csvData, options = {}) {
