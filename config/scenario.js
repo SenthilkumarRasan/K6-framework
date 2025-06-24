@@ -25,32 +25,32 @@ const buildCustomScenario = (type, rampingStages, timeUnit = '1s') => {
 // Common scenarios for API and PROTOCOL
 const apiProtocolScenarios = {
   smoke: {
-    executor: "ramping-arrival-rate",
+    executor: 'ramping-arrival-rate',
     stages: [
-      { duration: "1m", target: 1 },
-      { duration: "1m", target: 1 },
-      { duration: "30s", target: 0 }
+      { duration: '1m', target: 1 },
+      { duration: '1m', target: 1 },
+      { duration: '30s', target: 0 }
     ],
     preAllocatedVUs: 1,
     maxVUs: 10
   },
   spiketest: {
-    executor: "ramping-arrival-rate",
+    executor: 'ramping-arrival-rate',
     stages: [
-      { duration: "1m", target: 10 },
-      { duration: "30s", target: 100 },
-      { duration: "2m", target: 100 },
-      { duration: "30s", target: 0 }
+      { duration: '1m', target: 10 },
+      { duration: '30s', target: 100 },
+      { duration: '2m', target: 100 },
+      { duration: '30s', target: 0 }
     ],
     preAllocatedVUs: 10,
     maxVUs: 100
   },
   loadtest: {
-    executor: "ramping-arrival-rate",
+    executor: 'ramping-arrival-rate',
     stages: [
-      { duration: "2m", target: 10 },
-      { duration: "5m", target: 50 },
-      { duration: "2m", target: 0 }
+      { duration: '2m', target: 10 },
+      { duration: '5m', target: 50 },
+      { duration: '2m', target: 0 }
     ],
     preAllocatedVUs: 10,
     maxVUs: 100
@@ -61,16 +61,16 @@ const apiProtocolScenarios = {
 // Scenarios for BROWSER
 const browserScenarios = {
   smoke: {
-    executor: "per-vu-iterations",
+    executor: 'per-vu-iterations',
     vus: 1,
     iterations: 1
   },
   loadtest: {
-    executor: "ramping-vus",
+    executor: 'ramping-vus',
     stages: [
-      { duration: "1m", target: 2 },
-      { duration: "2m", target: 5 },
-      { duration: "1m", target: 0 }
+      { duration: '1m', target: 2 },
+      { duration: '2m', target: 5 },
+      { duration: '1m', target: 0 }
     ]
   }
   // Add more browser-specific scenarios as needed

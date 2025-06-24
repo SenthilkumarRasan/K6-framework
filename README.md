@@ -1,49 +1,308 @@
-# k6-template
+# k6 Performance Testing Framework
 
-A flexible performance testing framework built on [k6](https://k6.io/).
+A comprehensive performance testing framework built on [k6](https://k6.io/) with enhanced reporting capabilities for API, Browser, and Protocol testing.
 
-## What is k6?
+## Table of Contents
 
-k6 is an open-source load testing tool designed for testing the performance and reliability of modern applications and APIs. It is developer-centric, scriptable in JavaScript, and integrates well into CI/CD pipelines.
+- [Overview](#overview)
+- [Installation](#installation)
+- [Test Types](#test-types)
+  - [API Tests](#api-tests)
+  - [Browser Tests](#browser-tests)
+  - [Protocol Tests](#protocol-tests)
+- [Running Tests](#running-tests)
+  - [Using k6 Directly](#using-k6-directly)
+  - [Using the run_k6_tests.sh Script](#using-the-run_k6_testssh-script)
+  - [Using Docker](#using-docker)
+- [Custom HTML Reports](#custom-html-reports)
+- [Configuration Options](#configuration-options)
 
-## What types of tests can k6 run?
+## Project Structure & Key Files
 
-- **API Load Testing**: Test REST, GraphQL, and other HTTP APIs for performance, scalability, and correctness.
-- **Browser Automation**: Simulate real browsers to test end-to-end user journeys, including desktop and mobile device emulation.
-- **Protocol Testing**: Test lower-level protocols or custom endpoints.
-- **Desktop & Mobile Simulation**: Simulate different device types and network conditions to measure performance.
+- `run_k6_tests.sh`: Main wrapper script to run API, Browser, or Protocol tests with all configuration options and reporting.
+- `utils/coreVitals.js`: Collects Core Web Vitals and resource timing metrics for browser tests.
+- `utils/process-k6-results.js`: Generates enhanced HTML reports from k6 JSON output.
+- `utils/browserMetrics.js`: Utility functions for browser-side metrics collection.
+- `tests/browser/verticalBrowser.js`: Main browser test script. Parameterized for template, base URL, scenario, etc.
+- `tests/api/apiTest.js`: Example API test script.
+- `tests/protocol/websocketTest.js`: Example protocol (WebSocket) test script.
+- `results/`: Output directory for HTML and JSON reports (ignored by git).
+- `screenshots/`: Stores screenshots from browser tests (ignored by git).
+- `.gitignore`: Ensures results and screenshots are not tracked by git.
 
-k6 supports both headless and full browser modes for backend and frontend performance testing.
+## Overview
+
+This framework extends k6's capabilities with:
+
+- Unified test execution across API, Browser, and Protocol tests
+- Enhanced HTML reporting with detailed metrics visualization
+- Template-based organization for better test management
+- Docker support for consistent execution environments
+- Configurable test scenarios for different performance testing needs
 
 ## Installation
 
-**macOS**: `brew install k6`
+### Prerequisites
 
-**Windows**: `winget install k6` or download from the [k6 GitHub releases page](https://github.com/grafana/k6/releases).
+- Node.js (v14 or higher)
+- k6 (latest version)
 
-## Running Tests Directly with k6
+### Setup
 
-You can also run tests directly with the k6 command, bypassing the shell script:
+```bash
+# Install k6
+# macOS
+brew install k6
 
-### Examples
+# Ubuntu/Debian
+sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+echo "deb https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+sudo apt-get update
+sudo apt-get install k6
 
-**API Test**:
-```sh
-k6 run -e TEST_TYPE=API -e SCENARIO_TYPE=custom-tps -e RAMPING_STAGES="1m:1,1m:5,1m:0" -e ENVIRONMENT=qa tests/api/api.js --vertical=allrecipes --time-unit=1s
+# Windows
+winget install k6 or download from the k6 GitHub releases page
+
+# Install Node.js dependencies
+npm install
 ```
 
-**PROTOCOL Test**:
-```sh
-k6 run -e TEST_TYPE=PROTOCOL -e SCENARIO_TYPE=custom-tps -e RAMPING_STAGES="1m:1,1m:5,1m:0" -e ENVIRONMENT=qa tests/protocol/vertical.js --vertical=allrecipes --time-unit=1s
+## Test Types
+
+### API Tests
+
+API tests focus on HTTP endpoints performance without browser rendering overhead. These tests are ideal for measuring backend performance, API scalability, and service reliability.
+
+#### Example API Test Structure (with parameterization)
+
+```javascript
+import http from 'k6/http';
+import { check } from 'k6';
+
+const BASE_URL = __ENV.BASE_URL || 'https://api.example.com';
+const TEMPLATE = __ENV.TEMPLATE || 'apiTemplate';
+
+export default function() {
+  const response = http.get(`${BASE_URL}/endpoint`, { tags: { template: TEMPLATE } });
+  check(response, {
+    'status is 200': (r) => r.status === 200,
+    'response time < 500ms': (r) => r.timings.duration < 500
+  }, { tags: { template: TEMPLATE } });
+}
 ```
 
-**BROWSER Test**:
+**Run directly:**
 ```sh
-k6 run -e TEST_TYPE=BROWSER -e SCENARIO_TYPE=custom-tps -e RAMPING_STAGES="1m:1,1m:5,1m:0" -e ENVIRONMENT=qa -e HEADLESS_BROWSER=false tests/browser/k6Browsertest.js --vertical=allrecipes --time-unit=1s
+k6 run tests/api/apiTest.js --vus 10 --duration 30s -e BASE_URL=https://api.example.com -e TEMPLATE=apiTemplate
 ```
 
-**MULTI Test**:
+
+### Browser Tests
+
+Browser tests use k6's browser module to simulate real user interactions in a browser environment. These tests measure frontend performance metrics like Core Web Vitals (LCP, FCP, CLS) and provide insights into the user experience.
+
+#### Example Browser Test Structure (with parameterization)
+
+```javascript
+import { browser } from 'k6/browser';
+import { check } from 'k6';
+import { collectAllMetrics } from '../utils/coreVitals.js';
+
+const BASE_URL = __ENV.BASE_URL || 'https://example.com';
+const TEMPLATE = __ENV.TEMPLATE || 'homeTemplate';
+
+export default async function() {
+  const page = browser.newPage();
+  const tags = { template: TEMPLATE };
+  try {
+    await page.goto(BASE_URL);
+    const metrics = await collectAllMetrics(page, tags, metricDefinitions);
+    console.log(`LCP: ${metrics.cwvMetrics.lcp}ms for template ${tags.template}`);
+  } finally {
+    page.close();
+  }
+}
+```
+
+**Run directly:**
 ```sh
+k6 run tests/browser/verticalBrowser.js --browser --headless=true -e BASE_URL=https://example.com -e TEMPLATE=homeTemplate
+```
+
+
+### Protocol Tests
+
+Protocol tests focus on lower-level protocols or custom endpoints, useful for testing non-HTTP services or specialized protocols.
+
+#### Example Protocol Test Structure (with parameterization)
+
+```javascript
+import { check } from 'k6';
+import ws from 'k6/ws';
+
+const WS_URL = __ENV.WS_URL || 'ws://echo.websocket.org';
+const TEMPLATE = __ENV.TEMPLATE || 'wsTemplate';
+
+export default function() {
+  const tags = { template: TEMPLATE };
+  const response = ws.connect(WS_URL, { tags }, function(socket) {
+    socket.on('open', () => socket.send('Hello'));
+    socket.on('message', (data) => {
+      check(data, { 'is correct message': (d) => d === 'Hello' }, { tags });
+      socket.close();
+    });
+  });
+}
+```
+
+**Run directly:**
+```sh
+k6 run tests/protocol/websocketTest.js -e WS_URL=ws://echo.websocket.org -e TEMPLATE=wsTemplate
+```
+
+
+## Running Tests
+
+### Using k6 Directly
+
+Run tests directly using the k6 command-line tool with all parameters:
+
+```bash
+# API Test
+k6 run tests/api/apiTest.js \
+  -e BASE_URL=https://api.example.com \
+  -e TEMPLATE=apiTemplate \
+  -e CSV_FILENAME=api.csv \
+  -e SCENARIO_TYPE=custom-tps \
+  -e ENVIRONMENT=qa \
+  -e TIME_UNIT=1s \
+  -e K6_REPORT_AUT=shape
+
+# Browser Test
+k6 run tests/browser/verticalBrowser.js --browser --headless=true \
+  -e BASE_URL=https://example.com \
+  -e TEMPLATE=homeTemplate \
+  -e CSV_FILENAME=shape.csv \
+  -e SCENARIO_TYPE=custom-tps \
+  -e ENVIRONMENT=qa \
+  -e TIME_UNIT=1s \
+  -e K6_REPORT_AUT=shape \
+  -e CAPTURE_MANTLE_METRICS=true \
+  -e RAMPING_STAGES="10s:1,2m:35,10s:1"
+
+# Protocol Test
+k6 run tests/protocol/vertical.js \
+  -e BASE_URL=wss://ws.example.com \
+  -e CSV_FILENAME=vertical.csv \
+  -e SCENARIO_TYPE=custom-tps \
+  -e ENVIRONMENT=qa \
+  -e TIME_UNIT=1s \
+  -e K6_REPORT_AUT=shape \
+  -e RAMPING_STAGES="10s:1,2m:35,10s:1"
+```
+
+### Using the run_k6_tests.sh Script
+
+The included `run_k6_tests.sh` script provides a convenient wrapper with additional features:
+
+```bash
+# API Test
+./run_k6_tests.sh --script=apiTest.js --test-type=API --scenario=load --vus=10 --duration=30s
+
+# Browser Test
+./run_k6_tests.sh --script=verticalBrowser.js --test-type=BROWSER --scenario=custom-tps --environment=qa --headless=true --aut=shape --time-unit=1m --base-url="https://example.com" --ramping-stages="10s:1,2m:35,10s:1"
+
+# Protocol Test
+./run_k6_tests.sh --script=websocketTest.js --test-type=PROTOCOL --scenario=stress
+```
+
+### Using Docker
+
+The included Dockerfile allows you to run tests in a consistent environment:
+
+```bash
+# Build the Docker image
+docker build -t k6-tests .
+
+# Run a test with Docker
+docker run -v $(pwd)/results:/app/results k6-tests --script=verticalBrowser.js --test-type=BROWSER --scenario=custom-tps --environment=qa --headless=true --aut=shape --time-unit=1m --base-url="https://example.com" --ramping-stages="10s:1,2m:35,10s:1"
+```
+
+## Custom HTML Reports
+
+This framework includes an enhanced HTML reporting system that provides detailed visualizations of test results.
+
+### Report Features
+
+#### For All Test Types
+- Summary statistics with pass/fail metrics
+- Response time distributions
+- Error rate analysis
+- Detailed request/response logs
+- Template-based grouping of metrics
+
+#### For Browser Tests
+- **Core Web Vitals**: LCP (Largest Contentful Paint), FCP (First Contentful Paint), CLS (Cumulative Layout Shift), and TTFB metrics with color-coded thresholds
+- **Page Load Time**: Detailed breakdown of page load performance
+- **Network Resources Statistics**: Comprehensive statistics for different resource types (JS, CSS, images, fonts, etc.)
+- **Mantle Metrics**: Ad-related metrics including ad load times, rendering, and viewability
+
+#### For Protocol Tests
+- Connection statistics
+- Protocol-specific metrics
+- Custom timing measurements
+
+### Viewing Reports
+
+After running a test, HTML reports are generated in the `results/` directory with filenames following the pattern:
+
+```
+results/<TEST_TYPE>_<AUT>_<SCENARIO>_report.html
+```
+
+For example: `results/BROWSER_shape_custom-tps_report.html`
+
+## Configuration Options
+
+### Common Command Line Options
+
+| Option | Description | Example |
+|--------|-------------|--------|
+| `--script` | Test script to run | `--script=verticalBrowser.js` |
+| `--test-type` | Type of test (API, BROWSER, PROTOCOL) | `--test-type=BROWSER` |
+| `--scenario` | Test scenario (load, stress, spike, custom-tps) | `--scenario=custom-tps` |
+| `--environment` | Target environment (dev, qa, prod) | `--environment=qa` |
+| `--aut` | Application under test | `--aut=shape` |
+| `--time-unit` | Time unit for test duration | `--time-unit=1m` |
+| `--base-url` | Base URL for the test | `--base-url="https://example.com"` |
+
+### Browser-Specific Options
+
+| Option | Description | Example |
+|--------|-------------|--------|
+| `--headless` | Run browser in headless mode | `--headless=true` |
+| `--ramping-stages` | VU ramp up/down pattern | `--ramping-stages="10s:1,2m:35,10s:1"` |
+
+### API-Specific Options
+
+| Option | Description | Example |
+|--------|-------------|--------|
+| `--vus` | Number of virtual users | `--vus=10` |
+| `--duration` | Test duration | `--duration=30s` |
+
+### Environment Variables
+
+You can also configure tests using environment variables:
+
+```bash
+CAPTURE_MANTLE_METRICS=true ./run_k6_tests.sh --script=verticalBrowser.js --test-type=BROWSER
+```
+
+Key environment variables:
+
+- `CAPTURE_MANTLE_METRICS`: Controls Mantle metrics collection
+- `DEBUG`: Enables verbose logging
+- `K6_BROWSER_ARGS`: Additional browser arguments
 k6 run -e TEST_TYPE=MULTI -e SCENARIO_TYPE=custom-tps -e RAMPING_STAGES="1m:1,1m:5,1m:0" -e ENVIRONMENT=qa tests/multi/browserProtocolcombined.js --vertical=allrecipes --time-unit=1s
 ```
 

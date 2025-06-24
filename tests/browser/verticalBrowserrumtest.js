@@ -86,7 +86,7 @@ try {
   console.error(`Error loading CSV file: ${csvError}`);
   csvData = []; // Ensure csvData is an empty array to prevent further errors
 }
-console.log("SELECTION_MODE:", __ENV.SELECTION_MODE);
+console.log('SELECTION_MODE:', __ENV.SELECTION_MODE);
 const urlIterator = createCsvIterator(csvData, { selectionMode: __ENV.SELECTION_MODE });
 
 export async function setup() {

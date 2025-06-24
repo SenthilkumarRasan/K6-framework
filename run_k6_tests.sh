@@ -12,14 +12,17 @@ HEADLESS_BROWSER=false
 # Default base URL (can be overridden)
 BASE_URL=""
 
-# Default vertical (CSV file name without extension)
-VERTICAL="allrecipes"
+# Default AUT (Application Under Test - CSV file name without extension)
+AUT="allrecipes"
 
 # Default time unit for arrival rate
 TIME_UNIT="1s"
 
 # Default selection mode for CSV data
 SELECTION_MODE="global_sequential"
+
+# Default value for the flag
+CAPTURE_MANTLE_METRICS_ENABLED="true" 
 
 # Function to validate environment
 validate_environment() {
@@ -47,10 +50,10 @@ validate_test_type() {
   fi
 }
 
-# Function to validate vertical
-validate_vertical() {
+# Function to validate AUT
+validate_aut() {
   if [ -z "$1" ]; then
-    echo "Invalid vertical value: $1. Expected a non-empty string."
+    echo "Invalid AUT value: $1. Expected a non-empty string."
     exit 1
   fi
 }
@@ -81,15 +84,18 @@ while [ $# -gt 0 ]; do
     --base-url=*)
       BASE_URL="${1#*=}"
       ;;
-    --vertical=*)
-      VERTICAL="${1#*=}"
-      validate_vertical "$VERTICAL"
+    --aut=*)
+      AUT="${1#*=}"
+      validate_aut "$AUT"
       ;;
     --time-unit=*)
       TIME_UNIT="${1#*=}"
       ;;
     --selection-mode=*)
       SELECTION_MODE="${1#*=}"
+      ;;
+    --capture-mantle-metrics=*) # New flag
+      CAPTURE_MANTLE_METRICS_ENABLED="${1#*=}"
       ;;
     *)
       echo "Unknown parameter: $1"
@@ -125,9 +131,11 @@ export SCENARIO_TYPE
 export HEADLESS_BROWSER
 export RAMPING_STAGES
 export BASE_URL
-export CSV_FILENAME="${VERTICAL}.csv"
+export AUT # Export AUT itself
+export CSV_FILENAME="${AUT}.csv"
 export TIME_UNIT
 export SELECTION_MODE
+export CAPTURE_MANTLE_METRICS="$CAPTURE_MANTLE_METRICS_ENABLED" # Export the new flag
 
 # Set K6_BROWSER_HEADLESS based on the parameter
 export K6_BROWSER_HEADLESS=$HEADLESS_BROWSER
@@ -142,15 +150,13 @@ TESTS_FOLDER="tests/$(echo $TEST_TYPE | tr '[:upper:]' '[:lower:]')"
 # Create the results directory if it doesn't exist
 mkdir -p results
 
-# Create screenshots directory if running browser tests
-if [ "$TEST_TYPE" = "BROWSER" ]; then
-  mkdir -p screenshots
-  echo "Created screenshots directory for browser tests"
-fi
-
 # Construct the k6 command
+# Compose output file name for both HTML and JSON
+RESULTS_PREFIX="results/${TEST_TYPE}_${AUT}_${SCENARIO_TYPE}"
+RESULTS_JSON="${RESULTS_PREFIX}.json"
+
 k6 run \
-  -e STACK="$ENVIRONMENT" \
+  -e ENVIRONMENT="$ENVIRONMENT" \
   -e SCENARIO="$SCENARIO_TYPE" \
   -e RAMPING_STAGES="$RAMPING_STAGES" \
   -e BASE_URL="$BASE_URL" \
@@ -158,7 +164,8 @@ k6 run \
   -e TIME_UNIT="$TIME_UNIT" \
   -e HEADLESS_BROWSER="$HEADLESS_BROWSER" \
   -e SELECTION_MODE="$SELECTION_MODE" \
-  $TESTS_FOLDER/$SCRIPT_TO_RUN  --out json=results/results.json
+  -e CAPTURE_MANTLE_METRICS="$CAPTURE_MANTLE_METRICS" \
+  $TESTS_FOLDER/$SCRIPT_TO_RUN  --out json=$RESULTS_JSON
 
 # Process results with appropriate metrics based on test type
 echo "Setting K6_REPORT_TEST_TYPE for Node.js script to: $TEST_TYPE"
@@ -166,4 +173,5 @@ export K6_REPORT_TEST_TYPE="$TEST_TYPE"
 
 echo "Processing results for $TEST_TYPE test..."
 # In run_k6_tests.sh, before calling the node script:
-node utils/process-k6-results.js results/results.json $TEST_TYPE
+export K6_REPORT_AUT="$AUT" # Export AUT for the results processor
+node utils/process-k6-results.js $RESULTS_JSON $TEST_TYPE

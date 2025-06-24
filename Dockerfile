@@ -19,5 +19,6 @@ USER k6
 # Set the entrypoint to the shell script
 ENTRYPOINT ["/app/run_k6_tests.sh"]
 
-# Default command (can be overridden at runtime)
-CMD ["--help"]
+# Default command with all possible command line options
+# These can be overridden at runtime
+CMD ["--script=verticalBrowser.js", "--test-type=BROWSER", "--scenario=custom-tps", "--environment=qa", "--headless=true", "--aut=shape", "--time-unit=1m", "--base-url=https://example.com", "--ramping-stages=10s:1,2m:35,10s:1"]

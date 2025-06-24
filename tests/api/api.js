@@ -1,12 +1,8 @@
-import { check, group, fail } from 'k6';
-import { get } from '../../utils/httpClient.js';
-import { handleError } from '../../utils/helpers.js';
+/* globals __ENV */
+import { check, group } from 'k6';
 import { handleSummary2 } from '../../utils/handleSummary.js';
 import { scenarios, thresholds, buildCustomScenario } from '../../config/scenario.js';
 import http from 'k6/http';
-
-const testConfig = JSON.parse(open(`../../env/${__ENV.ENVIRONMENT}.json`));
-const base_URL = testConfig.baseURL;
 
 // Determine if the test is for API or BROWSER
 const testType = __ENV.TEST_TYPE || 'API'; // Default to API if not specified

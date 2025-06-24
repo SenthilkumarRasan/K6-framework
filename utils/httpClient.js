@@ -135,24 +135,24 @@ export function batch(requests = []) {
   requests.forEach(req => {
     const { method, url, body, params, options } = req;
     switch (method.toLowerCase()) {
-      case 'get':
-        responses[req.tag || url] = get(url, params, options);
-        break;
-      case 'post':
-        responses[req.tag || url] = post(url, body, params, options);
-        break;
-      case 'put':
-        responses[req.tag || url] = put(url, body, params, options);
-        break;
-      case 'del':
-      case 'delete':
-        responses[req.tag || url] = del(url, params, options);
-        break;
-      case 'patch':
-        responses[req.tag || url] = patch(url, body, params, options);
-        break;
-      default:
-        throw new Error(`Unsupported method: ${method}`);
+    case 'get':
+      responses[req.tag || url] = get(url, params, options);
+      break;
+    case 'post':
+      responses[req.tag || url] = post(url, body, params, options);
+      break;
+    case 'put':
+      responses[req.tag || url] = put(url, body, params, options);
+      break;
+    case 'del':
+    case 'delete':
+      responses[req.tag || url] = del(url, params, options);
+      break;
+    case 'patch':
+      responses[req.tag || url] = patch(url, body, params, options);
+      break;
+    default:
+      throw new Error(`Unsupported method: ${method}`);
     }
   });
   return responses;

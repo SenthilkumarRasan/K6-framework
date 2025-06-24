@@ -1,19 +1,15 @@
-import { browser } from 'k6/browser'; // Corrected to stable browser module
-import { Trend, Rate } from 'k6/metrics';
+/* eslint-disable no-unused-vars */
+/* globals __ENV, __VU, __ITER */
 import { SharedArray } from 'k6/data';
+
+// Import all metrics from a single source
+import * as metrics from '../../utils/metrics.js';
+
+// Import utilities
 import { createCsvIterator, parseCsvWithHeaders } from '../../utils/csvReader.js';
-import { scenarios, thresholds, buildCustomScenario } from '../../config/scenario.js'; 
-import { collectCoreWebVitals } from '../../utils/coreVitals.js'; 
-
-// --- Metrics ---
-const pageLoadTime = new Trend('browser_page_load_time');
-const pageLoadSuccess = new Rate('browser_page_load_success'); 
-
-// Core Web Vitals metrics
-const lcpByTemplate = new Trend('browser_lcp', true);
-const fcpByTemplate = new Trend('browser_fcp', true);
-const clsByTemplate = new Trend('browser_cls', true);
-const ttfbByTemplate = new Trend('browser_ttfb', true);
+import { scenarios, thresholds, buildCustomScenario } from '../../config/scenario.js';
+import { loadPageAndCollectMetrics, buildBrowserScenario, closeBrowserResources } from '../../utils/browserUtils.js';
+import { buildMetricDefinitions } from '../../utils/browserMetrics.js';
 
 // --- Configuration parameters ---
 const testType = __ENV.TEST_TYPE || 'BROWSER';
@@ -21,9 +17,9 @@ const csvFilename = __ENV.CSV_FILENAME || 'shape.csv';
 const baseUrl = __ENV.BASE_URL || 'http://localhost:3000';
 const scenarioType = __ENV.SCENARIO_TYPE || 'smoke';
 const environment = __ENV.ENVIRONMENT || 'dev';
-const headless = __ENV.HEADLESS_BROWSER === 'true';
 const timeUnit = __ENV.TIME_UNIT || '1s';
-const vertical = __ENV.VERTICAL || 'default';
+const aut = __ENV.AUT || 'default_aut';
+const captureMantleMetrics = String(__ENV.CAPTURE_MANTLE_METRICS || 'true').toLowerCase() === 'true';
 
 // Build scenario configuration based on the scenario type
 let scenarioConfig;
@@ -33,22 +29,9 @@ if (scenarioType === 'custom-tps' || scenarioType === 'custom-vus') {
   scenarioConfig = scenarios[testType][scenarioType];
 }
 
-// Ensure browser type is set for BROWSER test type
-if (testType === 'BROWSER' && !scenarioConfig.options) {
-  scenarioConfig.options = { 
-    browser: { 
-      type: 'chromium',
-      // Add browser stability settings
-      args: [
-        '--disable-dev-shm-usage',
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-gpu',
-        '--disable-web-security',
-        '--allow-running-insecure-content'
-      ]
-    } 
-  };
+// Apply browser-specific settings
+if (testType === 'BROWSER') {
+  scenarioConfig = buildBrowserScenario(scenarioType, scenarioConfig);
 }
 
 export const options = {
@@ -59,116 +42,75 @@ export const options = {
 };
 
 // --- Global shared iterator for strict sequential extraction ---
-// Read the CSV file directly in the test script to avoid path resolution issues
 const csvFilePath = `./../../testdata/${csvFilename}`;
-const parsedCsvData = new SharedArray('shared array', function () {
-  // Read the raw CSV string
-  const csvFileContent = open(csvFilePath);
-  // Parse it using the new function
-  return parseCsvWithHeaders(csvFileContent);
-});
 
-const urlIterator = createCsvIterator(parsedCsvData, { selectionMode: __ENV.SELECTION_MODE });
+let parsedCsvData;
+let urlIterator;
+try {
+  parsedCsvData = new SharedArray('shared array', function () {
+    const csvFileContent = open(csvFilePath);
+    const parsedData = parseCsvWithHeaders(csvFileContent);
+    return parsedData;
+  });
+  urlIterator = createCsvIterator(parsedCsvData, { selectionMode: __ENV.SELECTION_MODE });
+} catch (e) {
+  console.error(`[K6 BROWSER SCRIPT] ERROR in init context during CSV processing: ${e.message}`);
+}
 
 export async function setup() {
-  console.log(`Starting browser test with vertical: ${vertical}, environment: ${environment}`);
+  // Starting browser test
 }
 
 export default async function() {
+  // Get the next URL from the iterator
   const urlData = urlIterator.next();
-
   if (!urlData) {
     console.warn(`[K6 BROWSER] VU: ${__VU}, Iteration: ${__ITER} - No more URL data available from iterator. Skipping iteration.`);
     return;
   }
 
-  // Construct fullUrl and templateName from urlData based on CSV headers
+  // Prepare URL and tags
   const path = urlData.urlpath ? urlData.urlpath.trim() : '';
   const qs = urlData.querystring ? urlData.querystring.trim() : '';
   const fullUrl = `${baseUrl}${path}${qs ? '?' + qs : ''}`;
-  const templateNameFromCsv = urlData.templatename ? urlData.templatename.trim() : 'unknown_template';
+  const templateNameFromCsv = urlData.templatename ? urlData.templatename.trim() : 'testTemplate';
 
   const tags = {
-    template: templateNameFromCsv,
-    vertical: vertical,
+    transaction: templateNameFromCsv,
+    aut: aut,
     environment: environment,
     test_type: testType,
     scenario: scenarioType,
-    url_name: path.substring(0,50) // Use the path as a default url_name, capped at 50 chars
+    url_name: path.substring(0, 50)
   };
 
-  // Create browser page with longer timeout
-  const page = await browser.newPage({
-    timeout: 90000 // Increase timeout to 90 seconds
-  });
+  // Create options object separately to avoid circular reference
+  const metricOptions = {
+    includeCoreWebVitals: true,        // Set to false to exclude Core Web Vitals
+    includeDetailedTimingMetrics: true, // Set to false to exclude detailed timing metrics
+    includeResourceMetrics: true,       // Set to false to exclude resource metrics
+    captureMantleMetrics: captureMantleMetrics // Use the environment variable setting
+  };
   
-  let pageLoadSuccessful = true;
-  let navigationError = null;
+  // Build metric definitions object using the utility function
+  const metricDefinitions = buildMetricDefinitions(metrics, metricOptions);
 
+  // Load page and collect metrics using the utility function
+  // The captureMantleMetrics flag is now stored in metricDefinitions._options
+  const { page, context, success, metrics: collectedMetrics } = await loadPageAndCollectMetrics(
+    fullUrl,
+    tags,
+    metricDefinitions
+  );
+
+  // Close browser resources
   try {
-    console.log(`[K6 BROWSER] Navigating to: ${fullUrl} for template: ${tags.template}`);
-    const startTime = new Date();
-    const res = await page.goto(fullUrl, { waitUntil: 'load', timeout: 60000 });
-
-    const currentUrl = page.url();
-    const status = res.status();
-
-    if (status !== 200 && status !== 0) { // status 0 can sometimes be okay for file:// or about:blank
-      console.error(`[K6 BROWSER] Page load failed for ${currentUrl}. Status: ${status}`);
-      pageLoadSuccessful = false;
-      navigationError = `Page load failed with status ${status}`;
-    } else {
-      console.log(`[K6 BROWSER] Page loaded: ${currentUrl}, Status: ${status}`);
-      pageLoadSuccessful = true;
-    }
-
-    // --- Page Load Metrics ---
-    const loadTime = new Date() - startTime;
-    pageLoadTime.add(loadTime, tags);
-    pageLoadSuccess.add(pageLoadSuccessful, tags);
-
-    // --- Core Web Vitals ---
-    if (pageLoadSuccessful && tags.template !== 'serverStatus') {
-      try {
-        console.log('[DEBUG] CWV block: Attempting to collect Core Web Vitals...');
-        const cwvMetrics = await collectCoreWebVitals(page); // Call imported function, no 'tags' needed here
-        const { lcp, fcp, cls, ttfb } = cwvMetrics;
-
-        // Ensure metrics are numbers before adding, default to 0 or a sentinel if not.
-        if (typeof lcp === 'number') lcpByTemplate.add(lcp, tags);
-        if (typeof fcp === 'number') fcpByTemplate.add(fcp, tags);
-        if (typeof cls === 'number') clsByTemplate.add(cls, tags);
-        if (typeof ttfb === 'number') ttfbByTemplate.add(ttfb, tags);
-
-      } catch (cwvError) {
-        console.error(`[K6 BROWSER] Error collecting Core Web Vitals: ${cwvError.message}`, cwvError.stack);
-        // Optionally, mark pageLoadSuccessful as false or add a specific CWV error metric
-      }
-    } else if (tags.template === 'serverStatus') {
-      console.log('[DEBUG] Skipping Core Web Vitals for serverStatus template.');
-    } else if (!pageLoadSuccessful) {
-      console.log('[DEBUG] Skipping Core Web Vitals due to page load failure.');
-    }
-
-  } catch (e) {
-    console.error(`[K6 BROWSER] Error during page navigation or processing for ${fullUrl}: ${e.message}`, e.stack);
-    pageLoadSuccessful = false;
-    navigationError = e.message.substring(0, 200); // Cap error message length
-    pageLoadSuccess.add(false, { ...tags, error: navigationError }); // Add to rate with error tag
-    // No pageLoadTime metric is added here as the load might not have completed or timed out.
-  } finally {
-    if (page) {
-      try {
-        await page.close();
-      } catch (closeError) {
-        console.error(`[K6 BROWSER] Error closing page: ${closeError.message}`);
-      }
-    }
-    // Optional: Add a small delay if needed between iterations, though ramping handles overall pacing.
-    // sleep(1); 
+    await closeBrowserResources(page, context);
+  } catch (error) {
+    console.error(`[K6 BROWSER] Error closing browser resources: ${error.message}`);
   }
 }
 
-export async function teardown() {
-  console.log('Browser test completed');
+export function teardown() {
+  // Browser test completed
 }
