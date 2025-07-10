@@ -72,6 +72,28 @@ export async function loadPageAndCollectMetrics(url, tags, metricDefinitions) {
 
     // Collect all metrics
     metricsResult = await collectAllMetrics(page, tags, metricDefinitions);
+    
+    // Record individual resource metrics for the Network Resource Analysis table
+    if (metricsResult && metricsResult.resourceMetrics) {
+      const resourceTypes = ['js', 'css', 'img', 'font', 'other'];
+      resourceTypes.forEach(type => {
+        if (metricsResult.resourceMetrics[type] && metricsResult.resourceMetrics[type].length > 0) {
+          metricsResult.resourceMetrics[type].forEach(resource => {
+            // Add each resource to the appropriate metric with all necessary tags
+            if (metricDefinitions[`resource${type.charAt(0).toUpperCase() + type.slice(1)}`]) {
+              const resourceTags = {
+                ...tags,
+                url: resource.url,
+                size: resource.size.toString(),
+                status: resource.status.toString(),
+                initiatorType: resource.initiatorType
+              };
+              metricDefinitions[`resource${type.charAt(0).toUpperCase() + type.slice(1)}`].add(resource.duration, resourceTags);
+            }
+          });
+        }
+      });
+    }
 
     // Scroll the page to middle to trigger lazy-loaded elements
     const scrolled = await scrollPageToMiddle(page);
@@ -183,4 +205,130 @@ export function buildBrowserScenario(scenarioType, baseScenario) {
   }
   
   return scenarioConfig;
+}
+
+/**
+ * Navigates to a new page by performing a click action and collects metrics after navigation
+ * @param {import('k6/browser').Page} page - The browser page
+ * @param {function} navigationAction - Async function that performs the navigation action (e.g., click)
+ * @param {Object} tags - Tags to apply to metrics
+ * @param {Object} metricDefinitions - Object containing metric trend objects and options
+ * @param {Object} options - Navigation options (e.g., timeout)
+ * @returns {Promise<{success: boolean, metrics: Object}>} Success status and metrics
+ */
+export async function performNavigationAndCollectMetrics(page, navigationAction, tags, metricDefinitions, options = {}) {
+  const timeout = options.timeout || 30000;
+  let success = false;
+  let metricsResult = null;
+
+  try {
+    // Start timing before the navigation action
+    const startTime = new Date();
+    
+    // Perform the navigation action (like clicking a button)
+    try {
+      // For subsequent navigations, we need to ensure the navigation timing data is reset
+      // First, inject a script that will prepare for the upcoming navigation
+      await page.evaluate(() => {
+        console.log('[Navigation Reset] Preparing for navigation...');
+        
+        // Clear existing performance entries to ensure we get fresh data for this navigation
+        if (typeof performance.clearResourceTimings === 'function') {
+          console.log('[Navigation Reset] Clearing resource timings');
+          performance.clearResourceTimings();
+        }
+        
+        // Setup performance observer to capture navigation timing for this navigation
+        if (typeof PerformanceObserver !== 'undefined') {
+          try {
+            console.log('[Navigation Reset] Setting up performance observer for navigation timing');
+            const navObserver = new PerformanceObserver((entryList) => {
+              const entries = entryList.getEntries();
+              if (entries.length > 0) {
+                console.log('[Navigation Reset] Navigation performance entry captured:', 
+                  JSON.stringify({
+                    type: entries[0].entryType,
+                    name: entries[0].name,
+                    startTime: entries[0].startTime,
+                    duration: entries[0].duration,
+                    ttfb: entries[0].responseStart - entries[0].requestStart,
+                    serverTime: entries[0].responseStart - entries[0].requestStart
+                  })
+                );
+              }
+            });
+            navObserver.observe({ entryTypes: ['navigation'] });
+          } catch (e) {
+            console.error('[Navigation Reset] Error setting up observer:', e);
+          }
+        }
+      });
+      
+      // Now perform the actual navigation action
+      await navigationAction();
+      
+      // Wait for navigation to complete
+      await page.waitForNavigation({ waitUntil: 'load', timeout });
+      
+      // Optional wait time after navigation (for SPA or dynamic content to fully load)
+      if (options.waitAfterNavigation) {
+        await page.waitForTimeout(options.waitAfterNavigation);
+      }
+      
+      success = true;
+    } catch (navError) {
+      console.error(`[K6 BROWSER VU: ${__VU}, ITER: ${__ITER}] Navigation action error (Transaction: ${tags.transaction}): ${navError.message}`);
+      return { success: false, metrics: null };
+    }
+
+    // Record load time
+    const loadTime = new Date() - startTime;
+    if (metricDefinitions.pageLoadTime) {
+      metricDefinitions.pageLoadTime.add(loadTime, tags);
+    }
+    if (metricDefinitions.pageLoadSuccess) {
+      metricDefinitions.pageLoadSuccess.add(success, tags);
+    }
+
+    // Skip metrics collection for special cases
+    if (!success || tags.transaction === 'serverStatus') {
+      return { success, metrics: null };
+    }
+
+    // Collect all metrics
+    metricsResult = await collectAllMetrics(page, tags, metricDefinitions);
+    
+    // Record individual resource metrics for the Network Resource Analysis table
+    if (metricsResult && metricsResult.resourceMetrics) {
+      const resourceTypes = ['js', 'css', 'img', 'font', 'other'];
+      resourceTypes.forEach(type => {
+        if (metricsResult.resourceMetrics[type] && metricsResult.resourceMetrics[type].length > 0) {
+          metricsResult.resourceMetrics[type].forEach(resource => {
+            // Add each resource to the appropriate metric with all necessary tags
+            if (metricDefinitions[`resource${type.charAt(0).toUpperCase() + type.slice(1)}`]) {
+              const resourceTags = {
+                ...tags,
+                url: resource.url,
+                size: resource.size.toString(),
+                status: resource.status.toString(),
+                initiatorType: resource.initiatorType
+              };
+              metricDefinitions[`resource${type.charAt(0).toUpperCase() + type.slice(1)}`].add(resource.duration, resourceTags);
+            }
+          });
+        }
+      });
+    }
+
+    // Scroll the page to middle to trigger lazy-loaded elements
+    const scrolled = await scrollPageToMiddle(page);
+    if (!scrolled) {
+      console.warn(`[K6 BROWSER VU: ${__VU}, ITER: ${__ITER}] Error scrolling page after navigation (Transaction: ${tags.transaction}).`);
+    }
+
+    return { success, metrics: metricsResult };
+  } catch (error) {
+    console.error(`[K6 BROWSER VU: ${__VU}, ITER: ${__ITER}] Error during navigation and metrics collection: ${error.message}`);
+    return { success: false, metrics: null };
+  }
 }

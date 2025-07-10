@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K6 Performance Dashboard</title>
+    <!-- Tailwind CSS CDN for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Font: Inter for a clean, professional look -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN for charting capabilities -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <!-- Chart.js Datalabels Plugin for showing values on charts (optional but good for dashboards) -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <!-- Chart.js Zoom Plugin for interactive zoom and pan -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.2.1/dist/chartjs-plugin-zoom.min.js"></script>
+
+    <style>
+        /* Custom styles for the dashboard to override/enhance Tailwind */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50, for a very light and clean background */
+            color: #475569; /* slate-600 for main text */
+        }
+        
+        /* SLA threshold badges */
+        .badge {
+            display: inline-block;
+            padding: 0.35em 0.65em;
+            font-size: 0.75em;
+            font-weight: 700;
+            line-height: 1;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            border-radius: 0.375rem;
+            color: white;
+        }
+        
+        .badge-success { background-color: #22c55e; /* Green-500 */ }
+        .badge-warning { background-color: #eab308; /* Yellow-500 */ }
+        .badge-danger { background-color: #ef4444; /* Red-500 */ }
+        
+        /* SLA text colors */
+        .sla-green { color: #10b981; }
+        .sla-yellow { color: #f59e0b; }
+        .sla-red { color: #ef4444; }
+        /* Ensure canvas elements are responsive within their containers */
+        canvas {
+            max-width: 100%;
+            height: auto; /* Allow auto height within the constrained parent */
+        }
+
+        /* Custom table styling to match modern aesthetic */
+        .custom-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-bottom: 1.5rem;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+
+        .custom-table th,
+        .custom-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0; /* Slate-200 */
+        }
+
+        .custom-table thead th {
+            background-color: #4f46e5; /* Indigo-600 */
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.875rem;
+            letter-spacing: 0.05em;
+        }
+
+        .custom-table tbody tr:nth-child(even) {
+            background-color: #f8fafc; /* Light blue-gray */
+        }
+
+        .custom-table tbody tr:hover {
+            background-color: #f1f5f9; /* Lighter blue-gray on hover */
+        }
+
+        .custom-table .fails {
+            color: #ef4444; /* Red-500 */
+            font-weight: bold;
+            background-color: rgba(239, 68, 68, 0.1);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.35em 0.65em;
+            font-size: 0.75em;
+            font-weight: 700;
+            line-height: 1;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            border-radius: 0.375rem;
+            color: white;
+        }
+
+        .badge-success { background-color: #22c55e; /* Green-500 */ }
+        .badge-warning { background-color: #eab308; /* Yellow-500 */ }
+        .badge-danger { background-color: #ef4444; /* Red-500 */ }
+
+        /* Styles for Dashboard Info Cards */
+        #dashboardInfoContent {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+        .info-card {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            padding: 1rem;
+            background-color: #f1f5f9; /* slate-100 */
+            border-radius: 0.5rem;
+            border-left: 4px solid #4f46e5; /* indigo-500 */
+        }
+        .info-label {
+            font-size: 0.875rem;
+            color: #64748b; /* slate-500 */
+            font-weight: 500;
+        }
+        .info-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1e293b; /* slate-800 */
+        }
+        .info-value.text-red-500 {
+            color: #ef4444; /* red-500 */
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Main Dashboard Container -->
+    <div class="flex flex-1 flex-col lg:flex-row">
+
+        <!-- Sidebar (Optional, but good for navigation in larger dashboards) -->
+        <aside class="w-full lg:w-64 bg-slate-800 text-white p-6 lg:p-8 shadow-lg rounded-br-lg lg:rounded-tr-none lg:rounded-br-none">
+            <div class="text-2xl font-bold mb-8 text-indigo-300">K6 Dashboard</div>
+            <nav>
+                <ul>
+                    <li class="mb-4">
+                        <a href="#overview-section" class="flex items-center p-3 rounded-lg hover:bg-slate-700 transition-colors duration-200 text-indigo-200 font-medium">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m0 0l7 7m-7-7v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001 1h3m0-10v10a1 1 0 01-1 1h-3"></path></svg>
+                            Overview
+                        </a>
+                    </li>
+                    <li class="mb-4">
+                        <a href="#ttlb-section" class="flex items-center p-3 rounded-lg hover:bg-slate-700 transition-colors duration-200 text-slate-300">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            TTLB Metrics
+                        </a>
+                    </li>
+                    <li class="mb-4">
+                        <a href="#ttfb-section" class="flex items-center p-3 rounded-lg hover:bg-slate-700 transition-colors duration-200 text-slate-300">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            TTFB Metrics
+                        </a>
+                    </li>
+                    <li class="mb-4">
+                        <a href="#response-time-section" class="flex items-center p-3 rounded-lg hover:bg-slate-700 transition-colors duration-200 text-slate-300">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-1.25-3M15 10V5a3 3 0 00-3-3H9a3 3 0 00-3 3v5m6 0h.01M12 12h-.01"></path></svg>
+                            Response Time Charts
+                        </a>
+                    </li>
+                    <li class="mb-4">
+                        <a href="#tps-vus-section" class="flex items-center p-3 rounded-lg hover:bg-slate-700 transition-colors duration-200 text-slate-300">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10m-4-10l-8 4m8-4l-8 4m0 0l-8 4m8-4l-8 4"></path></svg>
+                            TPS & VUs
+                        </a>
+                    </li>
+                    <li class="mb-4">
+                        <a href="#errors-section" class="flex items-center p-3 rounded-lg hover:bg-slate-700 transition-colors duration-200 text-slate-300">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                            Errors
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 p-6 lg:p-8">
+            <!-- Header Section -->
+            <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 pb-4 border-b border-slate-200">
+                <h1 class="text-3xl font-extrabold text-slate-800 mb-4 sm:mb-0" id="dashboardTitle">K6 Performance Dashboard</h1>
+                <div class="flex items-center space-x-4">
+                    <select class="p-2 border border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-slate-700">
+                        <option>Last 24 Hours</option>
+                        <option>Last 7 Days</option>
+                        <option>Last 30 Days</option>
+                        <option>Custom Range</option>
+                    </select>
+                    <button class="px-4 py-2 bg-indigo-600 text-white rounded-md shadow-md hover:bg-indigo-700 transition-colors duration-200 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 0020 13a8 8 0 00-15.356-2m0 0v-5h-.582m15.356 2H21v5h-.582m-15.356 2A8.001 8.001 0 004 11a8 8 0 0015.356 2m0 0v5h.582M4 19v-5h-.582"></path></svg>
+                        Refresh
+                    </button>
+                </div>
+            </header>
+            
+            <!-- Data Integrity Warning Banner - Shown only when missing data is detected -->
+            <div id="data-warning-banner" class="hidden mb-6 p-4 rounded-lg bg-amber-50 border-l-4 border-amber-500 text-amber-700" role="alert">
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                    <p class="font-medium">Data Integrity Warning</p>
+                </div>
+                <p class="mt-2 text-sm" id="data-warning-message">Some metrics show N/A because data was not available in the test results. This is not a dashboard error, but reflects missing data in the test run.</p>
+            </div>
+
+
+
+            <!-- API Endpoint Performance Summary Table -->
+            <!-- Overview Section -->
+            <section id="overview-section" class="bg-white p-6 rounded-lg shadow-md mb-8">
+                <h2 class="text-xl font-semibold text-slate-700 mb-4">Dashboard Info</h2>
+                <div id="dashboardInfoContent">
+                    <!-- Dynamic content will be inserted here -->
+                </div>
+            </section>
+
+            <!-- TTLB Section (Time To Last Byte) -->
+            <section id="ttlb-section" class="bg-white p-6 rounded-lg shadow-md mb-8">
+                <div id="sla-info-ttlb" class="mb-4"></div>
+                <h2 class="text-xl font-semibold text-slate-700 mb-4">TTLB - Time To Last Byte (http_req_duration)</h2>
+                
+                <!-- SLA Legend for the table -->
+                <div class="mb-4 p-3 bg-slate-50 rounded-md border border-slate-200">
+                    <h3 class="text-sm font-semibold text-slate-700 mb-2">SLA Thresholds:</h3>
+                    <div class="flex flex-wrap gap-4 text-xs">
+                        <div class="flex items-center">
+                            <span class="badge badge-success mr-1">Green</span> 
+                            <span>Below warn threshold</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="badge badge-warning mr-1">Yellow</span>
+                            <span>Between warn and danger</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="badge badge-danger mr-1">Red</span>
+                            <span>Above danger threshold</span>
+                        </div>
+                        <div id="ttlb-sla-values" class="ml-auto font-mono">
+                            <!-- Will be populated with actual SLA values by JS -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>TRANSACTION</th>
+                                <th>COUNT</th>
+                                <th>FAILS</th>
+                                <th>FAIL RATE</th>
+                                <th>AVG (MS)</th>
+                                <th>MIN (MS)</th>
+                                <th>MED (MS)</th>
+                                <th>P90 (MS)</th>
+                                <th>P95 (MS)</th>
+                                <th>P99 (MS)</th>
+                                <th>MAX (MS)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ttlbSummaryTableBody">
+                            <!-- Dynamic content will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- TTFB Section (Time To First Byte) -->
+            <section id="ttfb-section" class="bg-white p-6 rounded-lg shadow-md mb-8">
+                <div id="sla-info-ttfb" class="mb-4"></div>
+                <h2 class="text-xl font-semibold text-slate-700 mb-4">TTFB - Time To First Byte (http_req_waiting)</h2>
+                <div class="overflow-x-auto">
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>TRANSACTION</th>
+                                <th>COUNT</th>
+                                <th>FAILS</th>
+                                <th>FAIL RATE</th>
+                                <th>AVG (MS)</th>
+                                <th>MIN (MS)</th>
+                                <th>MED (MS)</th>
+                                <th>P90 (MS)</th>
+                                <th>P95 (MS)</th>
+                                <th>P99 (MS)</th>
+                                <th>MAX (MS)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ttfbSummaryTableBody">
+                            <!-- Dynamic content will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Response Time Section -->
+            <section id="response-time-section" class="mb-8">
+                <h2 class="text-xl font-semibold text-slate-700 mb-4 bg-white p-4 rounded-lg shadow-md">Response Time Charts</h2>
+                
+                <!-- Chart Card 1: API Response Time Over Time (ms) -->
+                <div class="bg-white p-6 rounded-lg shadow-md min-h-[400px] flex flex-col mb-6">
+                    <h3 class="text-xl font-semibold text-slate-700 mb-4">API Response Time Over Time (ms)</h3>
+                    <div class="flex-1 relative">
+                        <canvas id="htmlResponseTimeChart"></canvas>
+                    </div>
+                    <button id="resetZoom1" class="mt-4 px-4 py-2 bg-slate-100 text-slate-700 rounded-md shadow-sm hover:bg-slate-200 transition-colors duration-200 text-sm">Reset Zoom</button>
+                </div>
+
+                <!-- Chart Card 4: Response Time Percentiles -->
+                <section class="bg-white p-6 rounded-lg shadow-md mb-8">
+                <h2 class="text-xl font-semibold text-slate-700 mb-4">Response Time Percentiles Over Time</h2>
+                <div class="h-80">
+                    <canvas id="overallPercentilesChart"></canvas>
+                </div>
+                <div class="text-center mt-4">
+                    <button id="resetZoom4" class="text-sm text-indigo-600 hover:text-indigo-800">Reset Zoom</button>
+                </div>
+            </section>
+
+                <!-- Chart Card: Response Time vs. TPS -->
+                <div class="bg-white p-6 rounded-lg shadow-md min-h-[400px] flex flex-col">
+                    <h3 class="text-xl font-semibold text-slate-700 mb-4">Response Time vs. TPS</h3>
+                    <div class="flex-1 relative">
+                        <canvas id="responseTimeVsTpsChart"></canvas>
+                    </div>
+                    <button id="resetZoom5" class="mt-4 px-4 py-2 bg-slate-100 text-slate-700 rounded-md shadow-sm hover:bg-slate-200 transition-colors duration-200 text-sm">Reset Zoom</button>
+                </div>
+            </section>
+
+            <!-- TPS & VUs Section -->
+            <section id="tps-vus-section" class="mb-8">
+                <h2 class="text-xl font-semibold text-slate-700 mb-4 bg-white p-4 rounded-lg shadow-md">TPS & VUs Charts</h2>
+                
+                <!-- Chart Card 2: Overall API Transactions Per Second -->
+                <div class="bg-white p-6 rounded-lg shadow-md min-h-[400px] flex flex-col mb-6">
+                    <h3 class="text-xl font-semibold text-slate-700 mb-4">Overall API Transactions Per Second</h3>
+                    <div class="flex-1 relative">
+                        <canvas id="htmlTpsChart"></canvas>
+                    </div>
+                    <button id="resetZoom2" class="mt-4 px-4 py-2 bg-slate-100 text-slate-700 rounded-md shadow-sm hover:bg-slate-200 transition-colors duration-200 text-sm">Reset Zoom</button>
+                </div>
+
+                <!-- Chart Card 3: Active VUsers -->
+                <div class="bg-white p-6 rounded-lg shadow-md min-h-[400px] flex flex-col">
+                    <h3 class="text-xl font-semibold text-slate-700 mb-4">Active VUsers</h3>
+                    <div class="flex-1 relative">
+                        <canvas id="activeVUsChart"></canvas>
+                    </div>
+                    <button id="resetZoom3" class="mt-4 px-4 py-2 bg-slate-100 text-slate-700 rounded-md shadow-sm hover:bg-slate-200 transition-colors duration-200 text-sm">Reset Zoom</button>
+                </div>
+            </section>
+
+            <!-- Error Report Section -->
+            <section id="errors-section" class="bg-white p-6 rounded-lg shadow-md mt-8">
+                <h2 class="text-xl font-semibold text-slate-700 mb-4">Error Report</h2>
+                <p class="mb-4 text-slate-600" id="totalHttpFailures">Total HTTP Request Failures:</p>
+                <div class="overflow-x-auto">
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th style="width:10%">Status</th>
+                                <th style="width:25%">Transaction</th>
+                                <th style="width:10%">Count</th>
+                                <th style="width:25%">Error</th>
+                                <th style="width:30%">Example URL</th>
+                            </tr>
+                        </thead>
+                        <tbody id="errorReportTableBody">
+                            <!-- Dynamic content will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+            <!-- Dashboard Legend Section -->                
+            <section id="legend-section" class="bg-white p-6 rounded-lg shadow-md mt-8 mb-8">
+                <h2 class="text-xl font-semibold text-slate-700 mb-4">Dashboard Metrics Legend</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Column 1: SLA Thresholds -->                    
+                    <div>
+                        <h3 class="text-base font-semibold text-slate-700 mb-2">SLA Thresholds</h3>
+                        <p class="mb-2 text-xs">The metrics in the dashboard are color-coded according to these thresholds:</p>
+                        <ul class="space-y-2 text-xs">
+                            <li><span class="px-1.5 py-0.5 rounded-full bg-green-100 text-green-800 text-xs font-medium">Green:</span> Below 'warn' threshold. Good performance.</li>
+                            <li><span class="px-1.5 py-0.5 rounded-full bg-yellow-100 text-yellow-800 text-xs font-medium">Yellow:</span> Between 'warn' and 'danger'.</li>
+                            <li><span class="px-1.5 py-0.5 rounded-full bg-red-100 text-red-800 text-xs font-medium">Red:</span> Above 'danger' threshold.</li>
+                        </ul>
+                    </div>
+                    <!-- Column 2: Time-Series Charts -->
+                    <div>
+                        <h3 class="text-base font-semibold text-slate-700 mb-2">Time-Series Charts</h3>
+                        <ul class="space-y-2 text-xs">
+                            <li><b>API Response Time:</b> Tracks response time over the test to spot degradation under load.</li>
+                            <li><b>Transactions Per Second (TPS):</b> Shows the rate of requests, indicating total load on the system.</li>
+                            <li><b>Active Virtual Users:</b> Displays the number of simulated users generating load.</li>
+                        </ul>
+                    </div>
+                    <!-- Column 3: Aggregate & Correlation Charts -->
+                    <div>
+                        <h3 class="text-base font-semibold text-slate-700 mb-2">Aggregate & Correlation Charts</h3>
+                        <ul class="space-y-2 text-xs">
+                            <li><b>Response Time Percentiles:</b> Summarizes p90/p95/p99 times to understand user experience.</li>
+                            <li><b>Response Time vs. TPS:</b> Correlates response time and TPS to visualize performance under load.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Register the datalabels and zoom plugins globally for all charts
+        Chart.register(ChartDataLabels, ChartZoom);
+        
+        // Define a consistent color palette using Tailwind's default colors
+        const primaryColor = '#4f46e5'; // Indigo-600
+        const secondaryColor = '#22c55e'; // Green-500
+        const accentColor1 = '#f97316'; // Orange-500
+        const accentColor2 = '#8b5cf6'; // Violet-500
+        const neutralColor = '#94a3b8'; // Slate-400
+        const dangerColor = '#ef4444'; // Red-500
+        const warningColor = '#eab308'; // Yellow-500
+        
+        // Store chart instances globally to access them for zoom reset
+        const chartInstances = {};
+        
+        /**
+         * Creates a linear gradient for chart background
+         * @param {CanvasRenderingContext2D} ctx - Canvas rendering context
+         * @param {Object} chartArea - Chart area dimensions
+         * @param {string} color - Base color in hex format
+         * @returns {CanvasGradient} Linear gradient for chart background
+         */
+        function createGradient(ctx, chartArea, color) {
+            if (!chartArea) return null;
+            
+            // Create modern gradient effect from perfreport version
+            const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+            gradient.addColorStop(0, `${color}00`); // Transparent at the bottom
+            gradient.addColorStop(0.4, `${color}20`); // Very light in the lower middle
+            gradient.addColorStop(0.7, `${color}40`); // Semi-transparent in the upper middle
+            gradient.addColorStop(1, `${color}80`); // More opaque at the top
+            return gradient;
+        }
+
+        // Colors and chart instances defined above
+
+        /**
+         * Renders the K6 Performance Dashboard with dynamic data.
+         * @param {object} data - The data object containing dashboard details and metrics.
+         * @param {object} data.dashboardInfo - General information about the dashboard.
+         * @param {string} data.dashboardInfo.title - Title of the dashboard.
+         * @param {string} data.dashboardInfo.testType - Type of the test (e.g., "API").
+         * @param {string} data.dashboardInfo.duration - Duration of the test run (e.g., "61.68s").
+         * @param {number} data.dashboardInfo.totalRequests - Total number of requests.
+         * @param {number} data.dashboardInfo.failedRequests - Number of failed requests.
+         * @param {number} data.dashboardInfo.avgRequestsPerSecond - Average requests per second.
+         * @param {string} data.dashboardInfo.avgResponseTime - Average response time (e.g., "109.45ms").
+         * @param {Array<object>} data.apiSummaryTable - Data for the API Endpoint Performance Summary table.
+         * @param {string} data.apiSummaryTable[].transaction - Name of the transaction.
+         * @param {number} data.apiSummaryTable[].count - Number of requests for this transaction.
+         * @param {number} data.apiSummaryTable[].fails - Number of failed requests for this transaction.
+         * @param {string} data.apiSummaryTable[].failRate - Failure rate (e.g., "0.00%").
+         * @param {number} data.apiSummaryTable[].avg - Average response time in ms.
+         * @param {number} data.apiSummaryTable[].min - Minimum response time in ms.
+         * @param {number} data.apiSummaryTable[].med - Median response time in ms.
+         * @param {number} data.apiSummaryTable[].p90 - 90th percentile response time in ms.
+         * @param {number} data.apiSummaryTable[].p95 - 95th percentile response time in ms.
+         * @param {number} data.apiSummaryTable[].p99 - 99th percentile response time in ms.
+         * @param {number} data.apiSummaryTable[].max - Maximum response time in ms.
+         * @param {object} data.chartData - Data for all Chart.js graphs.
+         * @param {object} data.chartData.htmlResponseTime - Dataset for HTML Response Time.
+         * @param {Array<object>} data.chartData.htmlResponseTime.datasets - Array of datasets for the chart.
+         * @param {object} data.chartData.htmlTps - Dataset for HTML TPS.
+         * @param {Array<object>} data.chartData.htmlTps.datasets - Array of datasets for the chart.
+         * @param {object} data.chartData.activeVUs - Dataset for Active VUsers.
+         * @param {Array<object>} data.chartData.activeVUs.datasets - Array of datasets for the chart.
+         * @param {object} data.chartData.overallPercentiles - Dataset for Overall Percentiles.
+         * @param {Array<object>} data.chartData.overallPercentiles.datasets - Array of datasets for the chart.
+         * @param {number} data.errorReport.totalHttpFailures - Total HTTP request failures.
+         * @param {Array<object>} data.errorReport.errors - Array of error details.
+         * @param {number} data.errorReport.errors[].status - HTTP status code.
+         * @param {string} data.errorReport.errors[].transaction - Transaction name.
+         * @param {number} data.errorReport.errors[].count - Number of occurrences.
+         * @param {string} data.errorReport.errors[].error - Error message.
+         * @param {string} data.errorReport.errors[].exampleUrl - Example URL where the error occurred.
+         */
+        function renderDashboard(data) {
+            // Show data integrity warning banner if notifications about missing data exist
+            if (data.notifications && data.notifications.missingData) {
+                const warningBanner = document.getElementById('data-warning-banner');
+                const warningMessage = document.getElementById('data-warning-message');
+                
+                // Display the banner
+                warningBanner.classList.remove('hidden');
+                
+                // Set the custom message if provided
+                if (data.notifications.message) {
+                    warningMessage.textContent = data.notifications.message;
+                }
+                
+                console.warn('Data integrity warning: Some test metrics are missing or incomplete');
+            }
+            
+            // --- Helper Functions ---
+            const formatValue = (value) => (value !== undefined && value !== null) ? value.toFixed(2) : 'N/A';
+            const colorizeCell = (value, slaConfig) => {
+                const num = parseFloat(value);
+                if (isNaN(num) || !slaConfig) return `<td class="text-center">${formatValue(value)}</td>`;
+                
+                let badgeClass = 'badge-success';
+                if (num >= slaConfig.danger) badgeClass = 'badge-danger';
+                else if (num >= slaConfig.warn) badgeClass = 'badge-warning';
+                
+                return `<td class="text-center"><span class="badge ${badgeClass}">${formatValue(value)}</span></td>`;
+            };
+            
+            // --- Populate SLA Threshold Info ---
+            if (data.sla) {
+                const slaInfoTtlb = document.getElementById('sla-info-ttlb');
+                const slaInfoTtfb = document.getElementById('sla-info-ttfb');
+                
+                // Generate HTML for SLA threshold info
+                const generateSlaInfoHtml = (title) => {
+                    let html = `<div class="rounded-lg bg-slate-50 p-4 border border-slate-200"><h3 class="text-sm font-semibold mb-2">SLA Thresholds for ${title}</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">`;
+                    
+                    if (data.sla.avg) {
+                        html += `<div><span class="font-medium">AVG Response Time:</span><br>
+                            <span class="sla-yellow">⚠️ WARN: ${data.sla.avg.warn}ms</span><br>
+                            <span class="sla-red">❌ DANGER: ${data.sla.avg.danger}ms</span></div>`;
+                    }
+                    
+                    if (data.sla.med) {
+                        html += `<div><span class="font-medium">MEDIAN Response Time:</span><br>
+                            <span class="sla-yellow">⚠️ WARN: ${data.sla.med.warn}ms</span><br>
+                            <span class="sla-red">❌ DANGER: ${data.sla.med.danger}ms</span></div>`;
+                    }
+                    
+                    if (data.sla.p90) {
+                        html += `<div><span class="font-medium">P90 Response Time:</span><br>
+                            <span class="sla-yellow">⚠️ WARN: ${data.sla.p90.warn}ms</span><br>
+                            <span class="sla-red">❌ DANGER: ${data.sla.p90.danger}ms</span></div>`;
+                    }
+                    
+                    html += `</div></div>`;
+                    return html;
+                };
+                
+                // Apply to TTLB and TTFB sections
+                if (slaInfoTtlb) slaInfoTtlb.innerHTML = generateSlaInfoHtml('TTLB');
+                if (slaInfoTtfb) slaInfoTtfb.innerHTML = generateSlaInfoHtml('TTFB');
+            }
+            
+            // --- Populate Dashboard Info ---
+            document.getElementById('dashboardTitle').innerText = data.dashboardInfo.title || 'K6 Performance Dashboard';
+            const dashboardInfoContent = document.getElementById('dashboardInfoContent');
+            dashboardInfoContent.innerHTML = `
+                <div class="info-card"><div class="info-label">Test Type</div><div class="info-value">${data.dashboardInfo.testType}</div></div>
+                <div class="info-card"><div class="info-label">Duration</div><div class="info-value">${data.dashboardInfo.duration}</div></div>
+                <div class="info-card"><div class="info-label">Total Requests</div><div class="info-value">${data.dashboardInfo.totalRequests}</div></div>
+                <div class="info-card" style="border-left-color: #ef4444;"><div class="info-label">Failed Requests</div><div class="info-value text-red-500">${data.dashboardInfo.failedRequests}</div></div>
+                <div class="info-card"><div class="info-label">Avg RPS</div><div class="info-value">${data.dashboardInfo.avgRequestsPerSecond}</div></div>
+                <div class="info-card"><div class="info-label">Avg Response Time</div><div class="info-value">${data.dashboardInfo.avgResponseTime}</div></div>
+            `;
+            
+            // --- Populate Tables ---
+            const populateTable = (tbodyId, tableData, noDataMessage) => {
+                const tableBody = document.getElementById(tbodyId);
+                if (!tableBody) return;
+                tableBody.innerHTML = '';
+                if (tableData && tableData.length > 0) {
+                    tableData.forEach(row => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td class="font-semibold text-slate-700">${row.transaction}</td>
+                            <td class="text-center">${row.count}</td>
+                            <td class="text-center">${row.fails}</td>
+                            <td class="text-center">${row.failRate}</td>
+                            ${colorizeCell(row.avg, data.sla.avg)}
+                            <td class="text-center">${row.min !== undefined ? row.min.toFixed(2) : 'N/A'}</td>
+                            ${colorizeCell(row.med, data.sla.med)}
+                            ${colorizeCell(row.p90, data.sla.p90)}
+                            <td class="text-center">${row.p95 !== undefined ? row.p95.toFixed(2) : 'N/A'}</td>
+                            <td class="text-center">${row.p99 !== undefined ? row.p99.toFixed(2) : 'N/A'}</td>
+                            <td class="text-center">${row.max !== undefined ? row.max.toFixed(2) : 'N/A'}</td>
+                        `;
+                        tableBody.appendChild(tr);
+                    });
+                } else {
+                    tableBody.innerHTML = `<tr><td colspan="11" class="text-center py-4 text-slate-500">${noDataMessage}</td></tr>`;
+                }
+            };
+            populateTable('ttlbSummaryTableBody', data.apiSummaryTable, 'No TTLB data available');
+            populateTable('ttfbSummaryTableBody', data.ttfbSummaryTable, 'No TTFB data available');
+            
+            // --- Populate Error Report Table ---
+            const errorReportTableBody = document.getElementById('errorReportTableBody');
+            errorReportTableBody.innerHTML = '';
+            if (data.errorReport && data.errorReport.errors.length > 0 && data.errorReport.totalHttpFailures > 0) {
+                data.errorReport.errors.forEach(err => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${err.status || 'N/A'}</td>
+                        <td>${err.transaction}</td>
+                        <td>${err.count}</td>
+                        <td class="text-left">${err.error}</td>
+                        <td class="text-left">${err.exampleUrl || 'N/A'}</td>
+                    `;
+                    errorReportTableBody.appendChild(tr);
+                });
+            } else {
+                errorReportTableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-slate-500">No errors detected in this test run</td></tr>';
+            }
+            
+            // --- Chart Rendering ---
+            const chartInstances = {};
+            const responseTimeColors = ['#4f46e5', '#f97316', '#22c55e', '#8b5cf6', '#ef4444', '#eab308'];
+            const percentileColors = ['#ef4444', '#f97316', '#4f46e5', '#22c55e']; // p99, p95, p90, Median
+            
+            // Add a helper function to preprocess the data and convert absolute timestamps to relative ones
+            function preprocessTimeData(datasets) {
+                if (!datasets || datasets.length === 0 || !datasets[0].data || datasets[0].data.length === 0) {
+                    return datasets;
+                }
+                
+                // Find the earliest timestamp across all datasets
+                let earliestTime = Number.MAX_SAFE_INTEGER;
+                datasets.forEach(dataset => {
+                    if (!dataset.data) return;
+                    
+                    dataset.data.forEach(point => {
+                        if (point && point.x && point.x < earliestTime) {
+                            earliestTime = point.x;
+                        }
+                    });
+                });
+                
+                // Convert all timestamps to seconds from the start
+                datasets.forEach(dataset => {
+                    if (!dataset.data) return;
+                    
+                    dataset.data = dataset.data.map(point => {
+                        if (!point || !point.x) return point;
+                        
+                        // Calculate seconds elapsed since earliest time
+                        const elapsedSeconds = (point.x - earliestTime) / 1000;
+                        
+                        return {
+                            x: elapsedSeconds,
+                            y: point.y
+                        };
+                    });
+                });
+                
+                return datasets;
+            }
+            
+            const commonChartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top', labels: { font: { family: 'Inter', size: 12 }, color: '#475569' } },
+                    tooltip: { mode: 'index', intersect: false, bodyFont: { family: 'Inter' }, titleFont: { family: 'Inter', weight: 'bold' }, backgroundColor: 'rgba(30, 41, 59, 0.9)', borderColor: '#6366f1', borderWidth: 1, cornerRadius: 6, displayColors: true },
+                    datalabels: { display: false },
+                    zoom: { zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' }, pan: { enabled: true, mode: 'x' } }
+                },
+                scales: {
+                    x: {
+                        type: 'linear',
+                        grid: { display: false },
+                        ticks: {
+                            color: '#64748b',
+                            callback: function(value, index, values) {
+                                // Format the value (seconds) to HH:MM:SS
+                                const h = Math.floor(value / 3600).toString().padStart(2, '0');
+                                const m = Math.floor((value % 3600) / 60).toString().padStart(2, '0');
+                                const s = Math.floor(value % 60).toString().padStart(2, '0');
+                                return `${h}:${m}:${s}`;
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Test duration (HH:MM:SS)',
+                            color: '#64748b'
+                        }
+                    },
+                    y: { beginAtZero: true, grid: { color: '#e2e8f0' }, ticks: { color: '#64748b', font: { family: 'Inter', size: 11 } } } 
+                },
+                elements: { line: { tension: 0.4, borderWidth: 2, fill: false }, point: { radius: 0, hoverRadius: 6, hitRadius: 10, hoverBorderWidth: 2 } },
+                animation: { duration: 500, easing: 'easeOutQuart' }
+            };
+            
+            // --- Chart 1: API Response Time Over Time (ms) ---
+            const htmlResponseTimeCtx = document.getElementById('htmlResponseTimeChart').getContext('2d');
+            chartInstances.htmlResponseTimeChart = new Chart(htmlResponseTimeCtx, {
+                type: 'line',
+                data: {
+                    datasets: preprocessTimeData((data.chartData.htmlResponseTime?.datasets || []).map((dataset, index) => {
+                        const color = responseTimeColors[index % responseTimeColors.length];
+                        return {
+                            ...dataset,
+                            borderColor: color,
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 0,
+                            pointHoverRadius: 6,
+                            backgroundColor: (context) => {
+                                const chart = context.chart;
+                                const { ctx, chartArea } = chart;
+                                return createGradient(ctx, chartArea, color);
+                            }
+                        };
+                    }))
+                },
+                options: { ...commonChartOptions, scales: { ...commonChartOptions.scales, y: { ...commonChartOptions.scales.y, title: { display: true, text: 'Response Time (ms)' } } } }
+            });
+            document.getElementById('resetZoom1').addEventListener('click', () => chartInstances.htmlResponseTimeChart.resetZoom());
+            
+            // --- Chart 2: Overall API Transactions Per Second ---
+            const htmlTpsCtx = document.getElementById('htmlTpsChart').getContext('2d');
+            chartInstances.htmlTpsChart = new Chart(htmlTpsCtx, {
+                type: 'line',
+                data: {
+                    datasets: preprocessTimeData((data.chartData.htmlTps?.datasets || []).map(dataset => ({
+                        ...dataset,
+                        borderColor: '#10b981', // Teal-600 for TPS
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 6,
+                        backgroundColor: (context) => {
+                            const chart = context.chart;
+                            const { ctx, chartArea } = chart;
+                            return createGradient(ctx, chartArea, '#10b981');
+                        }
+                    })))
+                },
+                options: { ...commonChartOptions, scales: { ...commonChartOptions.scales, y: { ...commonChartOptions.scales.y, title: { display: true, text: 'Transactions per Second' } } } }
+            });
+            document.getElementById('resetZoom2').addEventListener('click', () => chartInstances.htmlTpsChart.resetZoom());
+            
+            // --- Chart 3: Active VUsers ---
+            const activeVUsCtx = document.getElementById('activeVUsChart').getContext('2d');
+            chartInstances.activeVUsChart = new Chart(activeVUsCtx, {
+                type: 'line',
+                data: {
+                    datasets: preprocessTimeData((data.chartData.activeVUs?.datasets || []).map(dataset => ({
+                        ...dataset,
+                        borderColor: '#8b5cf6', // Violet-500
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 6,
+                        backgroundColor: (context) => {
+                            const chart = context.chart;
+                            const { ctx, chartArea } = chart;
+                            return createGradient(ctx, chartArea, '#8b5cf6');
+                        }
+                    })))
+                },
+                options: { ...commonChartOptions, scales: { ...commonChartOptions.scales, y: { ...commonChartOptions.scales.y, title: { display: true, text: 'Virtual Users' } } } }
+            });
+            document.getElementById('resetZoom3').addEventListener('click', () => chartInstances.activeVUsChart.resetZoom());
+            
+            // --- Chart 4: Response Time Percentiles (Time-Series) ---
+            const overallPercentilesCtx = document.getElementById('overallPercentilesChart').getContext('2d');
+            
+            // Define colors for each percentile (using different variable name to avoid redeclaration)
+            const percentilesChartColors = {
+                'p50 (Median)': '#22c55e', // Green
+                'p90': '#6366f1',          // Indigo
+                'p95': '#f97316',          // Orange
+                'p99': '#ef4444'           // Red
+            };
+            
+            // Create datasets for each percentile
+            const percentileDatasets = [
+                {
+                    label: 'p50 (Median)',
+                    data: preprocessTimeData([{ data: data.chartData.overallPercentiles?.datasets?.[0]?.data || [] }])[0].data,
+                    borderColor: percentilesChartColors['p50 (Median)'],
+                    backgroundColor: function(context) {
+                        const chart = context.chart;
+                        const {ctx, chartArea} = chart;
+                        if (!chartArea) return null;
+                        return createGradient(ctx, chartArea, percentilesChartColors['p50 (Median)']);
+                    },
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 0,
+                    pointHoverRadius: 6
+                },
+                {
+                    label: 'p90',
+                    data: preprocessTimeData([{ data: data.chartData.overallPercentiles?.datasets?.[1]?.data || [] }])[0].data,
+                    borderColor: percentilesChartColors['p90'],
+                    backgroundColor: function(context) {
+                        const chart = context.chart;
+                        const {ctx, chartArea} = chart;
+                        if (!chartArea) return null;
+                        return createGradient(ctx, chartArea, percentilesChartColors['p90']);
+                    },
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 0,
+                    pointHoverRadius: 6
+                },
+                {
+                    label: 'p95',
+                    data: preprocessTimeData([{ data: data.chartData.overallPercentiles?.datasets?.[2]?.data || [] }])[0].data,
+                    borderColor: percentilesChartColors['p95'],
+                    backgroundColor: function(context) {
+                        const chart = context.chart;
+                        const {ctx, chartArea} = chart;
+                        if (!chartArea) return null;
+                        return createGradient(ctx, chartArea, percentilesChartColors['p95']);
+                    },
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 0,
+                    pointHoverRadius: 6
+                },
+                {
+                    label: 'p99',
+                    data: preprocessTimeData([{ data: data.chartData.overallPercentiles?.datasets?.[3]?.data || [] }])[0].data,
+                    borderColor: percentilesChartColors['p99'],
+                    backgroundColor: function(context) {
+                        const chart = context.chart;
+                        const {ctx, chartArea} = chart;
+                        if (!chartArea) return null;
+                        return createGradient(ctx, chartArea, percentilesChartColors['p99']);
+                    },
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 0,
+                    pointHoverRadius: 6
+                }
+            ];
+            
+            chartInstances.overallPercentilesChart = new Chart(overallPercentilesCtx, {
+                type: 'line',
+                data: { datasets: percentileDatasets },
+                options: { ...commonChartOptions, scales: { ...commonChartOptions.scales, y: { ...commonChartOptions.scales.y, title: { display: true, text: 'Response Time (ms)' } } } }
+            });
+            document.getElementById('resetZoom4').addEventListener('click', () => chartInstances.overallPercentilesChart.resetZoom());
+            
+            // --- Chart 5: Response Time vs. TPS ---
+            const responseTimeVsTpsCtx = document.getElementById('responseTimeVsTpsChart').getContext('2d');
+            const overallResponseTimeData = {
+                ...(data.chartData.overallAvgResponseTime.datasets[0] || {}),
+                label: 'Overall Avg Response Time (ms)',
+                yAxisID: 'y',
+                borderColor: '#4f46e5',
+                fill: true,
+                tension: 0.4,
+                borderWidth: 2,
+                pointRadius: 0,
+                pointHoverRadius: 6,
+                backgroundColor: (context) => {
+                    const chart = context.chart;
+                    const {ctx, chartArea} = chart;
+                    return createGradient(ctx, chartArea, '#4f46e5');
+                }
+            };
+            const tpsData = {
+                ...(data.chartData.htmlTps.datasets[0] || {}),
+                label: 'TPS',
+                yAxisID: 'y1',
+                borderColor: '#10b981',
+                fill: true,
+                tension: 0.4,
+                borderWidth: 2,
+                pointRadius: 0,
+                pointHoverRadius: 6,
+                backgroundColor: (context) => {
+                    const chart = context.chart;
+                    const {ctx, chartArea} = chart;
+                    return createGradient(ctx, chartArea, '#10b981');
+                }
+            };
+
+            // Preprocess time data for this chart
+            const preprocessedDatasets = preprocessTimeData([overallResponseTimeData, tpsData]);
+
+            chartInstances.responseTimeVsTpsChart = new Chart(responseTimeVsTpsCtx, {
+                type: 'line',
+                data: { datasets: preprocessedDatasets },
+                options: {
+                    ...commonChartOptions,
+                    scales: {
+                        ...commonChartOptions.scales,
+                        y: { ...commonChartOptions.scales.y, type: 'linear', position: 'left', title: { display: true, text: 'Response Time (ms)', color: '#4f46e5' }, ticks: { color: '#4f46e5' } },
+                        y1: { type: 'linear', position: 'right', beginAtZero: true, grid: { drawOnChartArea: false }, title: { display: true, text: 'Transactions per Second (TPS)', color: '#10b981' }, ticks: { color: '#10b981' } }
+                    }
+                }
+            });
+            document.getElementById('resetZoom5').addEventListener('click', () => chartInstances.responseTimeVsTpsChart.resetZoom());
+        }
+
+        // Example Usage: Call renderDashboard with your dynamic data
+document.addEventListener('DOMContentLoaded', function() {
+    // --- Generated data from k6 test results ---
+    // This data is generated from /opt/projects/git/k6/temp/api_processed.json
+    const data = {
+  "dashboardInfo": {
+    "title": "K6 Performance Dashboard: Unknown Application Unknown Scenario",
+    "testType": "API",
+    "duration": "152.131",
+    "totalRequests": 714,
+    "failedRequests": 0,
+    "avgRequestsPerSecond": "4.69",
+    "avgResponseTime": "94.38ms",
+    "aut": "Unknown Application",
+    "scenario": "Unknown Scenario"
+  },
+  "apiSummaryTable": [],
+  "ttfbSummaryTable": [],
+  "chartData": {
+    "htmlResponseTime": {
+      "datasets": []
+    },
+    "overallAvgResponseTime": {
+      "datasets": [
+        {
+          "label": "Overall Avg Response Time",
+          "data": [],
+          "borderColor": "#8b5cf6",
+          "backgroundColor": "rgba(99, 102, 241, 0.1)",
+          "borderWidth": 2,
+          "pointRadius": 0,
+          "pointHoverRadius": 6,
+          "pointBackgroundColor": "#6366f1",
+          "pointHoverBorderColor": "#fff",
+          "pointBorderWidth": 2,
+          "tension": 0.4,
+          "fill": false
+        }
+      ]
+    },
+    "htmlTps": {
+      "datasets": [
+        {
+          "label": "Requests per Second",
+          "data": [],
+          "borderColor": "#22c55e",
+          "backgroundColor": "rgba(34, 197, 94, 0.1)",
+          "borderWidth": 2,
+          "pointRadius": 0,
+          "pointHoverRadius": 6,
+          "pointBackgroundColor": "#22c55e",
+          "pointHoverBorderColor": "#fff",
+          "pointBorderWidth": 2,
+          "tension": 0.4,
+          "fill": true
+        }
+      ]
+    },
+    "activeVUs": {
+      "datasets": [
+        {
+          "label": "Active VUs",
+          "data": [],
+          "borderColor": "#8b5cf6",
+          "backgroundColor": "rgba(139, 92, 246, 0.1)",
+          "borderWidth": 2,
+          "pointRadius": 0,
+          "pointHoverRadius": 6,
+          "pointBackgroundColor": "#8b5cf6",
+          "pointHoverBorderColor": "#fff",
+          "pointBorderWidth": 2,
+          "stepped": true,
+          "fill": true
+        }
+      ]
+    },
+    "overallPercentiles": {
+      "datasets": [
+        {
+          "label": "p50 (Median)",
+          "data": [],
+          "borderColor": "#22c55e",
+          "backgroundColor": "rgba(34, 197, 94, 0.1)",
+          "borderWidth": 2,
+          "pointRadius": 0,
+          "pointHoverRadius": 6,
+          "tension": 0.4,
+          "fill": true
+        },
+        {
+          "label": "p90",
+          "data": [],
+          "borderColor": "#6366f1",
+          "backgroundColor": "rgba(99, 102, 241, 0.1)",
+          "borderWidth": 2,
+          "pointRadius": 0,
+          "pointHoverRadius": 6,
+          "tension": 0.4,
+          "fill": true
+        },
+        {
+          "label": "p95",
+          "data": [],
+          "borderColor": "#f97316",
+          "backgroundColor": "rgba(249, 115, 22, 0.1)",
+          "borderWidth": 2,
+          "pointRadius": 0,
+          "pointHoverRadius": 6,
+          "tension": 0.4,
+          "fill": true
+        },
+        {
+          "label": "p99",
+          "data": [],
+          "borderColor": "#ef4444",
+          "backgroundColor": "rgba(239, 68, 68, 0.1)",
+          "borderWidth": 2,
+          "pointRadius": 0,
+          "pointHoverRadius": 6,
+          "tension": 0.4,
+          "fill": true
+        }
+      ]
+    }
+  },
+  "errorReport": {
+    "totalHttpFailures": 0,
+    "errors": [
+      {
+        "status": null,
+        "transaction": "All Transactions",
+        "count": 0,
+        "error": "No errors detected in this test run",
+        "exampleUrl": ""
+      }
+    ]
+  },
+  "sla": {
+    "avg": {
+      "warn": 300,
+      "danger": 500
+    },
+    "med": {
+      "warn": 250,
+      "danger": 400
+    },
+    "p90": {
+      "warn": 500,
+      "danger": 800
+    }
+  }
+};
+
+    // Call the render function with the real data
+    renderDashboard(data);
+});
+    </script>
+<script>
+// Embedded chart rendering script - makes report self-contained for CI environments
+document.addEventListener('DOMContentLoaded', function () {
+    if (typeof Chart === 'undefined') {
+        console.error('Chart.js is not loaded.');
+        return;
+    }
+
+    const chartData = window.chartData;
+    const percentileData = window.percentileData;
+    const chartInstances = {};
+
+    if (!chartData || !percentileData) {
+        console.error('Chart data is not available.');
+        return;
+    }
+
+    const randomColor = () => `#${Math.floor(Math.random()*16777215).toString(16)}`;
+
+    const zoomOptions = {
+        pan: { enabled: true, mode: 'x' },
+        zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' }
+    };
+
+    const resetZoom = (chartId) => chartInstances[chartId]?.resetZoom();
+
+    // Response Time Chart
+    const responseTimeDatasets = Object.keys(chartData.responseTimeByTx).map(txName => ({
+        label: txName,
+        data: chartData.responseTimeByTx[txName],
+        borderColor: randomColor(),
+        backgroundColor: 'transparent',
+        tension: 0.1,
+        pointRadius: 0
+    }));
+
+    if (document.getElementById('responseTimeChart')) {
+        chartInstances.responseTimeChart = new Chart(document.getElementById('responseTimeChart'), {
+            type: 'line',
+            data: { datasets: responseTimeDatasets },
+            options: { responsive: true, maintainAspectRatio: false, scales: { x: { type: 'time', time: { unit: 'second' } } }, plugins: { title: { display: true, text: 'API Response Time Over Time (ms)' }, zoom: zoomOptions } }
+        });
+        document.getElementById('resetZoomResponseTime').onclick = () => resetZoom('responseTimeChart');
+    }
+
+    // Percentiles Chart
+    if (document.getElementById('percentilesChart')) {
+        chartInstances.percentilesChart = new Chart(document.getElementById('percentilesChart'), {
+            type: 'bar',
+            data: {
+                labels: percentileData.labels,
+                datasets: [
+                    { label: 'p90', data: percentileData.p90, backgroundColor: 'rgba(255, 206, 86, 0.5)' },
+                    { label: 'p95', data: percentileData.p95, backgroundColor: 'rgba(255, 159, 64, 0.5)' },
+                    { label: 'p99', data: percentileData.p99, backgroundColor: 'rgba(255, 99, 132, 0.5)' },
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Response Time Percentiles' }, zoom: zoomOptions } }
+        });
+        document.getElementById('resetZoomPercentiles').onclick = () => resetZoom('percentilesChart');
+    }
+
+    // Response Time vs VUs Chart
+    if (document.getElementById('vuVsResponseTimeChart')) {
+        chartInstances.vuVsResponseTimeChart = new Chart(document.getElementById('vuVsResponseTimeChart'), {
+            type: 'line',
+            data: {
+                datasets: [
+                    { label: 'Avg Response Time (ms)', data: chartData.avgResponseTimePerSecond, borderColor: '#4f46e5', yAxisID: 'y' },
+                    { label: 'Active VUs', data: chartData.active_vus, borderColor: '#f97316', yAxisID: 'y1', type: 'line', steppped: true },
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false, scales: { x: { type: 'time', time: { unit: 'second' } }, y: { position: 'left' }, y1: { position: 'right', grid: { drawOnChartArea: false } } }, plugins: { title: { display: true, text: 'Response Time vs. Active Users' }, zoom: zoomOptions } }
+        });
+        document.getElementById('resetZoomVuVsResponseTime').onclick = () => resetZoom('vuVsResponseTimeChart');
+    }
+
+    // TPS Chart
+    if (document.getElementById('tpsChart')) {
+        chartInstances.tpsChart = new Chart(document.getElementById('tpsChart'), {
+            type: 'line',
+            data: { datasets: [{ label: 'Requests/sec', data: chartData.requests_per_second, borderColor: '#22c55e', backgroundColor: '#22c55e33', tension: 0.1, pointRadius: 0 }] },
+            options: { responsive: true, maintainAspectRatio: false, scales: { x: { type: 'time', time: { unit: 'second' } } }, plugins: { title: { display: true, text: 'Overall API Transactions Per Second' }, zoom: zoomOptions } }
+        });
+        document.getElementById('resetZoomTps').onclick = () => resetZoom('tpsChart');
+    }
+
+    // VUs Chart
+    if (document.getElementById('vuChart')) {
+        chartInstances.vuChart = new Chart(document.getElementById('vuChart'), {
+            type: 'line',
+            data: { datasets: [{ label: 'Active VUs', data: chartData.active_vus, borderColor: '#f97316', backgroundColor: '#f9731633', tension: 0.1, pointRadius: 0, steppped: true }] },
+            options: { responsive: true, maintainAspectRatio: false, scales: { x: { type: 'time', time: { unit: 'second' } } }, plugins: { title: { display: true, text: 'Active VUs' }, zoom: zoomOptions } }
+        });
+        document.getElementById('resetZoomVu').onclick = () => resetZoom('vuChart');
+    }
+});
+
+</script>
+</body>
+</html>

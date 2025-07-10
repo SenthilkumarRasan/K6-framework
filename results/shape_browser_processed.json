@@ -1,0 +1,194 @@
+{
+  "testInfo": {
+    "testType": "BROWSER",
+    "aut": "shape",
+    "scenario": "smoke"
+  },
+  "summary": {
+    "testRunDuration": "5 sec",
+    "startTime": "Invalid Date",
+    "endTime": "7/9/2025, 1:29:13 AM",
+    "totalRequests": 1,
+    "failedRequests": 0,
+    "avgRps": 0.2007628990162618,
+    "avgResponseTime": 118
+  },
+  "webVitals": {
+    "lcp": {
+      "name": "browser_lcp",
+      "values": [
+        412
+      ],
+      "byTransaction": {
+        "taxonomyScTemplate": {
+          "values": [
+            412
+          ],
+          "stats": {
+            "avg": 412,
+            "min": 412,
+            "max": 412,
+            "med": 412,
+            "p90": 412,
+            "p95": 412,
+            "p99": 412,
+            "count": 1
+          }
+        }
+      },
+      "stats": {
+        "avg": 412,
+        "min": 412,
+        "max": 412,
+        "med": 412,
+        "p90": 412,
+        "p95": 412,
+        "p99": 412,
+        "count": 1
+      }
+    },
+    "fcp": {
+      "name": "browser_fcp",
+      "values": [
+        412
+      ],
+      "byTransaction": {
+        "taxonomyScTemplate": {
+          "values": [
+            412
+          ],
+          "stats": {
+            "avg": 412,
+            "min": 412,
+            "max": 412,
+            "med": 412,
+            "p90": 412,
+            "p95": 412,
+            "p99": 412,
+            "count": 1
+          }
+        }
+      },
+      "stats": {
+        "avg": 412,
+        "min": 412,
+        "max": 412,
+        "med": 412,
+        "p90": 412,
+        "p95": 412,
+        "p99": 412,
+        "count": 1
+      }
+    },
+    "cls": {
+      "name": "browser_cls",
+      "values": [
+        0
+      ],
+      "byTransaction": {
+        "taxonomyScTemplate": {
+          "values": [
+            0
+          ],
+          "stats": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "med": 0,
+            "p90": 0,
+            "p95": 0,
+            "p99": 0,
+            "count": 1
+          }
+        }
+      },
+      "stats": {
+        "avg": 0,
+        "min": 0,
+        "max": 0,
+        "med": 0,
+        "p90": 0,
+        "p95": 0,
+        "p99": 0,
+        "count": 1
+      }
+    },
+    "ttfb": {
+      "name": "browser_ttfb",
+      "values": [
+        118
+      ],
+      "byTransaction": {
+        "taxonomyScTemplate": {
+          "values": [
+            118
+          ],
+          "stats": {
+            "avg": 118,
+            "min": 118,
+            "max": 118,
+            "med": 118,
+            "p90": 118,
+            "p95": 118,
+            "p99": 118,
+            "count": 1
+          }
+        }
+      },
+      "stats": {
+        "avg": 118,
+        "min": 118,
+        "max": 118,
+        "med": 118,
+        "p90": 118,
+        "p95": 118,
+        "p99": 118,
+        "count": 1
+      }
+    }
+  },
+  "chartData": {
+    "responseTimeByTx": {
+      "taxonomyScTemplate": [
+        {
+          "t": "2025-07-09T06:29:13.705Z",
+          "y": 412
+        }
+      ]
+    },
+    "requests_per_second": [
+      {
+        "t": "2025-07-09T06:29:13.705Z",
+        "y": 1
+      }
+    ],
+    "active_vus": [
+      {
+        "t": "2025-07-09T06:29:09.984Z",
+        "y": 1
+      },
+      {
+        "t": "2025-07-09T06:29:10.984Z",
+        "y": 1
+      },
+      {
+        "t": "2025-07-09T06:29:11.984Z",
+        "y": 1
+      },
+      {
+        "t": "2025-07-09T06:29:12.984Z",
+        "y": 1
+      }
+    ]
+  },
+  "timeSeriesPercentiles": {
+    "p50": [],
+    "p90": [],
+    "p95": [],
+    "p99": []
+  },
+  "errors": {
+    "totalHttpFailures": 0,
+    "errors": []
+  }
+}

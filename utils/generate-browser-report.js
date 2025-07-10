@@ -445,23 +445,19 @@ function generateBrowserReport(data, transactions, state) {
       Object.keys(data[key] || {}).length > 0
     );
     
-    // Filter out any Mantle metrics that only contain fallback/sample data
+    // Filter out any Mantle metrics that have no data
     const realMantleKeys = availableMantleKeys.filter(key => {
-      // Check if this metric has any real data (not just fallback data)
+      // Check if this metric has any data
       if (!data[key]) return false;
       
-      // Check each transaction's data to see if it's real or fallback
+      // Check if any transaction has values for this metric
       for (const transaction in data[key]) {
         const values = data[key][transaction];
-        // If we have values and they're not all identical (which would indicate fallback data)
         if (values && values.length > 0) {
-          // Check if all values are identical (likely fallback data)
-          const firstValue = values[0];
-          const allSame = values.every(v => v === firstValue);
-          if (!allSame) return true; // Found real data with variation
+          return true; // Found data
         }
       }
-      return false; // No real data found for this metric
+      return false; // No data found for this metric
     });
     
     if (realMantleKeys.length > 0) {
@@ -521,24 +517,14 @@ function generateBrowserReport(data, transactions, state) {
             if (mantleMetricDisplayNames[metricKey]) {
               const metricValues = data[metricKey] && data[metricKey][transaction] ? data[metricKey][transaction] : [];
               
-              // Check if we have real data (not just fallback data)
+              // Display metrics if we have values
               if (metricValues.length > 0) {
-                // Check if all values are identical (likely fallback data)
-                const firstValue = metricValues[0];
-                const allSame = metricValues.every(v => v === firstValue);
-                
-                if (!allSame) {
-                  // Real data with variation
-                  const stats = calculateStats(metricValues);
-                  const countBasedMetrics = ['browser_mantle_scroll_depth', 'browser_mantle_adsrendered', 'browser_mantle_adsviewable'];
-                  if (countBasedMetrics.includes(metricKey)) {
-                    state.htmlReportContent.push(`<td>${stats.min.toFixed(2)}</td><td>${stats.max.toFixed(2)}</td>`);
-                  } else {
-                    state.htmlReportContent.push(`<td>${stats.avg.toFixed(2)}</td><td>${stats.p90.toFixed(2)}</td>`);
-                  }
+                const stats = calculateStats(metricValues);
+                const countBasedMetrics = ['browser_mantle_scroll_depth', 'browser_mantle_adsrendered', 'browser_mantle_adsviewable'];
+                if (countBasedMetrics.includes(metricKey)) {
+                  state.htmlReportContent.push(`<td>${stats.min.toFixed(2)}</td><td>${stats.max.toFixed(2)}</td>`);
                 } else {
-                  // Likely fallback data
-                  state.htmlReportContent.push('<td>N/A</td><td>N/A</td>');
+                  state.htmlReportContent.push(`<td>${stats.avg.toFixed(2)}</td><td>${stats.p90.toFixed(2)}</td>`);
                 }
               } else {
                 state.htmlReportContent.push('<td>N/A</td><td>N/A</td>');

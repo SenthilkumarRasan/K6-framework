@@ -21,4 +21,4 @@ ENTRYPOINT ["/app/run_k6_tests.sh"]
 
 # Default command with all possible command line options
 # These can be overridden at runtime
-CMD ["--script=verticalBrowser.js", "--test-type=BROWSER", "--scenario=custom-tps", "--environment=qa", "--headless=true", "--aut=shape", "--time-unit=1m", "--base-url=https://example.com", "--ramping-stages=10s:1,2m:35,10s:1"]
+CMD ["--script=verticalBrowser.js", "--test-type=BROWSER", "--scenario=custom-tps", "--environment=qa", "--headless=true", "--aut=shape", "--time-unit=1m", "--base-url=https://example.com", "--ramping-stages=10s:1,2m:35,10s:1", "--sla-config={\"avg\":{\"warn\":300,\"danger\":500},\"med\":{\"warn\":250,\"danger\":400},\"p90\":{\"warn\":500,\"danger\":800}}", "--dashboard=true", "--report=true"]

@@ -1,0 +1,239 @@
+{
+    "metrics": {
+        "http_req_tls_handshaking": {
+            "max": 129.312,
+            "p(90)": 0,
+            "p(95)": 0,
+            "avg": 1.0877639405204462,
+            "min": 0,
+            "med": 0
+        },
+        "http_req_waiting": {
+            "avg": 109.23263011152432,
+            "min": 102.691,
+            "med": 108.848,
+            "max": 178.322,
+            "p(90)": 111.7987,
+            "p(95)": 113.07579999999999
+        },
+        "http_req_duration": {
+            "max": 180.51,
+            "p(90)": 112.1253,
+            "p(95)": 113.4524,
+            "avg": 109.45738289962826,
+            "min": 102.966,
+            "med": 109.0195,
+            "thresholds": {
+                "p(95) < 1000": false,
+                "p(90) < 500": false
+            }
+        },
+        "iterations": {
+            "rate": 3.809505289967176,
+            "count": 134
+        },
+        "data_sent": {
+            "count": 130318,
+            "rate": 3704.829181924944
+        },
+        "checks": {
+            "passes": 473,
+            "fails": 333,
+            "thresholds": {
+                "rate == 1.00": true
+            },
+            "value": 0.586848635235732
+        },
+        "http_req_connecting": {
+            "avg": 0.9929330855018587,
+            "min": 0,
+            "med": 0,
+            "max": 112.135,
+            "p(90)": 0,
+            "p(95)": 0
+        },
+        "group_duration": {
+            "p(90)": 112.4529375,
+            "p(95)": 113.85803175,
+            "avg": 111.12637797761204,
+            "min": 103.197792,
+            "med": 109.284937,
+            "max": 340.336208
+        },
+        "dropped_iterations": {
+            "count": 3,
+            "rate": 0.08528743186493677
+        },
+        "http_reqs": {
+            "count": 538,
+            "rate": 15.294879447778662
+        },
+        "http_req_duration{expected_response:true}": {
+            "min": 103.368,
+            "med": 109.237,
+            "max": 180.51,
+            "p(90)": 112.3525,
+            "p(95)": 113.5605,
+            "avg": 109.65000316455686
+        },
+        "vus": {
+            "value": 1,
+            "min": 0,
+            "max": 2
+        },
+        "http_req_blocked": {
+            "p(90)": 0.001,
+            "p(95)": 0.001,
+            "avg": 2.322219330855005,
+            "min": 0,
+            "med": 0.001,
+            "max": 365.852
+        },
+        "vus_max": {
+            "max": 4,
+            "value": 4,
+            "min": 1
+        },
+        "http_req_sending": {
+            "avg": 0.1329999999999999,
+            "min": 0.032,
+            "med": 0.107,
+            "max": 2.655,
+            "p(90)": 0.16630000000000003,
+            "p(95)": 0.19029999999999994
+        },
+        "iteration_duration": {
+            "min": 426.7455,
+            "med": 437.65579149999996,
+            "max": 669.966292,
+            "p(90)": 445.50824190000003,
+            "p(95)": 450.55023585000004,
+            "avg": 444.6666327611941
+        },
+        "http_req_failed": {
+            "passes": 222,
+            "fails": 316,
+            "thresholds": {
+                "rate <= 0.02": true
+            },
+            "value": 0.41263940520446096
+        },
+        "http_req_receiving": {
+            "avg": 0.09175278810408916,
+            "min": 0.012,
+            "med": 0.05,
+            "max": 5.12,
+            "p(90)": 0.08660000000000002,
+            "p(95)": 0.115
+        },
+        "data_received": {
+            "count": 475070,
+            "rate": 13505.833418691838
+        }
+    },
+    "setup_data": "ranbQ2QsQ8HW579d",
+    "root_group": {
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {
+            "setup": {
+                "path": "::setup",
+                "id": "5c0f8025f7e0b6654089e5b00e950f1a",
+                "groups": {},
+                "checks": {
+                        "created user": {
+                            "passes": 1,
+                            "fails": 0,
+                            "name": "created user",
+                            "path": "::setup::created user",
+                            "id": "58aba34ae856f5ad12e8bc57a0fb83a6"
+                        },
+                        "logged in successfully": {
+                            "passes": 1,
+                            "fails": 0,
+                            "name": "logged in successfully",
+                            "path": "::setup::logged in successfully",
+                            "id": "9be2eac02d552796de2e3067eacc0d1a"
+                        }
+                    },
+                "name": "setup"
+            },
+            "01. Create a new rating": {
+                "name": "01. Create a new rating",
+                "path": "::01. Create a new rating",
+                "id": "e763bdcc20efd5b92026c1a001ac6534",
+                "groups": {},
+                "checks": {
+                        "Rating created correctly": {
+                            "name": "Rating created correctly",
+                            "path": "::01. Create a new rating::Rating created correctly",
+                            "id": "d24cd16ed506cb34c409290bafa438eb",
+                            "passes": 134,
+                            "fails": 0
+                        }
+                    }
+            },
+            "02. Fetch my ratings": {
+                "name": "02. Fetch my ratings",
+                "path": "::02. Fetch my ratings",
+                "id": "9574115bdb2825494d9bdab423225ece",
+                "groups": {},
+                "checks": {
+                        "retrieve ratings status": {
+                            "name": "retrieve ratings status",
+                            "path": "::02. Fetch my ratings::retrieve ratings status",
+                            "id": "a6a30448b4c7af9836ba6a3b5da2d4f4",
+                            "passes": 134,
+                            "fails": 0
+                        },
+                        "retrieved ratings list": {
+                            "name": "retrieved ratings list",
+                            "path": "::02. Fetch my ratings::retrieved ratings list",
+                            "id": "fb7de46cc6dea0b3e82e5f042b66b4e4",
+                            "passes": 134,
+                            "fails": 0
+                        }
+                    }
+            },
+            "03. Update the rating": {
+                "id": "53538f191d054620a3f39a05a2d5785f",
+                "groups": {},
+                "checks": {
+                        "Update worked": {
+                            "name": "Update worked",
+                            "path": "::03. Update the rating::Update worked",
+                            "id": "89806f3994c7b5e9e807976106a37021",
+                            "passes": 23,
+                            "fails": 111
+                        },
+                        "Updated stars number is correct": {
+                            "name": "Updated stars number is correct",
+                            "path": "::03. Update the rating::Updated stars number is correct",
+                            "id": "ce7fa0b9945f34b13e4ce31264e881c2",
+                            "passes": 23,
+                            "fails": 111
+                        }
+                    },
+                "name": "03. Update the rating",
+                "path": "::03. Update the rating"
+            },
+            "04. Delete the rating": {
+                "checks": {
+                    "Rating was deleted correctly": {
+                        "passes": 23,
+                        "fails": 111,
+                        "name": "Rating was deleted correctly",
+                        "path": "::04. Delete the rating::Rating was deleted correctly",
+                        "id": "48003234face1e4f6d12cbc2b5175507"
+                    }
+                },
+                "name": "04. Delete the rating",
+                "path": "::04. Delete the rating",
+                "id": "9df148d4ca8b2bc584e04f0b74fceb26",
+                "groups": {}
+            }
+        },
+        "checks": {},
+        "name": "",
+        "path": ""
+    }
+}

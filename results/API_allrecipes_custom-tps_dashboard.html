@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K6 Performance Dashboard: allrecipes - custom-tps</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.2.1/dist/chartjs-plugin-zoom.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #22c55e;
+            --warning-color: #f97316;
+            --danger-color: #ef4444;
+            --bg-color: #f8fafc;
+            --text-color: #475569;
+            --slate-50: #f8fafc;
+            --slate-100: #f1f5f9;
+            --slate-200: #e2e8f0;
+            --slate-300: #cbd5e1;
+            --slate-400: #94a3b8;
+            --slate-500: #64748b;
+            --slate-600: #475569;
+            --slate-700: #334155;
+            --slate-800: #1e293b;
+            --slate-900: #0f172a;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9; /* Use lighter gray background matching reference */
+            color: var(--text-color);
+            line-height: 1.5;
+        }
+        
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            width: 240px;
+            background-color: var(--slate-800);
+            color: white;
+            padding: 1.5rem;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+        
+        .sidebar-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #a5b4fc; /* indigo-300 */
+            margin-bottom: 2rem;
+        }
+        
+        .nav-section {
+            margin-bottom: 1.5rem;
+        }
+        
+        .nav-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--slate-400);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 0.625rem 0;
+            color: var(--slate-300);
+            text-decoration: none;
+            transition: color 0.15s ease;
+            font-weight: 500;
+            font-size: 0.9375rem;
+        }
+        
+        .nav-item svg {
+            width: 1.25rem;
+            height: 1.25rem;
+            margin-right: 0.75rem;
+        }
+        
+        .nav-item:hover {
+            color: white;
+        }
+        
+        .content {
+            flex: 1;
+            margin-left: 240px;
+            padding: 2rem;
+        }
+        
+        .dashboard-header {
+            margin-bottom: 2rem;
+        }
+        
+        .dashboard-title {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: var(--slate-900);
+            margin-bottom: 1.5rem;
+        }
+        
+        .info-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .info-card {
+            background-color: white;
+            border-radius: 0.5rem;
+            padding: 1.25rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .info-card.card-danger {
+            border-top-color: var(--danger-color);
+        }
+        
+        .info-card .info-label {
+            font-size: 0.875rem;
+            color: var(--slate-500);
+            margin-bottom: 0.5rem;
+        }
+        
+        .info-card .info-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--slate-800);
+        }
+        
+        .text-danger {
+            color: var(--danger-color);
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .card-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--slate-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--slate-50);
+        }
+        
+        .card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--slate-800);
+            margin: 0;
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        .responsive-table {
+            overflow-x: auto;
+            width: 100%;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        thead {
+            background-color: #4f46e5; /* indigo-600 */
+        }
+        
+        th {
+            text-align: left;
+            padding: 0.75rem 1rem;
+            font-weight: 600;
+            color: white;
+            border-bottom: none;
+        }
+        
+        td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--slate-200);
+            color: var(--slate-700);
+        }
+        
+        tbody tr:hover {
+            background-color: var(--slate-100);
+        }
+        
+        thead tr:hover {
+            background-color: #4f46e5; /* Explicitly keep header color on hover */
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 0.35em 0.65em;
+            font-size: 0.75em;
+            font-weight: 700;
+            line-height: 1;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            border-radius: 0.375rem;
+            color: white;
+        }
+        
+        .badge-success {
+            background-color: var(--secondary-color);
+        }
+        
+        .badge-warning {
+            background-color: var(--warning-color);
+        }
+        
+        .badge-danger {
+            background-color: var(--danger-color);
+        }
+        
+        .cell-success {
+            background-color: rgba(34, 197, 94, 0.1);
+            color: var(--secondary-color);
+        }
+        
+        .cell-warning {
+            background-color: rgba(249, 115, 22, 0.1);
+            color: var(--warning-color);
+        }
+        
+        .cell-danger {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+        }
+        
+        .chart-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 1rem;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            line-height: 1.25rem;
+            border-radius: 0.375rem;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        
+        .btn-sm {
+            padding: 0.25rem 0.625rem;
+            font-size: 0.75rem;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #4f46e5; /* indigo-600 */
+        }
+        
+        .btn-outline {
+            background-color: white;
+            border-color: var(--slate-300);
+            color: var(--slate-700);
+        }
+        
+        .btn-outline:hover {
+            background-color: var(--slate-50);
+        }
+        
+        .sla-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .sla-card {
+            background-color: var(--slate-50);
+            border: 1px solid var(--slate-200);
+            border-radius: 6px;
+            padding: 10px 12px;
+            font-size: 12px;
+        }
+        .sla-card .label {
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: var(--slate-700);
+        }
+        .sla-card .warn {
+            display: inline-block;
+            margin-right: 6px;
+        }
+        .sla-card .danger {
+            display: inline-block;
+        }
+        .sla-thresholds {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 6px 0;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 12px;
+            overflow-x: auto;
+            color: #475569;
+        }
+        
+        .warn {
+            color: #f97316; /* orange-500 */
+            font-weight: 500;
+            margin: 0 6px 0 2px;
+            white-space: nowrap;
+        }
+        
+        .danger {
+            color: #ef4444; /* red-500 */
+            font-weight: 500;
+            margin-left: 2px;
+            white-space: nowrap;
+        }
+        
+        .legend-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .legend-column h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--slate-800);
+            margin-bottom: 0.75rem;
+        }
+        
+        .legend-item {
+            display: flex;
+            margin-bottom: 0.5rem;
+        }
+        
+        .legend-color {
+            width: 1rem;
+            height: 1rem;
+            border-radius: 0.25rem;
+            margin-right: 0.5rem;
+            flex-shrink: 0;
+        }
+        
+        .legend-color.color-green {
+            background-color: var(--secondary-color);
+        }
+        
+        .legend-color.color-yellow {
+            background-color: var(--warning-color);
+        }
+        
+        .legend-color.color-red {
+            background-color: var(--danger-color);
+        }
+        
+        .legend-text {
+            font-size: 0.875rem;
+            color: var(--slate-600);
+        }
+        
+        .footer {
+            margin-top: 2rem;
+            padding: 1rem;
+            color: var(--slate-500);
+            text-align: center;
+            font-size: 0.875rem;
+            border-top: 1px solid var(--slate-200);
+        }
+        
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: static;
+            }
+            
+            .content {
+                margin-left: 0;
+            }
+            
+            .dashboard-container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-title">K6 Dashboard</div>
+            
+            <div class="nav-section">
+                <div class="nav-title">Reports</div>
+                <a href="#overview" class="nav-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+                    </svg>
+                    Overview
+                </a>
+                <a href="#ttlb" class="nav-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    TTLB Metrics
+                </a>
+                <a href="#ttfb" class="nav-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    TTFB Metrics
+                </a>
+                <a href="#charts" class="nav-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                    </svg>
+                    Response Time Charts
+                </a>
+                <a href="#tps-vus" class="nav-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                    </svg>
+                    TPS & VUs
+                </a>
+                <a href="#errors" class="nav-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    Errors
+                </a>
+            </div>
+        </div>
+        
+        <!-- Content -->
+        <div class="content">
+            <!-- Header -->
+            <div class="dashboard-header" id="overview">
+                <h1 class="dashboard-title">K6 Performance Dashboard: allrecipes - custom-tps</h1>
+                <div class="info-cards">
+                    
+    <div class="info-card">
+        <div class="info-label">Test Type</div>
+        <div class="info-value">API</div>
+    </div>
+    <div class="info-card">
+        <div class="info-label">Duration</div>
+        <div class="info-value">0m 34s</div>
+    </div>
+    <div class="info-card">
+        <div class="info-label">Total Requests</div>
+        <div class="info-value">538</div>
+    </div>
+    <div class="info-card" style="border-left-color: var(--primary-color)">
+        <div class="info-label">Failed Requests</div>
+        <div class="info-value ">0</div>
+    </div>
+    <div class="info-card">
+        <div class="info-label">Avg RPS</div>
+        <div class="info-value">15.54</div>
+    </div>
+    <div class="info-card">
+        <div class="info-label">Avg Response Time</div>
+        <div class="info-value">109.46ms</div>
+    </div>
+  
+                </div>
+            </div>
+            
+            <!-- TTLB Section -->
+            <div class="card" id="ttlb">
+                <div class="card-header">
+                    <h2 class="card-title">TTLB (Response Time) by Endpoint</h2>
+                </div>
+                <div class="card-body">
+                    <!-- SLA Threshold indicators -->
+                    <div class="sla-threshold-indicators">
+                        <div class="sla-thresholds">AVG <span class="warn">WARN: 300ms</span> <span class="danger">DANGER: 500ms</span> &nbsp; | &nbsp; MEDIAN <span class="warn">WARN: 250ms</span> <span class="danger">DANGER: 400ms</span> &nbsp; | &nbsp; P90 <span class="warn">WARN: 500ms</span> <span class="danger">DANGER: 800ms</span></div>
+                    </div>
+                    
+                    <div class="responsive-table">
+                        <table>
+    <thead>
+      <tr>
+        <th>Transaction</th>
+        <th class="text-center">Count</th>
+        <th class="text-center">Min (ms)</th>
+        <th class="text-center">Avg (ms)</th>
+        <th class="text-center">Med (ms)</th>
+        <th class="text-center">p90 (ms)</th>
+        <th class="text-center">p95 (ms)</th>
+        <th class="text-center">p99 (ms)</th>
+        <th class="text-center">Max (ms)</th>
+      </tr>
+    </thead>
+    <tbody><tr>
+      <td>Create</td>
+      <td class="text-center">134</td>
+      <td class="text-center">103.89</td>
+      <td class="text-center"><span class="badge badge-success">108.22</span></td>
+      <td class="text-center"><span class="badge badge-success">107.69</span></td>
+      <td class="text-center"><span class="badge badge-success">112.18</span></td>
+      <td class="text-center">113.37</td>
+      <td class="text-center">116.14</td>
+      <td class="text-center">128.94</td>
+    </tr><tr>
+      <td>Delete</td>
+      <td class="text-center">134</td>
+      <td class="text-center">102.97</td>
+      <td class="text-center"><span class="badge badge-success">109.58</span></td>
+      <td class="text-center"><span class="badge badge-success">109.36</span></td>
+      <td class="text-center"><span class="badge badge-success">111.96</span></td>
+      <td class="text-center">113.47</td>
+      <td class="text-center">117.29</td>
+      <td class="text-center">119.81</td>
+    </tr><tr>
+      <td>Fetch</td>
+      <td class="text-center">134</td>
+      <td class="text-center">104.73</td>
+      <td class="text-center"><span class="badge badge-success">110.18</span></td>
+      <td class="text-center"><span class="badge badge-success">110.05</span></td>
+      <td class="text-center"><span class="badge badge-success">112.72</span></td>
+      <td class="text-center">114.01</td>
+      <td class="text-center">116.85</td>
+      <td class="text-center">117.30</td>
+    </tr><tr>
+      <td>Update</td>
+      <td class="text-center">134</td>
+      <td class="text-center">103.37</td>
+      <td class="text-center"><span class="badge badge-success">108.80</span></td>
+      <td class="text-center"><span class="badge badge-success">108.47</span></td>
+      <td class="text-center"><span class="badge badge-success">111.03</span></td>
+      <td class="text-center">112.84</td>
+      <td class="text-center">117.54</td>
+      <td class="text-center">130.64</td>
+    </tr><tr>
+      <td>https://quickpizza.grafana.com/api/users</td>
+      <td class="text-center">1</td>
+      <td class="text-center">180.51</td>
+      <td class="text-center"><span class="badge badge-success">180.51</span></td>
+      <td class="text-center"><span class="badge badge-success">180.51</span></td>
+      <td class="text-center"><span class="badge badge-success">180.51</span></td>
+      <td class="text-center">180.51</td>
+      <td class="text-center">180.51</td>
+      <td class="text-center">180.51</td>
+    </tr><tr>
+      <td>https://quickpizza.grafana.com/api/users/token/login</td>
+      <td class="text-center">1</td>
+      <td class="text-center">179.36</td>
+      <td class="text-center"><span class="badge badge-success">179.36</span></td>
+      <td class="text-center"><span class="badge badge-success">179.36</span></td>
+      <td class="text-center"><span class="badge badge-success">179.36</span></td>
+      <td class="text-center">179.36</td>
+      <td class="text-center">179.36</td>
+      <td class="text-center">179.36</td>
+    </tr></tbody>
+  </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- TTFB Section -->
+            <div class="card" id="ttfb">
+                <div class="card-header">
+                    <h2 class="card-title">TTFB (Wait Time) by Endpoint</h2>
+                </div>
+                <div class="card-body">
+                    <!-- SLA Threshold indicators -->
+                    <div class="sla-threshold-indicators">
+                        <div class="sla-thresholds">AVG <span class="warn">WARN: 250ms</span> <span class="danger">DANGER: 400ms</span> &nbsp; | &nbsp; MEDIAN <span class="warn">WARN: 350ms</span> <span class="danger">DANGER: 500ms</span> &nbsp; | &nbsp; P90 <span class="warn">WARN: 750ms</span> <span class="danger">DANGER: 900ms</span></div>
+                    </div>
+                    
+                    <div class="responsive-table">
+                        <table>
+    <thead>
+      <tr>
+        <th>Transaction</th>
+        <th class="text-center">Count</th>
+        <th class="text-center">Min (ms)</th>
+        <th class="text-center">Avg (ms)</th>
+        <th class="text-center">Med (ms)</th>
+        <th class="text-center">p90 (ms)</th>
+        <th class="text-center">p95 (ms)</th>
+        <th class="text-center">p99 (ms)</th>
+        <th class="text-center">Max (ms)</th>
+      </tr>
+    </thead>
+    <tbody><tr>
+      <td>Create</td>
+      <td class="text-center">134</td>
+      <td class="text-center">103.64</td>
+      <td class="text-center"><span class="badge badge-success">107.91</span></td>
+      <td class="text-center"><span class="badge badge-success">107.44</span></td>
+      <td class="text-center"><span class="badge badge-success">111.85</span></td>
+      <td class="text-center">112.68</td>
+      <td class="text-center">116.03</td>
+      <td class="text-center">128.79</td>
+    </tr><tr>
+      <td>Delete</td>
+      <td class="text-center">134</td>
+      <td class="text-center">102.69</td>
+      <td class="text-center"><span class="badge badge-success">109.44</span></td>
+      <td class="text-center"><span class="badge badge-success">109.23</span></td>
+      <td class="text-center"><span class="badge badge-success">111.86</span></td>
+      <td class="text-center">113.29</td>
+      <td class="text-center">117.19</td>
+      <td class="text-center">119.67</td>
+    </tr><tr>
+      <td>Fetch</td>
+      <td class="text-center">134</td>
+      <td class="text-center">104.52</td>
+      <td class="text-center"><span class="badge badge-success">109.94</span></td>
+      <td class="text-center"><span class="badge badge-success">109.92</span></td>
+      <td class="text-center"><span class="badge badge-success">112.46</span></td>
+      <td class="text-center">113.54</td>
+      <td class="text-center">116.01</td>
+      <td class="text-center">117.12</td>
+    </tr><tr>
+      <td>Update</td>
+      <td class="text-center">134</td>
+      <td class="text-center">103.24</td>
+      <td class="text-center"><span class="badge badge-success">108.61</span></td>
+      <td class="text-center"><span class="badge badge-success">108.32</span></td>
+      <td class="text-center"><span class="badge badge-success">110.92</span></td>
+      <td class="text-center">112.04</td>
+      <td class="text-center">117.41</td>
+      <td class="text-center">130.47</td>
+    </tr><tr>
+      <td>https://quickpizza.grafana.com/api/users</td>
+      <td class="text-center">1</td>
+      <td class="text-center">178.32</td>
+      <td class="text-center"><span class="badge badge-warning">178.32</span></td>
+      <td class="text-center"><span class="badge badge-success">178.32</span></td>
+      <td class="text-center"><span class="badge badge-success">178.32</span></td>
+      <td class="text-center">178.32</td>
+      <td class="text-center">178.32</td>
+      <td class="text-center">178.32</td>
+    </tr><tr>
+      <td>https://quickpizza.grafana.com/api/users/token/login</td>
+      <td class="text-center">1</td>
+      <td class="text-center">177.95</td>
+      <td class="text-center"><span class="badge badge-warning">177.95</span></td>
+      <td class="text-center"><span class="badge badge-success">177.95</span></td>
+      <td class="text-center"><span class="badge badge-success">177.95</span></td>
+      <td class="text-center">177.95</td>
+      <td class="text-center">177.95</td>
+      <td class="text-center">177.95</td>
+    </tr></tbody>
+  </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Response Time Charts -->
+            <div id="charts">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Transaction Response Time Over Time (ms)</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="responseTimeChart"></canvas>
+                        </div>
+                        <div class="chart-actions">
+                            <button class="btn btn-sm btn-outline" onclick="resetZoomChart('responseTimeChart')">Reset Zoom</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Response Time Percentiles Over Time</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="percentilesChart"></canvas>
+                        </div>
+                        <div class="chart-actions">
+                            <button class="btn btn-sm btn-outline" onclick="resetZoomChart('percentilesChart')">Reset Zoom</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Response Time vs. TPS</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="responseTimeTpsChart"></canvas>
+                        </div>
+                        <div class="chart-actions">
+                            <button class="btn btn-sm btn-outline" onclick="resetZoomChart('responseTimeTpsChart')">Reset Zoom</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- TPS & VUs Charts -->
+            <div id="tps-vus">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Overall API Transactions Per Second</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="rpsChart"></canvas>
+                        </div>
+                        <div class="chart-actions">
+                            <button class="btn btn-sm btn-outline" onclick="resetZoomChart('rpsChart')">Reset Zoom</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Active VUsers</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="vuChart"></canvas>
+                        </div>
+                        <div class="chart-actions">
+                            <button class="btn btn-sm btn-outline" onclick="resetZoomChart('vuChart')">Reset Zoom</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Errors Section -->
+            <div class="card" id="errors">
+                <div class="card-header">
+                    <h2 class="card-title">Error Report</h2>
+                </div>
+                <div class="card-body">
+                    <div class="responsive-table">
+                        <p>No errors detected in this test run.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Legends Section -->
+            <div class="card" id="legends">
+                <div class="card-header">
+                    <h2 class="card-title">Dashboard Metrics Legend</h2>
+                </div>
+                <div class="card-body">
+                    <div class="legend-section">
+                        <div class="legend-column">
+                            <h3>SLA Thresholds</h3>
+                            <div class="legend-item">
+                                <div class="legend-color color-green"></div>
+                                <div class="legend-text">Green: Below 'warn' threshold. Good performance.</div>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color color-yellow"></div>
+                                <div class="legend-text">Yellow: Between 'warn' and 'danger'. Monitor needed.</div>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color color-red"></div>
+                                <div class="legend-text">Red: Above 'danger' threshold. Action needed.</div>
+                            </div>
+                        </div>
+                        
+                        <div class="legend-column">
+                            <h3>Time-Series Charts</h3>
+                            <div class="legend-item">
+                                <div class="legend-text">API Response Time: Tracks response time over the test to spot degradation under load.</div>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-text">Transactions Per Second (TPS): Shows the rate of requests, indicating total load on the system.</div>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-text">Active Virtual Users: Displays the number of simulated users generating load.</div>
+                            </div>
+                        </div>
+                        
+                        <div class="legend-column">
+                            <h3>Aggregate & Correlation Charts</h3>
+                            <div class="legend-item">
+                                <div class="legend-text">Response Time Percentiles: Summarizes p50/p90/p95/p99 times to understand user experience.</div>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-text">Response Time vs. TPS: Correlates response time and TPS to visualize performance under load.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer">
+                Generated by K6 Performance Dashboard Generator | 7/9/2025, 9:00:33 PM
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Helper function to reset zoom on charts
+        function resetZoomChart(chartId) {
+            if (window.charts && window.charts[chartId]) {
+                window.charts[chartId].resetZoom();
+            }
+        }
+        
+        // Helper function to create gradient backgrounds
+        function createGradient(ctx, chartArea, colorStops) {
+            if (!chartArea) {
+                // Return a fallback color if the chartArea is not defined
+                return colorStops.length > 0 ? colorStops[0].color : 'rgba(0,0,0,0.1)';
+            }
+            const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+            
+            colorStops.forEach(stop => {
+                gradient.addColorStop(stop.offset, stop.color);
+            });
+            
+            return gradient;
+        }
+        
+        // Initialize charts with data
+        document.addEventListener('DOMContentLoaded', function() {
+            // Store chart instances to access them later for zoom reset
+            window.charts = {};
+            
+            
+    Chart.register(ChartDataLabels, ChartZoom);
+
+    const clientData = {"responseTimeDatasets":[{"label":"Create","data":[{"x":2521,"y":109.814},{"x":3118,"y":106.778},{"x":3757,"y":109.228},{"x":4294,"y":110.259},{"x":4764,"y":108.472},{"x":5802,"y":108.615},{"x":5948,"y":106.725},{"x":6291,"y":106.778},{"x":6613,"y":104.949},{"x":6923,"y":104.606},{"x":7221,"y":107.718},{"x":7503,"y":106.499},{"x":7777,"y":108.915},{"x":8040,"y":108.662},{"x":8292,"y":107.487},{"x":8538,"y":105.352},{"x":8777,"y":106.246},{"x":9009,"y":106.153},{"x":9234,"y":104.062},{"x":9479,"y":128.943},{"x":10092,"y":108.269},{"x":10109,"y":111.424},{"x":10294,"y":109.392},{"x":10896,"y":110.816},{"x":10919,"y":116.137},{"x":11096,"y":110.33},{"x":11293,"y":107.168},{"x":11495,"y":109.742},{"x":11697,"y":111.576},{"x":11899,"y":113.389},{"x":12092,"y":105.88},{"x":12299,"y":113.408},{"x":12493,"y":106.763},{"x":12695,"y":108.974},{"x":12899,"y":112.41},{"x":13100,"y":104.295},{"x":13292,"y":106.422},{"x":13493,"y":107.416},{"x":13698,"y":112.177},{"x":13893,"y":107.386},{"x":14093,"y":106.635},{"x":14291,"y":104.459},{"x":14499,"y":112.513},{"x":14697,"y":110.293},{"x":14896,"y":109.238},{"x":15096,"y":109.189},{"x":15292,"y":105.191},{"x":15494,"y":107.932},{"x":15693,"y":106.639},{"x":15894,"y":107.162},{"x":16098,"y":112.059},{"x":16294,"y":106.865},{"x":16496,"y":109.914},{"x":16699,"y":112.125},{"x":16895,"y":108.176},{"x":17092,"y":105.777},{"x":17291,"y":104.314},{"x":17494,"y":106.672},{"x":17694,"y":107.478},{"x":17892,"y":105.625},{"x":18094,"y":107.535},{"x":18293,"y":106.167},{"x":18496,"y":108.706},{"x":18700,"y":112.74},{"x":18894,"y":107.584},{"x":19094,"y":106.946},{"x":19294,"y":106.831},{"x":19493,"y":105.97},{"x":19700,"y":112.183},{"x":19897,"y":110.122},{"x":20097,"y":109.714},{"x":20293,"y":106.104},{"x":20500,"y":113.558},{"x":20697,"y":109.623},{"x":20895,"y":107.545},{"x":21093,"y":105.813},{"x":21296,"y":107.986},{"x":21496,"y":108.099},{"x":21695,"y":107.688},{"x":21895,"y":107.871},{"x":22093,"y":105.316},{"x":22293,"y":106.177},{"x":22493,"y":105.312},{"x":22698,"y":110.213},{"x":22894,"y":106.853},{"x":23094,"y":106.721},{"x":23292,"y":104.229},{"x":23501,"y":113.568},{"x":23701,"y":113.374},{"x":23896,"y":109.013},{"x":24094,"y":106.679},{"x":24293,"y":105.566},{"x":24491,"y":103.893},{"x":24697,"y":109.256},{"x":24894,"y":106.129},{"x":25093,"y":105.802},{"x":25295,"y":106.34},{"x":25494,"y":106.466},{"x":25692,"y":104.162},{"x":25905,"y":112.466},{"x":26098,"y":110.277},{"x":26295,"y":106.965},{"x":26500,"y":112.881},{"x":26696,"y":108.111},{"x":26893,"y":105.266},{"x":27098,"y":109.259},{"x":27294,"y":106.43},{"x":27495,"y":107.037},{"x":27696,"y":108.42},{"x":27896,"y":108.037},{"x":28093,"y":104.985},{"x":28296,"y":108.263},{"x":28496,"y":107.804},{"x":28694,"y":106.497},{"x":28894,"y":106.921},{"x":29098,"y":109.872},{"x":29296,"y":107.503},{"x":29494,"y":104.983},{"x":29697,"y":108.664},{"x":29896,"y":107.99},{"x":30098,"y":109.994},{"x":30300,"y":112.276},{"x":30498,"y":104.901},{"x":30714,"y":108.326},{"x":30936,"y":106.804},{"x":31175,"y":109.727},{"x":31423,"y":107.72},{"x":31689,"y":106.181},{"x":31981,"y":109.127},{"x":32297,"y":108.7},{"x":32651,"y":108.07},{"x":33061,"y":108.008},{"x":33560,"y":104.228},{"x":34297,"y":107.669}],"borderColor":"#4f46e5","backgroundColor":"GRADIENT_PLACEHOLDER_#4f46e5","borderWidth":2,"pointRadius":0,"tension":0.4,"fill":true},{"label":"Delete","data":[{"x":2852,"y":108.73},{"x":3442,"y":104.595},{"x":4077,"y":109.311},{"x":4626,"y":108.974},{"x":5093,"y":110.66},{"x":6132,"y":111.457},{"x":6284,"y":106.336},{"x":6628,"y":112.378},{"x":6944,"y":108.435},{"x":7253,"y":107.687},{"x":7549,"y":111.902},{"x":7833,"y":109.873},{"x":8110,"y":110.48},{"x":8376,"y":119.807},{"x":8621,"y":110.266},{"x":8866,"y":109.344},{"x":9107,"y":112.591},{"x":9339,"y":110.245},{"x":9591,"y":110.67},{"x":9811,"y":109.133},{"x":10422,"y":111.122},{"x":10434,"y":109.711},{"x":10617,"y":109.891},{"x":11223,"y":109.817},{"x":11247,"y":109.315},{"x":11430,"y":113.958},{"x":11627,"y":112.77},{"x":11823,"y":105.584},{"x":12017,"y":103.84},{"x":12223,"y":109.451},{"x":12426,"y":108.669},{"x":12615,"y":102.966},{"x":12818,"y":107.844},{"x":13025,"y":110.325},{"x":13231,"y":108.562},{"x":13429,"y":109.551},{"x":13621,"y":110.066},{"x":13823,"y":109.022},{"x":14026,"y":109.112},{"x":14220,"y":108.28},{"x":14424,"y":111.394},{"x":14618,"y":109.572},{"x":14826,"y":108.708},{"x":15023,"y":108.037},{"x":15223,"y":108.314},{"x":15429,"y":110.346},{"x":15614,"y":108.694},{"x":15826,"y":112.126},{"x":16019,"y":104.805},{"x":16218,"y":110.014},{"x":16427,"y":109.913},{"x":16624,"y":110.299},{"x":16823,"y":109.055},{"x":17026,"y":109.436},{"x":17224,"y":108.596},{"x":17420,"y":107.947},{"x":17619,"y":110.29},{"x":17824,"y":108.434},{"x":18024,"y":109.322},{"x":18226,"y":114.21},{"x":18423,"y":108.779},{"x":18618,"y":109.091},{"x":18819,"y":104.359},{"x":19031,"y":111.385},{"x":19225,"y":111.361},{"x":19421,"y":108.214},{"x":19624,"y":111.901},{"x":19832,"y":109.571},{"x":20026,"y":108.108},{"x":20222,"y":110.353},{"x":20425,"y":108.633},{"x":20625,"y":110.729},{"x":20833,"y":110.203},{"x":21028,"y":110.669},{"x":21226,"y":110.31},{"x":21418,"y":108.931},{"x":21626,"y":110.989},{"x":21821,"y":107.849},{"x":22031,"y":116.142},{"x":22218,"y":108.257},{"x":22420,"y":108.518},{"x":22626,"y":112.385},{"x":22821,"y":108.063},{"x":23038,"y":109.425},{"x":23226,"y":110.777},{"x":23425,"y":105.591},{"x":23628,"y":109.815},{"x":23835,"y":107.501},{"x":24033,"y":111.645},{"x":24226,"y":107.235},{"x":24421,"y":107.707},{"x":24620,"y":108.853},{"x":24817,"y":108.296},{"x":25026,"y":112.184},{"x":25225,"y":109.926},{"x":25420,"y":109.476},{"x":25620,"y":108.192},{"x":25822,"y":108.726},{"x":26029,"y":109.277},{"x":26230,"y":106.645},{"x":26431,"y":111.339},{"x":26624,"y":110.481},{"x":26834,"y":108.658},{"x":27015,"y":108.902},{"x":27223,"y":108.59},{"x":27427,"y":108.486},{"x":27628,"y":111.708},{"x":27827,"y":111.662},{"x":28025,"y":108.477},{"x":28225,"y":109.993},{"x":28422,"y":111.962},{"x":28625,"y":110.441},{"x":28825,"y":109.017},{"x":29023,"y":108.838},{"x":29222,"y":107.538},{"x":29437,"y":117.209},{"x":29638,"y":117.294},{"x":29823,"y":109.637},{"x":30022,"y":108.551},{"x":30226,"y":110.508},{"x":30431,"y":110.642},{"x":30631,"y":110.336},{"x":30825,"y":109.889},{"x":31044,"y":110.187},{"x":31263,"y":109.831},{"x":31506,"y":109.363},{"x":31754,"y":108.846},{"x":32016,"y":107.066},{"x":32303,"y":107.997},{"x":32629,"y":113.471},{"x":32979,"y":108.033},{"x":33386,"y":105.339},{"x":33888,"y":106.08},{"x":34627,"y":108.754}],"borderColor":"#22c55e","backgroundColor":"GRADIENT_PLACEHOLDER_#22c55e","borderWidth":2,"pointRadius":0,"tension":0.4,"fill":true},{"label":"Fetch","data":[{"x":2635,"y":111.879},{"x":3228,"y":110.516},{"x":3864,"y":106.333},{"x":4405,"y":110.66},{"x":4874,"y":109.641},{"x":5910,"y":107.535},{"x":6062,"y":113.466},{"x":6407,"y":116.089},{"x":6727,"y":113.037},{"x":7036,"y":113.08},{"x":7330,"y":108.978},{"x":7615,"y":111.821},{"x":7891,"y":112.723},{"x":8149,"y":108.532},{"x":8401,"y":109.236},{"x":8648,"y":109.636},{"x":8886,"y":109.19},{"x":9120,"y":110.587},{"x":9348,"y":114.007},{"x":9593,"y":113.938},{"x":10201,"y":108.951},{"x":10216,"y":106.921},{"x":10403,"y":107.99},{"x":11003,"y":107.267},{"x":11030,"y":110.487},{"x":11208,"y":111.372},{"x":11402,"y":109.527},{"x":11610,"y":114.207},{"x":11807,"y":109.266},{"x":12007,"y":108.198},{"x":12203,"y":111.122},{"x":12404,"y":104.765},{"x":12601,"y":107.687},{"x":12805,"y":109.952},{"x":13009,"y":110.455},{"x":13211,"y":110.649},{"x":13403,"y":110.341},{"x":13605,"y":111.104},{"x":13807,"y":108.772},{"x":14001,"y":107.117},{"x":14202,"y":108.516},{"x":14399,"y":107.872},{"x":14608,"y":109.34},{"x":14807,"y":109.693},{"x":15006,"y":109.701},{"x":15207,"y":111.191},{"x":15398,"y":106.094},{"x":15606,"y":112.161},{"x":15805,"y":111.58},{"x":15999,"y":105.187},{"x":16208,"y":109.098},{"x":16404,"y":109.55},{"x":16606,"y":109.395},{"x":16808,"y":109.129},{"x":17007,"y":111.667},{"x":17203,"y":110.876},{"x":17401,"y":109.258},{"x":17604,"y":110.27},{"x":17805,"y":111.039},{"x":18002,"y":109.321},{"x":18205,"y":110.209},{"x":18405,"y":111.908},{"x":18603,"y":107.128},{"x":18811,"y":110.964},{"x":19006,"y":111.313},{"x":19204,"y":109.67},{"x":19404,"y":109.861},{"x":19609,"y":116.082},{"x":19810,"y":109.749},{"x":20007,"y":110.046},{"x":20206,"y":109.385},{"x":20404,"y":110.933},{"x":20613,"y":112.597},{"x":20808,"y":111.055},{"x":21004,"y":108.985},{"x":21201,"y":108.1},{"x":21406,"y":109.865},{"x":21607,"y":110.503},{"x":21805,"y":110.371},{"x":22006,"y":110.857},{"x":22202,"y":108.86},{"x":22404,"y":110.728},{"x":22604,"y":110.44},{"x":22811,"y":112.889},{"x":23006,"y":111.32},{"x":23207,"y":112.076},{"x":23401,"y":109.66},{"x":23618,"y":117.302},{"x":23810,"y":109.05},{"x":24004,"y":107.657},{"x":24205,"y":110.566},{"x":24403,"y":109.514},{"x":24600,"y":108.167},{"x":24806,"y":108.474},{"x":25006,"y":110.92},{"x":25204,"y":110.046},{"x":25404,"y":108.817},{"x":25604,"y":110.321},{"x":25809,"y":116.851},{"x":26015,"y":109.876},{"x":26207,"y":109.125},{"x":26403,"y":107.308},{"x":26612,"y":111.055},{"x":26801,"y":104.735},{"x":27003,"y":110.205},{"x":27207,"y":109.128},{"x":27405,"y":110.932},{"x":27608,"y":113.45},{"x":27807,"y":110.829},{"x":28007,"y":110.733},{"x":28201,"y":107.752},{"x":28408,"y":111.29},{"x":28605,"y":108.713},{"x":28805,"y":110.36},{"x":29003,"y":108.312},{"x":29210,"y":111.535},{"x":29411,"y":115.271},{"x":29606,"y":112.295},{"x":29807,"y":109.977},{"x":30006,"y":109.655},{"x":30209,"y":111.154},{"x":30411,"y":110.674},{"x":30607,"y":108.747},{"x":30826,"y":110.929},{"x":31045,"y":108.733},{"x":31285,"y":110.031},{"x":31534,"y":110.475},{"x":31801,"y":110.903},{"x":32087,"y":105.405},{"x":32407,"y":109.697},{"x":32762,"y":110.994},{"x":33171,"y":109.988},{"x":33671,"y":111.097},{"x":34408,"y":111}],"borderColor":"#f97316","backgroundColor":"GRADIENT_PLACEHOLDER_#f97316","borderWidth":2,"pointRadius":0,"tension":0.4,"fill":true},{"label":"Update","data":[{"x":2743,"y":108.199},{"x":3337,"y":108.253},{"x":3967,"y":103.562},{"x":4517,"y":111.667},{"x":4982,"y":108.075},{"x":6020,"y":109.578},{"x":6178,"y":115.369},{"x":6516,"y":108.493},{"x":6835,"y":108.433},{"x":7145,"y":108.348},{"x":7437,"y":106.811},{"x":7722,"y":107.44},{"x":8000,"y":108.758},{"x":8256,"y":106.781},{"x":8511,"y":109.247},{"x":8756,"y":107.657},{"x":8994,"y":107.936},{"x":9228,"y":108.028},{"x":9479,"y":130.636},{"x":9702,"y":108.289},{"x":10311,"y":109.402},{"x":10324,"y":107.53},{"x":10507,"y":104.319},{"x":11113,"y":109.74},{"x":11136,"y":106.719},{"x":11316,"y":106.351},{"x":11514,"y":111.589},{"x":11717,"y":106.599},{"x":11913,"y":105.511},{"x":12113,"y":106.062},{"x":12317,"y":112.842},{"x":12511,"y":106.609},{"x":12710,"y":109.05},{"x":12915,"y":109.556},{"x":13122,"y":110.12},{"x":13319,"y":108.47},{"x":13510,"y":107.25},{"x":13714,"y":108.749},{"x":13917,"y":109.416},{"x":14111,"y":110.203},{"x":14312,"y":110.258},{"x":14508,"y":108.918},{"x":14717,"y":108.479},{"x":14915,"y":107.59},{"x":15114,"y":108.591},{"x":15319,"y":111.325},{"x":15505,"y":106.786},{"x":15714,"y":106.962},{"x":15914,"y":108.959},{"x":16108,"y":109.062},{"x":16316,"y":108.572},{"x":16514,"y":109.523},{"x":16714,"y":107.728},{"x":16917,"y":108.365},{"x":17115,"y":108.458},{"x":17312,"y":107.804},{"x":17509,"y":108.137},{"x":17715,"y":110.448},{"x":17914,"y":108.654},{"x":18112,"y":109.309},{"x":18313,"y":108.439},{"x":18509,"y":103.713},{"x":18714,"y":110.796},{"x":18919,"y":108.166},{"x":19114,"y":107.622},{"x":19312,"y":107.446},{"x":19511,"y":107.326},{"x":19722,"y":106.356},{"x":19918,"y":107.71},{"x":20111,"y":103.895},{"x":20316,"y":110.012},{"x":20514,"y":109.466},{"x":20722,"y":108.663},{"x":20917,"y":107.366},{"x":21115,"y":111.181},{"x":21309,"y":107.774},{"x":21514,"y":108.209},{"x":21713,"y":105.99},{"x":21914,"y":108.538},{"x":22110,"y":103.368},{"x":22311,"y":109.009},{"x":22513,"y":108.84},{"x":22713,"y":108.541},{"x":22928,"y":117.542},{"x":23115,"y":108.937},{"x":23319,"y":111.952},{"x":23518,"y":116.341},{"x":23727,"y":108.264},{"x":23921,"y":110.699},{"x":24118,"y":113.875},{"x":24313,"y":108.232},{"x":24511,"y":108.291},{"x":24708,"y":107.722},{"x":24914,"y":107.876},{"x":25115,"y":109.376},{"x":25311,"y":106.481},{"x":25512,"y":107.961},{"x":25713,"y":108.854},{"x":25920,"y":108.279},{"x":26123,"y":107.43},{"x":26319,"y":111.544},{"x":26513,"y":109.926},{"x":26725,"y":113.019},{"x":26905,"y":103.669},{"x":27114,"y":110.042},{"x":27318,"y":110.878},{"x":27516,"y":109.978},{"x":27716,"y":106.765},{"x":27917,"y":109.14},{"x":28115,"y":107.459},{"x":28309,"y":108.241},{"x":28514,"y":106.263},{"x":28715,"y":110.085},{"x":28914,"y":108.4},{"x":29114,"y":110.551},{"x":29319,"y":109.541},{"x":29521,"y":109.303},{"x":29713,"y":106.673},{"x":29913,"y":105.587},{"x":30115,"y":108.962},{"x":30320,"y":110.041},{"x":30521,"y":109.341},{"x":30715,"y":108.584},{"x":30933,"y":107.278},{"x":31153,"y":108.006},{"x":31397,"y":111.028},{"x":31645,"y":109.924},{"x":31909,"y":108.264},{"x":32195,"y":107.379},{"x":32515,"y":107.965},{"x":32871,"y":108.486},{"x":33280,"y":108.915},{"x":33782,"y":109.985},{"x":34518,"y":109.752}],"borderColor":"#8b5cf6","backgroundColor":"GRADIENT_PLACEHOLDER_#8b5cf6","borderWidth":2,"pointRadius":0,"tension":0.4,"fill":true},{"label":"https://quickpizza.grafana.com/api/users","data":[{"x":0,"y":180.51}],"borderColor":"#94a3b8","backgroundColor":"GRADIENT_PLACEHOLDER_#94a3b8","borderWidth":2,"pointRadius":0,"tension":0.4,"fill":true},{"label":"https://quickpizza.grafana.com/api/users/token/login","data":[{"x":180,"y":179.356}],"borderColor":"#ef4444","backgroundColor":"GRADIENT_PLACEHOLDER_#ef4444","borderWidth":2,"pointRadius":0,"tension":0.4,"fill":true}],"p50Data":[{"x":0,"y":179.356},{"x":2000,"y":108.73},{"x":3000,"y":106.778},{"x":4000,"y":109.311},{"x":5000,"y":107.535},{"x":6000,"y":108.493},{"x":7000,"y":108.915},{"x":8000,"y":108.758},{"x":9000,"y":110.587},{"x":10000,"y":109.392},{"x":11000,"y":109.74},{"x":12000,"y":108.198},{"x":13000,"y":109.022},{"x":14000,"y":108.918},{"x":15000,"y":108.591},{"x":16000,"y":109.129},{"x":17000,"y":108.458},{"x":18000,"y":108.779},{"x":19000,"y":109.571},{"x":20000,"y":109.623},{"x":21000,"y":108.209},{"x":22000,"y":108.84},{"x":23000,"y":109.66},{"x":24000,"y":108.167},{"x":25000,"y":108.817},{"x":26000,"y":109.125},{"x":27000,"y":109.14},{"x":28000,"y":108.4},{"x":29000,"y":109.303},{"x":30000,"y":109.655},{"x":31000,"y":109.363},{"x":32000,"y":108.033},{"x":33000,"y":108.008},{"x":34000,"y":108.754}],"p90Data":[{"x":0,"y":180.51},{"x":2000,"y":111.879},{"x":3000,"y":110.516},{"x":4000,"y":111.667},{"x":5000,"y":110.66},{"x":6000,"y":115.369},{"x":7000,"y":112.723},{"x":8000,"y":110.48},{"x":9000,"y":128.943},{"x":10000,"y":111.424},{"x":11000,"y":113.389},{"x":12000,"y":112.41},{"x":13000,"y":110.649},{"x":14000,"y":110.293},{"x":15000,"y":111.58},{"x":16000,"y":112.059},{"x":17000,"y":110.876},{"x":18000,"y":111.908},{"x":19000,"y":111.901},{"x":20000,"y":111.055},{"x":21000,"y":110.669},{"x":22000,"y":112.889},{"x":23000,"y":113.568},{"x":24000,"y":110.566},{"x":25000,"y":112.184},{"x":26000,"y":111.544},{"x":27000,"y":111.662},{"x":28000,"y":110.733},{"x":29000,"y":115.271},{"x":30000,"y":110.929},{"x":31000,"y":110.903},{"x":32000,"y":110.994},{"x":33000,"y":111.097},{"x":34000,"y":111}],"p95Data":[{"x":0,"y":180.51},{"x":2000,"y":111.879},{"x":3000,"y":110.516},{"x":4000,"y":111.667},{"x":5000,"y":110.66},{"x":6000,"y":116.089},{"x":7000,"y":113.08},{"x":8000,"y":119.807},{"x":9000,"y":130.636},{"x":10000,"y":116.137},{"x":11000,"y":113.958},{"x":12000,"y":112.842},{"x":13000,"y":111.104},{"x":14000,"y":111.394},{"x":15000,"y":112.126},{"x":16000,"y":112.125},{"x":17000,"y":111.039},{"x":18000,"y":112.74},{"x":19000,"y":112.183},{"x":20000,"y":112.597},{"x":21000,"y":110.989},{"x":22000,"y":116.142},{"x":23000,"y":116.341},{"x":24000,"y":111.645},{"x":25000,"y":112.466},{"x":26000,"y":112.881},{"x":27000,"y":111.708},{"x":28000,"y":111.29},{"x":29000,"y":117.209},{"x":30000,"y":111.154},{"x":31000,"y":111.028},{"x":32000,"y":113.471},{"x":33000,"y":111.097},{"x":34000,"y":111}],"p99Data":[{"x":0,"y":180.51},{"x":2000,"y":111.879},{"x":3000,"y":110.516},{"x":4000,"y":111.667},{"x":5000,"y":110.66},{"x":6000,"y":116.089},{"x":7000,"y":113.08},{"x":8000,"y":119.807},{"x":9000,"y":130.636},{"x":10000,"y":116.137},{"x":11000,"y":114.207},{"x":12000,"y":113.408},{"x":13000,"y":112.177},{"x":14000,"y":112.513},{"x":15000,"y":112.161},{"x":16000,"y":112.125},{"x":17000,"y":111.667},{"x":18000,"y":114.21},{"x":19000,"y":116.082},{"x":20000,"y":113.558},{"x":21000,"y":111.181},{"x":22000,"y":117.542},{"x":23000,"y":117.302},{"x":24000,"y":113.875},{"x":25000,"y":116.851},{"x":26000,"y":113.019},{"x":27000,"y":113.45},{"x":28000,"y":111.962},{"x":29000,"y":117.294},{"x":30000,"y":112.276},{"x":31000,"y":111.028},{"x":32000,"y":113.471},{"x":33000,"y":111.097},{"x":34000,"y":111}],"rpsData":[{"x":-653,"y":2},{"x":347,"y":0},{"x":1347,"y":0},{"x":2347,"y":7},{"x":3347,"y":6},{"x":4347,"y":7},{"x":5347,"y":9},{"x":6347,"y":13},{"x":7347,"y":14},{"x":8347,"y":17},{"x":9347,"y":14},{"x":10347,"y":17},{"x":11347,"y":20},{"x":12347,"y":20},{"x":13347,"y":20},{"x":14347,"y":20},{"x":15347,"y":20},{"x":16347,"y":20},{"x":17347,"y":20},{"x":18347,"y":20},{"x":19347,"y":20},{"x":20347,"y":20},{"x":21347,"y":20},{"x":22347,"y":20},{"x":23347,"y":20},{"x":24347,"y":20},{"x":25347,"y":20},{"x":26347,"y":20},{"x":27347,"y":20},{"x":28347,"y":20},{"x":29347,"y":20},{"x":30347,"y":18},{"x":31347,"y":15},{"x":32347,"y":10},{"x":33347,"y":6},{"x":34347,"y":3}],"vuData":[{"x":450,"y":0},{"x":1450,"y":0},{"x":2451,"y":1},{"x":3451,"y":0},{"x":4451,"y":1},{"x":5452,"y":0},{"x":6452,"y":1},{"x":7452,"y":2},{"x":8453,"y":2},{"x":9453,"y":2},{"x":10453,"y":1},{"x":11453,"y":2},{"x":12454,"y":2},{"x":13454,"y":2},{"x":14454,"y":2},{"x":15454,"y":2},{"x":16455,"y":2},{"x":17455,"y":2},{"x":18455,"y":2},{"x":19455,"y":2},{"x":20455,"y":2},{"x":21455,"y":2},{"x":22455,"y":2},{"x":23455,"y":2},{"x":24456,"y":2},{"x":25456,"y":2},{"x":26456,"y":2},{"x":27456,"y":2},{"x":28456,"y":2},{"x":29456,"y":2},{"x":30456,"y":2},{"x":31456,"y":2},{"x":32456,"y":1},{"x":33456,"y":1},{"x":34456,"y":1}],"combinedTimeData":[{"x":-1000,"responseTime":null,"tps":2},{"x":0,"responseTime":179.933,"tps":0},{"x":1000,"responseTime":null,"tps":0},{"x":2000,"responseTime":109.6555,"tps":7},{"x":3000,"responseTime":107.03785714285716,"tps":6},{"x":4000,"responseTime":109.63237500000001,"tps":7},{"x":5000,"responseTime":108.38374999999999,"tps":9},{"x":6000,"responseTime":109.95742857142857,"tps":13},{"x":7000,"responseTime":109.36884615384614,"tps":14},{"x":8000,"responseTime":109.09511764705883,"tps":17},{"x":9000,"responseTime":112.86784615384614,"tps":14},{"x":10000,"responseTime":109.41964285714288,"tps":17},{"x":11000,"responseTime":109.64927272727272,"tps":20},{"x":12000,"responseTime":108.3024,"tps":20},{"x":13000,"responseTime":109.02739999999999,"tps":20},{"x":14000,"responseTime":108.90950000000001,"tps":20},{"x":15000,"responseTime":108.67461904761906,"tps":20},{"x":16000,"responseTime":109.13931578947366,"tps":20},{"x":17000,"responseTime":108.55900000000001,"tps":20},{"x":18000,"responseTime":108.92229999999999,"tps":20},{"x":19000,"responseTime":109.38094999999998,"tps":20},{"x":20000,"responseTime":109.39939999999999,"tps":20},{"x":21000,"responseTime":108.78605000000002,"tps":20},{"x":22000,"responseTime":109.4155,"tps":20},{"x":23000,"responseTime":110.28074999999998,"tps":20},{"x":24000,"responseTime":108.28164999999998,"tps":20},{"x":25000,"responseTime":109.0823,"tps":20},{"x":26000,"responseTime":108.87935,"tps":20},{"x":27000,"responseTime":109.49390000000001,"tps":20},{"x":28000,"responseTime":108.68279999999997,"tps":20},{"x":29000,"responseTime":109.92864999999999,"tps":20},{"x":30000,"responseTime":109.37959999999998,"tps":18},{"x":31000,"responseTime":109.27162499999999,"tps":15},{"x":32000,"responseTime":108.60525,"tps":10},{"x":33000,"responseTime":107.955,"tps":6},{"x":34000,"responseTime":109.29375,"tps":3}]};
+    const testStartTime = 1752112798653; // Make test start time available for absolute time formatting
+
+    // Define the formatTime function for consistent time formatting across all charts
+    function formatTime(ms) {
+        const seconds = Math.floor(ms / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        return minutes.toString().padStart(2, '0') + ':' + remainingSeconds.toString().padStart(2, '0');
+    }
+
+    const timeScaleOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'nearest', axis: 'x', intersect: false },
+        plugins: {
+            tooltip: {
+                callbacks: {
+                    title: function(context) { return 'At ' + formatTime(context[0].parsed.x) + ' of test'; }
+                }
+            },
+            legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } },
+            zoom: { pan: { enabled: true, mode: 'x' }, zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' } },
+            datalabels: { display: false }
+        },
+        scales: {
+            x: {
+                type: 'linear',
+                title: { display: true, text: 'Test Duration (MM:SS)' },
+                ticks: { 
+                    callback: function(value) { 
+                        // Ensure proper time formatting for all charts
+                        return formatTime(value);
+                    }
+                },
+                grid: { color: 'rgba(0, 0, 0, 0.05)' }
+            },
+            y: { 
+                title: { display: true, text: 'Response Time (ms)' },
+                grid: { color: 'rgba(0, 0, 0, 0.05)' }
+            }
+        }
+    };
+
+    // Response Time Chart
+    if (document.getElementById('responseTimeChart')) {
+      clientData.responseTimeDatasets.forEach(ds => {
+        const color = ds.borderColor;
+        ds.backgroundColor = (context) => {
+            const chart = context.chart;
+            const { ctx, chartArea } = chart;
+            if (!chartArea) return null;
+            const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+            gradient.addColorStop(0, color + '22');
+            gradient.addColorStop(1, color + '66');
+            return gradient;
+        };
+      });
+      new Chart(document.getElementById('responseTimeChart').getContext('2d'), {
+        type: 'line',
+        data: { datasets: clientData.responseTimeDatasets },
+        options: timeScaleOptions
+      });
+    }
+    
+    // Percentiles Chart
+    if (document.getElementById('percentilesChart')) {
+      new Chart(document.getElementById('percentilesChart').getContext('2d'), {
+        type: 'line',
+        data: {
+          datasets: [
+            { label: 'p50 (Median)', data: clientData.p50Data, borderColor: '#22c55e', backgroundColor: '#22c55e44', borderWidth: 2, pointRadius: 0, fill: true },
+            { label: 'p90', data: clientData.p90Data, borderColor: '#a855f7', backgroundColor: '#a855f744', borderWidth: 2, pointRadius: 0, fill: true },
+            { label: 'p95', data: clientData.p95Data, borderColor: '#f97316', backgroundColor: '#f9731644', borderWidth: 2, pointRadius: 0, fill: true },
+            { label: 'p99', data: clientData.p99Data, borderColor: '#ef4444', backgroundColor: '#ef444444', borderWidth: 2, pointRadius: 0, fill: true }
+          ]
+        },
+        options: timeScaleOptions
+      });
+    }
+    
+    // Response Time vs TPS Chart with dual Y-axes
+    if (document.getElementById('responseTimeTpsChart')) {
+      const ctx = document.getElementById('responseTimeTpsChart').getContext('2d');
+      
+      // Clear any previous chart elements
+      if (window.rtVsTpsChart) {
+        window.rtVsTpsChart.destroy();
+      }
+      
+      // Extract data for the chart - clean up the data points
+      const rtData = clientData.combinedTimeData
+        .filter(point => point.responseTime !== null)
+        .map(point => ({
+          x: point.x,
+          y: point.responseTime
+        }));
+      
+      // Reduce the number of data points for TPS to make it cleaner
+      const tpsData = clientData.combinedTimeData
+        .filter(point => point.tps !== null)
+        .map(point => ({
+          x: point.x,
+          y: point.tps
+        }));
+      
+      // Configure dual Y-axis chart with cleaner display
+      const rtVsTpsOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          mode: 'index',
+          intersect: false,
+        },
+        elements: {
+          line: {
+            tension: 0.3
+          },
+          point: {
+            radius: 0 // Hide points for cleaner lines
+          }
+        },
+        plugins: {
+          tooltip: {
+            callbacks: {
+              title: function(context) {
+                return 'At ' + formatTime(context[0].parsed.x) + ' of test';
+              },
+              label: function(context) {
+                const datasetLabel = context.dataset.label;
+                const value = context.parsed.y;
+                if (datasetLabel === 'Response Time') {
+                  return datasetLabel + ': ' + value.toFixed(2) + ' ms';
+                } else {
+                  return datasetLabel + ': ' + value.toFixed(2);
+                }
+              }
+            },
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            titleFont: { size: 12 },
+            bodyFont: { size: 12 },
+            padding: 8,
+            displayColors: true
+          },
+          legend: {
+            position: 'top',
+            align: 'center',
+            labels: {
+              usePointStyle: true,
+              boxWidth: 10,
+              padding: 10,
+              font: { size: 11 }
+            }
+          },
+          datalabels: {
+            display: false
+          }
+        },
+        scales: {
+          x: {
+            type: 'linear',
+            title: { display: true, text: 'Test Duration (MM:SS)', font: { size: 12 } },
+            ticks: { 
+              callback: function(value) { return formatTime(value); },
+              font: { size: 10 },
+              maxRotation: 0
+            },
+            grid: { color: 'rgba(0, 0, 0, 0.05)' }
+          },
+          y: {
+            type: 'linear',
+            display: true,
+            position: 'left',
+            title: { display: true, text: 'Response Time (ms)', font: { size: 12 } },
+            beginAtZero: true,
+            ticks: { font: { size: 10 } },
+            grid: { color: 'rgba(0, 0, 0, 0.05)' }
+          },
+          y1: {
+            type: 'linear',
+            display: true,
+            position: 'right',
+            title: { display: true, text: 'TPS', font: { size: 12 } },
+            beginAtZero: true,
+            ticks: { font: { size: 10 } },
+            grid: {
+              drawOnChartArea: false // Only show grid lines for the left axis
+            }
+          }
+        }
+      };
+      
+      // Sample the data to reduce visual noise
+      const sampleRate = Math.max(1, Math.floor(rtData.length / 200)); // Limit to ~200 points max
+      const sampledRtData = rtData.filter((_, i) => i % sampleRate === 0);
+      
+      // Create the chart with dual Y-axes
+      window.rtVsTpsChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          datasets: [
+            {
+              label: 'Response Time',
+              data: sampledRtData,
+              borderColor: '#4f46e5',
+              backgroundColor: function(context) {
+                const chart = context.chart;
+                const {ctx, chartArea} = chart;
+                if (!chartArea) return null;
+                const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+                gradient.addColorStop(0, 'rgba(79, 70, 229, 0.05)');
+                gradient.addColorStop(1, 'rgba(79, 70, 229, 0.2)');
+                return gradient;
+              },
+              yAxisID: 'y',
+              fill: true,
+              borderWidth: 1.5,
+              pointRadius: 0,
+              pointHoverRadius: 3
+            },
+            {
+              label: 'TPS',
+              data: tpsData,
+              borderColor: '#22c55e',
+              backgroundColor: 'transparent',
+              yAxisID: 'y1',
+              borderWidth: 1.5,
+              pointRadius: 0,
+              pointHoverRadius: 3,
+              fill: false
+            }
+          ]
+        },
+        options: rtVsTpsOptions
+      });
+    }
+    
+    // RPS Chart
+    if (document.getElementById('rpsChart')) {
+      // Clone the time scale options but ensure proper formatting
+      const rpsOptions = JSON.parse(JSON.stringify(timeScaleOptions));
+      rpsOptions.scales.y.title.text = 'RPS';
+      
+      // Ensure x-axis ticks use proper time formatting
+      rpsOptions.scales.x = {
+        type: 'linear',
+        title: { display: true, text: 'Test Duration (MM:SS)' },
+        ticks: {
+          callback: function(value) { 
+            return formatTime(value);
+          }
+        },
+        grid: { color: 'rgba(0, 0, 0, 0.05)' }
+      };
+      
+      new Chart(document.getElementById('rpsChart').getContext('2d'), {
+        type: 'line',
+        data: { datasets: [{ label: 'RPS', data: clientData.rpsData, borderColor: '#22c55e', borderWidth: 2, pointRadius: 0, fill: true, tension: 0.4 }] },
+        options: rpsOptions
+      });
+    }
+    
+    // VU Chart
+    if (document.getElementById('vuChart')) {
+      // Clone the time scale options but ensure proper formatting
+      const vuOptions = JSON.parse(JSON.stringify(timeScaleOptions));
+      vuOptions.scales.y.title.text = 'VUs';
+      
+      // Ensure x-axis ticks use proper time formatting
+      vuOptions.scales.x = {
+        type: 'linear',
+        title: { display: true, text: 'Test Duration (MM:SS)' },
+        ticks: {
+          callback: function(value) { 
+            return formatTime(value);
+          }
+        },
+        grid: { color: 'rgba(0, 0, 0, 0.05)' }
+      };
+      
+      new Chart(document.getElementById('vuChart').getContext('2d'), {
+        type: 'line',
+        data: { datasets: [{ label: 'VUs', data: clientData.vuData, borderColor: '#8b5cf6', borderWidth: 2, pointRadius: 0, fill: true, stepped: true }] },
+        options: vuOptions
+      });
+    }
+  
+        });
+    </script>
+</body>
+</html>

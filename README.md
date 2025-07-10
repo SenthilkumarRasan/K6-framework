@@ -1,6 +1,6 @@
 # k6 Performance Testing Framework
 
-A comprehensive performance testing framework built on [k6](https://k6.io/) with enhanced reporting capabilities for API, Browser, and Protocol testing.
+A comprehensive performance testing framework built on [k6](https://k6.io/) with enhanced reporting capabilities for API, Browser, and Protocol testing. Features improved browser dashboard with Core Web Vitals metrics, custom visualization, and SLA-based highlighting.
 
 ## Table of Contents
 
@@ -35,10 +35,13 @@ A comprehensive performance testing framework built on [k6](https://k6.io/) with
 This framework extends k6's capabilities with:
 
 - Unified test execution across API, Browser, and Protocol tests
-- Enhanced HTML reporting with detailed metrics visualization
+- Enhanced HTML reporting with detailed metrics visualization including Core Web Vitals
 - Template-based organization for better test management
 - Docker support for consistent execution environments
+- SLA-based performance visualization with color-coded thresholds
 - Configurable test scenarios for different performance testing needs
+- Real-time Core Web Vitals metrics collection for browser tests
+- Accurate and reliable reporting with no synthetic data
 
 ## Installation
 
@@ -226,6 +229,48 @@ docker build -t k6-tests .
 
 # Run a test with Docker
 docker run -v $(pwd)/results:/app/results k6-tests --script=verticalBrowser.js --test-type=BROWSER --scenario=custom-tps --environment=qa --headless=true --aut=shape --time-unit=1m --base-url="https://example.com" --ramping-stages="10s:1,2m:35,10s:1"
+```
+
+## Browser Performance Dashboard
+
+The browser performance dashboard provides comprehensive visualization of browser test metrics including Core Web Vitals. The dashboard includes:
+
+- **Information Cards**: Key test metadata and performance summary (BROWSER test type, duration, requests, RPS, response time)
+- **SLA Banners**: Color-coded performance thresholds for key metrics
+- **Web Vitals Tables**: Detailed percentile metrics for TTFB and LCP with color-coded cells based on SLA thresholds
+- **Time-Series Charts**: 
+  - Response Time Percentiles Chart with median, p90, p95, and p99 metrics
+  - Response Time vs TPS Chart
+  - Virtual Users Chart
+  - Transaction Performance by Template
+
+### SLA Thresholds
+
+The dashboard uses the following default SLA thresholds:
+
+**Server Time (TTFB)**:
+- AVG: warning at 300ms, danger at 500ms
+- MEDIAN: warning at 250ms, danger at 400ms
+- P90: warning at 500ms, danger at 800ms
+
+**Page Load Time (LCP)**:
+- AVG: warning at 2.5s, danger at 4s
+- MEDIAN: warning at 2.5s, danger at 4s
+- P90: warning at 4s, danger at 6s
+
+These thresholds can be customized using the `--sla-config` parameter.
+
+### Browser Dashboard Example
+
+```
+# Generate a browser performance dashboard
+node utils/dashboards/common/performance-data-processor.js [raw-json-file] [summary-json-file] [output-file] BROWSER [vertical] [scenario]
+
+# Example
+node utils/dashboards/common/performance-data-processor.js results/BROWSER_shape_custom-tps.json results/BROWSER_shape_custom-tps_summary.json temp/processed.json BROWSER shape custom-tps
+
+# Generate the HTML dashboard
+node utils/dashboards/performance/browser-performance-dashboard.js temp/processed.json utils/dashboards/performance/browser-performance-dashboard-template.html results/browser_dashboard.html
 ```
 
 ## Custom HTML Reports

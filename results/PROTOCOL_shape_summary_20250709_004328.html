@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en" style="scroll-behavior: smooth;">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K6 Protocol Summary Report</title>
+    <!-- Tailwind CSS CDN for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Font: Inter for a clean, professional look -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles for the report to override/enhance Tailwind */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* Light blue-gray background */
+            color: #334155; /* Darker text for readability */
+        }
+
+        /* Enhanced Section Title Style */
+        .section-title {
+            color: #111827;
+            font-size: 22px;
+            font-weight: 700;
+            margin: 48px 0 16px 0;
+            position: relative;
+            display: inline-block;
+            padding-bottom: 8px;
+        }
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 4px;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6);
+            border-radius: 4px;
+        }
+
+        /* Modern Table Styling */
+        .custom-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-bottom: 32px;
+            font-size: 14px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .custom-table thead th {
+            background-color: #4f46e5; /* Deep purple header */
+            color: white;
+            padding: 12px 16px;
+            font-weight: 600;
+            text-align: left;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+        .custom-table tbody td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e5e7eb;
+            background-color: white;
+        }
+        .custom-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+        .custom-table tbody tr:hover td {
+            background-color: #f9fafb;
+        }
+
+        /* Special table styling for different resource types */
+        .html-table thead th {
+            background-color: #1e40af; /* Blue for HTML resources */
+        }
+        .nonhtml-table thead th {
+            background-color: #047857; /* Green for non-HTML resources */
+        }
+        .resource-type-table thead th {
+            background-color: #b91c1c; /* Red for resource types */
+        }
+        .network-table thead th {
+            background-color: #3730a3; /* Indigo for network analysis */
+        }
+
+        /* Summary stats cards */
+        .summary-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        .summary-stat-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 16px;
+            border-left: 4px solid #4f46e5;
+        }
+        .summary-stat-card.primary {
+            border-left-color: #4f46e5;
+        }
+        .summary-stat-card.success {
+            border-left-color: #10b981;
+        }
+        .summary-stat-card.warning {
+            border-left-color: #f59e0b;
+        }
+        .summary-stat-card.danger {
+            border-left-color: #ef4444;
+        }
+        .summary-stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .summary-stat-label {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        /* Responsive layout */
+        @media (max-width: 768px) {
+            .summary-stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        /* Left Navigation Styling */
+        .container-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: #1a202c; /* Dark background for sidebar */
+            color: #e2e8f0; /* Light text color */
+            padding: 1.5rem;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+            flex-shrink: 0;
+        }
+
+        .sidebar h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: #6366f1; /* Accent color for title */
+        }
+
+        .sidebar nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar nav ul li {
+            margin-bottom: 0.75rem;
+        }
+
+        .sidebar nav ul li a {
+            color: #e2e8f0;
+            text-decoration: none;
+            display: block;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            transition: background-color 0.2s ease;
+        }
+
+        .sidebar nav ul li a:hover {
+            background-color: #2d3748;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container-layout {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Main Dashboard Container -->
+    <div class="container-layout">        
+        <!-- Left Navigation Sidebar -->
+        <aside class="sidebar">
+            <h2>K6 Report</h2>
+            <nav>
+                <ul>
+                    <li><a href="#overview-section">Performance Summary</a></li>
+                    <li><a href="#html-resources-section">HTML Resources</a></li>
+                    <li><a href="#nonhtml-resources-section">Non-HTML Resources</a></li>
+                    <li><a href="#resource-types-section">Resource Types</a></li>
+                    <li><a href="#network-analysis-section">Network Analysis</a></li>
+                    <li><a href="#metrics-legend-section">Metrics Legend</a></li>
+                </ul>
+            </nav>
+        </aside>
+        <main class="flex-1 p-6 lg:p-8">
+            <!-- Header Section -->
+            <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 pb-4 border-b border-slate-200">
+                <h1 class="text-3xl font-extrabold text-slate-800 mb-4 sm:mb-0">Protocol Summary Report</h1>
+            </header>
+
+            <!-- Performance Summary -->
+            <section id="overview-section" class="mb-8">
+                <h2 class="section-title">Performance Summary</h2>
+                <div class="summary-stats-grid">
+    <div class="summary-stats-grid">
+      <div class="summary-stat-card primary">
+        <div class="summary-stat-value">49</div>
+        <div class="summary-stat-label">HTML Requests</div>
+      </div>
+      <div class="summary-stat-card success">
+        <div class="summary-stat-value">1331</div>
+        <div class="summary-stat-label">Non-HTML Requests</div>
+      </div>
+      <div class="summary-stat-card warning">
+        <div class="summary-stat-value">99.93%</div>
+        <div class="summary-stat-label">Overall Success Rate</div>
+      </div>
+      <div class="summary-stat-card danger">
+        <div class="summary-stat-value">1</div>
+        <div class="summary-stat-label">Failed Requests</div>
+      </div>
+      <div class="summary-stat-card primary">
+        <div class="summary-stat-value">1m 57s</div>
+        <div class="summary-stat-label">Test Duration</div>
+      </div>
+    </div>
+  </div>
+
+                <!-- Overall Summary Table -->
+                <div id="overall-metrics">
+                    <!-- Server-side rendered overall metrics table will be inserted here -->
+                </div>
+            
+<div class="mt-6">
+
+    <div class="overflow-x-auto">
+      <table class="custom-table w-full">
+        <thead>
+          <tr>
+            <th>Resource Type</th>
+            <th>Requests</th>
+            <th>Success Rate</th>
+            <th>Failed</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>HTML Resources</td>
+            <td>49</td>
+            <td>97.96%</td>
+            <td>1</td>
+          </tr>
+          <tr>
+            <td>Non-HTML Resources</td>
+            <td>1331</td>
+            <td>100.00%</td>
+            <td>0</td>
+          </tr>
+          <tr class="font-semibold">
+            <td>Total</td>
+            <td>1380</td>
+            <td>99.93%</td>
+            <td>1</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  
+</div>
+</section>
+
+            <!-- HTML Resources Section -->
+            <section id="html-resources-section" class="mb-8">
+                <h2 class="section-title">HTML Resources</h2>
+
+    <div class="overflow-x-auto">
+      <table class="custom-table html-table w-full">
+        <thead>
+          <tr>
+            <th>Transaction</th>
+            <th>Requests</th>
+            <th>Success Rate</th>
+            <th colspan="3">TTFB (ms)</th>
+            <th colspan="3">TTLB (ms)</th>
+          </tr>
+          <tr>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th>Avg</th>
+            <th>Med</th>
+            <th>p90</th>
+            <th>Avg</th>
+            <th>Med</th>
+            <th>p90</th>
+          </tr>
+        </thead>
+        <tbody>
+  
+      <tr>
+        <td>taxonomyScTemplate</td>
+        <td>4</td>
+        <td>100.00%</td>
+        <td>177.73</td>
+        <td>179.38</td>
+        <td>198.32</td>
+        <td>229.56</td>
+        <td>229.68</td>
+        <td>280.74</td>
+      </tr>
+    
+      <tr>
+        <td>listScCommerceTemplate</td>
+        <td>11</td>
+        <td>100.00%</td>
+        <td>224.85</td>
+        <td>216.62</td>
+        <td>239.20</td>
+        <td>319.19</td>
+        <td>303.46</td>
+        <td>365.41</td>
+      </tr>
+    
+      <tr>
+        <td>structuredContentTemplate</td>
+        <td>15</td>
+        <td>100.00%</td>
+        <td>175.37</td>
+        <td>174.67</td>
+        <td>190.22</td>
+        <td>215.15</td>
+        <td>215.69</td>
+        <td>226.94</td>
+      </tr>
+    
+      <tr>
+        <td>listScTemplate</td>
+        <td>12</td>
+        <td>100.00%</td>
+        <td>176.25</td>
+        <td>174.44</td>
+        <td>188.39</td>
+        <td>230.63</td>
+        <td>236.24</td>
+        <td>252.52</td>
+      </tr>
+    
+      <tr>
+        <td>exclusiveTemplate</td>
+        <td>2</td>
+        <td>100.00%</td>
+        <td>196.41</td>
+        <td>217.53</td>
+        <td>217.53</td>
+        <td>248.19</td>
+        <td>269.42</td>
+        <td>269.42</td>
+      </tr>
+    
+      <tr>
+        <td>homeTemplate</td>
+        <td>2</td>
+        <td>100.00%</td>
+        <td>164.41</td>
+        <td>166.61</td>
+        <td>166.61</td>
+        <td>214.25</td>
+        <td>221.44</td>
+        <td>221.44</td>
+      </tr>
+    
+      <tr>
+        <td>robotsTemplate</td>
+        <td>1</td>
+        <td>100.00%</td>
+        <td>104.09</td>
+        <td>104.09</td>
+        <td>104.09</td>
+        <td>104.33</td>
+        <td>104.33</td>
+        <td>104.33</td>
+      </tr>
+    
+      <tr>
+        <td>sweepstakesHubTemplate</td>
+        <td>1</td>
+        <td>100.00%</td>
+        <td>136.80</td>
+        <td>136.80</td>
+        <td>136.80</td>
+        <td>165.94</td>
+        <td>165.94</td>
+        <td>165.94</td>
+      </tr>
+    
+      <tr>
+        <td>shape-embed-endpoint-template</td>
+        <td>1</td>
+        <td>0.00%</td>
+        <td>149.44</td>
+        <td>149.44</td>
+        <td>149.44</td>
+        <td>150.94</td>
+        <td>150.94</td>
+        <td>150.94</td>
+      </tr>
+    
+        </tbody>
+      </table>
+    </div>
+  
+                <div id="html-resources">
+                    <!-- Server-side rendered HTML resources table will be inserted here -->
+                </div>
+            </section>
+
+            <!-- Non-HTML Resources Section -->
+            <section id="nonhtml-resources-section" class="mb-8">
+                <h2 class="section-title">Non-HTML Resources</h2>
+
+    <div class="overflow-x-auto">
+      <table class="custom-table nonhtml-table w-full">
+        <thead>
+          <tr>
+            <th>Transaction</th>
+            <th>Requests</th>
+            <th>Success Rate</th>
+            <th colspan="3">TTFB (ms)</th>
+            <th colspan="3">TTLB (ms)</th>
+          </tr>
+          <tr>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th>Avg</th>
+            <th>Med</th>
+            <th>p90</th>
+            <th>Avg</th>
+            <th>Med</th>
+            <th>p90</th>
+          </tr>
+        </thead>
+        <tbody>
+  
+      <tr>
+        <td>taxonomyScTemplate</td>
+        <td>101</td>
+        <td>100.00%</td>
+        <td>108.60</td>
+        <td>94.81</td>
+        <td>115.39</td>
+        <td>112.50</td>
+        <td>97.19</td>
+        <td>125.28</td>
+      </tr>
+    
+      <tr>
+        <td>listScCommerceTemplate</td>
+        <td>331</td>
+        <td>100.00%</td>
+        <td>99.13</td>
+        <td>93.94</td>
+        <td>110.78</td>
+        <td>106.01</td>
+        <td>99.77</td>
+        <td>118.72</td>
+      </tr>
+    
+      <tr>
+        <td>structuredContentTemplate</td>
+        <td>394</td>
+        <td>100.00%</td>
+        <td>99.51</td>
+        <td>92.05</td>
+        <td>113.69</td>
+        <td>103.94</td>
+        <td>94.71</td>
+        <td>119.90</td>
+      </tr>
+    
+      <tr>
+        <td>listScTemplate</td>
+        <td>377</td>
+        <td>100.00%</td>
+        <td>106.75</td>
+        <td>95.22</td>
+        <td>153.06</td>
+        <td>112.41</td>
+        <td>99.82</td>
+        <td>154.23</td>
+      </tr>
+    
+      <tr>
+        <td>exclusiveTemplate</td>
+        <td>60</td>
+        <td>100.00%</td>
+        <td>134.18</td>
+        <td>96.69</td>
+        <td>125.06</td>
+        <td>144.74</td>
+        <td>102.88</td>
+        <td>289.28</td>
+      </tr>
+    
+      <tr>
+        <td>homeTemplate</td>
+        <td>60</td>
+        <td>100.00%</td>
+        <td>93.53</td>
+        <td>89.35</td>
+        <td>110.87</td>
+        <td>96.77</td>
+        <td>93.28</td>
+        <td>115.60</td>
+      </tr>
+    
+      <tr>
+        <td>sweepstakesHubTemplate</td>
+        <td>8</td>
+        <td>100.00%</td>
+        <td>90.96</td>
+        <td>89.51</td>
+        <td>109.22</td>
+        <td>96.66</td>
+        <td>97.31</td>
+        <td>124.84</td>
+      </tr>
+    
+        </tbody>
+      </table>
+    </div>
+  
+                <div id="nonhtml-resources">
+                    <!-- Server-side rendered non-HTML resources table will be inserted here -->
+                </div>
+            </section>
+
+            <!-- Resource Types Section -->
+            <section id="resource-types-section" class="mb-8">
+                <h2 class="section-title">Resource Types by Transaction</h2>
+
+    <div class="mb-4 p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700">
+      <p class="font-medium">Note: Following strict data integrity requirements, only actual measured metrics are shown.</p>
+      <p class="text-sm">Resource type breakdowns (CSS/JS/Image) would require additional instrumentation data not available in this test run.</p>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="custom-table resource-type-table w-full">
+        <thead>
+          <tr>
+            <th>Transaction</th>
+            <th>Resource Type</th>
+            <th>Requests</th>
+            <th>Avg TTFB (ms)</th>
+            <th>Avg TTLB (ms)</th>
+            <th>p90 (ms)</th>
+            <th>Success Rate</th>
+          </tr>
+        </thead>
+        <tbody>
+  
+        <tr class="border-t-4 border-slate-200">
+          <td rowspan="1">taxonomyScTemplate</td>
+          <td>All Resources</td>
+          <td>101</td>
+          <td>108.60</td>
+          <td>112.50</td>
+          <td>125.28</td>
+          <td>100.00%</td>
+        </tr>
+      
+        <tr class="border-t-4 border-slate-200">
+          <td rowspan="1">listScCommerceTemplate</td>
+          <td>All Resources</td>
+          <td>331</td>
+          <td>99.13</td>
+          <td>106.01</td>
+          <td>118.72</td>
+          <td>100.00%</td>
+        </tr>
+      
+        <tr class="border-t-4 border-slate-200">
+          <td rowspan="1">structuredContentTemplate</td>
+          <td>All Resources</td>
+          <td>394</td>
+          <td>99.51</td>
+          <td>103.94</td>
+          <td>119.90</td>
+          <td>100.00%</td>
+        </tr>
+      
+        <tr class="border-t-4 border-slate-200">
+          <td rowspan="1">listScTemplate</td>
+          <td>All Resources</td>
+          <td>377</td>
+          <td>106.75</td>
+          <td>112.41</td>
+          <td>154.23</td>
+          <td>100.00%</td>
+        </tr>
+      
+        <tr class="border-t-4 border-slate-200">
+          <td rowspan="1">exclusiveTemplate</td>
+          <td>All Resources</td>
+          <td>60</td>
+          <td>134.18</td>
+          <td>144.74</td>
+          <td>289.28</td>
+          <td>100.00%</td>
+        </tr>
+      
+        <tr class="border-t-4 border-slate-200">
+          <td rowspan="1">homeTemplate</td>
+          <td>All Resources</td>
+          <td>60</td>
+          <td>93.53</td>
+          <td>96.77</td>
+          <td>115.60</td>
+          <td>100.00%</td>
+        </tr>
+      
+        <tr class="border-t-4 border-slate-200">
+          <td rowspan="1">sweepstakesHubTemplate</td>
+          <td>All Resources</td>
+          <td>8</td>
+          <td>90.96</td>
+          <td>96.66</td>
+          <td>124.84</td>
+          <td>100.00%</td>
+        </tr>
+      
+        </tbody>
+      </table>
+    </div>
+  
+                <div id="resource-types">
+                    <!-- Server-side rendered resource types table will be inserted here -->
+                </div>
+            </section>
+
+            <!-- Network Resource Analysis -->
+            <section id="network-analysis-section" class="mb-8">
+                <h2 class="section-title">Network Resource Analysis</h2>
+
+    <div class="overflow-x-auto">
+      <table class="custom-table network-table w-full">
+        <thead>
+          <tr>
+            <th>Transaction</th>
+            <th>Total Requests</th>
+            <th>Avg Time (ms)</th>
+            <th>Success Rate</th>
+          </tr>
+        </thead>
+        <tbody>
+  
+      <tr>
+        <td>taxonomyScTemplate</td>
+        <td>101</td>
+        <td>112.50</td>
+        <td>100.00%</td>
+      </tr>
+    
+      <tr>
+        <td>listScCommerceTemplate</td>
+        <td>331</td>
+        <td>106.01</td>
+        <td>100.00%</td>
+      </tr>
+    
+      <tr>
+        <td>structuredContentTemplate</td>
+        <td>394</td>
+        <td>103.94</td>
+        <td>100.00%</td>
+      </tr>
+    
+      <tr>
+        <td>listScTemplate</td>
+        <td>377</td>
+        <td>112.41</td>
+        <td>100.00%</td>
+      </tr>
+    
+      <tr>
+        <td>exclusiveTemplate</td>
+        <td>60</td>
+        <td>144.74</td>
+        <td>100.00%</td>
+      </tr>
+    
+      <tr>
+        <td>homeTemplate</td>
+        <td>60</td>
+        <td>96.77</td>
+        <td>100.00%</td>
+      </tr>
+    
+      <tr>
+        <td>sweepstakesHubTemplate</td>
+        <td>8</td>
+        <td>96.66</td>
+        <td>100.00%</td>
+      </tr>
+    
+        </tbody>
+      </table>
+    </div>
+  
+                <div id="network-analysis">
+                    <!-- Server-side rendered network analysis table will be inserted here -->
+                </div>
+            </section>
+
+            <!-- Metrics Legend -->
+            <section id="metrics-legend-section" class="mb-8 metrics-explanation">
+                <h2 class="section-title">Metrics Legend</h2>
+                <div class="overflow-x-auto">
+                    <table class="custom-table metrics-definition-table">
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="font-medium">HTML Resources</td>
+                                <td>Main HTML page requests, typically the initial page load for each transaction.</td>
+                            </tr>
+                            <tr>
+                                <td class="font-medium">Non-HTML Resources</td>
+                                <td>Secondary resources loaded by HTML pages, such as JavaScript, CSS, images, fonts, etc.</td>
+                            </tr>
+                            <tr>
+                                <td class="font-medium">TTFB<br><span class="font-normal text-xs">(Time To First Byte)</span></td>
+                                <td>Time elapsed between sending the request and receiving the first byte of the response. This measures server processing time and network latency.</td>
+                            </tr>
+                            <tr>
+                                <td class="font-medium">TTLB<br><span class="font-normal text-xs">(Time To Last Byte)</span></td>
+                                <td>Total time from request start to receiving the complete response. This includes TTFB plus content download time.</td>
+                            </tr>
+                            <tr>
+                                <td class="font-medium">Avg</td>
+                                <td>Average (mean) value of all measurements.</td>
+                            </tr>
+                            <tr>
+                                <td class="font-medium">Med</td>
+                                <td>Median value - the middle point where 50% of measurements are above and 50% below.</td>
+                            </tr>
+                            <tr>
+                                <td class="font-medium">p90</td>
+                                <td>90th percentile - 90% of measurements are below this value. Useful for understanding worst-case performance.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-slate-800 text-white p-4 text-center text-sm">
+            <p><span </p>
+        </footer>
+    </div>
+</body>
+</html>

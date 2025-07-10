@@ -1,0 +1,945 @@
+<h1>K6 Performance Test Report</h1>
+<p><strong>Run Start Time:</strong> 6/30/2025, 6:46:17 PM</p>
+<p><strong>Run End Time:</strong> 6/30/2025, 6:48:00 PM</p>
+<p><strong>Base URL:</strong> https://grafana.com</p>
+<p><strong>Test Type:</strong> BROWSER</p>
+<p><strong>AUT:</strong> allrecipes</p>
+<p><strong>Scenario:</strong> smoke</p>
+
+  <style>
+    /* Base Styles */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.6;
+      color: #374151;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+      background-color: #f9fafb;
+    }
+    
+    h1, h2, h3, h4 {
+      color: #111827;
+      margin-top: 1.5em;
+      margin-bottom: 0.75em;
+    }
+    
+    h1 {
+      font-size: 1.75rem;
+      border-bottom: 3px solid #4f46e5;
+      padding-bottom: 0.5rem;
+      display: inline-block;
+    }
+    
+    h3.section-header {
+      font-size: 1.25rem;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid;
+    }
+    
+    h3.section-header.overall-summary-header {
+      border-color: #4338ca;
+    }
+    
+    h3.section-header.html-performance-header {
+      border-color: #065f46;
+    }
+    
+    h3.section-header.nonhtml-performance-header {
+      border-color: #4338ca;
+    }
+    
+    h3.section-header.resource-type-header {
+      border-color: #991b1b;
+    }
+    
+    h3.section-header.network-analysis-header {
+      border-color: #6b21a8;
+    }
+
+    /* Modern Table Styling */
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      margin-bottom: 32px;
+      font-size: 14px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    
+    th {
+      color: #fff;
+      padding: 14px 16px;
+      text-align: left;
+      font-weight: 600;
+      letter-spacing: 0.025em;
+    }
+    
+    /* Table header gradient styles for different table types */
+    .overall-summary-table th { background: linear-gradient(to right, #3730a3, #4338ca); }
+    .html-performance-table th { background: linear-gradient(to right, #065f46, #047857); }
+    .nonhtml-performance-table th { background: linear-gradient(to right, #4338ca, #4f46e5); }
+    .resource-type-table th { background: linear-gradient(to right, #991b1b, #b91c1c); }
+    .network-analysis-table th { background: linear-gradient(to right, #6b21a8, #7e22ce); }
+    
+    /* Table header gradient styles for different table types */
+    .core-web-vitals-table th { background: linear-gradient(to right, #991b1b, #b91c1c); }
+    .mantle-metrics-table th { background: linear-gradient(to right, #b45309, #d97706); }
+    .pageload-table th { background: linear-gradient(to right, #065f46, #047857); }
+    .protocol-ttfb-table th { background: linear-gradient(to right, #4338ca, #4f46e5); }
+    .protocol-ttlb-table th { background: linear-gradient(to right, #6b21a8, #7e22ce); }
+    .resource-type-table th { background: linear-gradient(to right, #991b1b, #b91c1c); }
+    .top-resources-table th { background: linear-gradient(to right, #6b21a8, #7e22ce); }
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid #e5e7eb;
+      background-color: #fff;
+      transition: background-color 0.2s ease;
+    }
+    tr:nth-child(even) td { 
+      background-color: #f9fafb;
+    }
+    /* Enhanced row hover effect with data visualization */
+    tr {
+      position: relative;
+    }
+    tr:hover td { 
+      background-color: #eef2ff !important;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    /* Add data visualization with bars for numeric cells */
+    td:nth-child(n+2) {
+      position: relative;
+    }
+    
+    td:nth-child(n+2)::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      height: 3px;
+      width: 0;
+      background: linear-gradient(to right, #3b82f6, #10b981);
+      opacity: 0.5;
+      transition: width 0.3s ease;
+    }
+    
+    /* Show the bars on hover */
+    tr:hover td:nth-child(n+2)::before {
+      width: calc(100% * var(--data-percent, 0.5));
+    }
+    .metrics-section {
+      margin-bottom: 32px;
+    }
+
+    /* Enhanced Section Title Style */
+    .section-title, .metrics-header, .section-header {
+      color: #111827;
+      font-size: 22px;
+      font-weight: 700;
+      margin: 48px 0 16px 0;
+      position: relative;
+      display: inline-block;
+      padding-bottom: 8px;
+      background-color: transparent !important;
+      border: none !important;
+    }
+    .section-title::after, .metrics-header::after, .section-header::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 60px;
+      height: 4px;
+      background: linear-gradient(90deg, #6366f1, #8b5cf6);
+      border-radius: 4px;
+    }
+
+    /* Subtle Medium Table Header Colors */
+    .overall-head th, .overall-table th, .overall-summary-table th { 
+      background: linear-gradient(to right, #4338ca, #4f46e5) !important; /* subtle indigo */
+    }
+    .html-head th, .timing-breakdown th { 
+      background: linear-gradient(to right, #065f46, #047857) !important; /* subtle green */
+    }
+    .nonhtml-head th, .mantle-metrics-table th, .transaction-stats-table th { 
+      background: linear-gradient(to right, #b45309, #d97706) !important; /* subtle amber */
+    }
+    .resource-head th, .resource-type-table th, .core-web-vitals-table th { 
+      background: linear-gradient(to right, #991b1b, #b91c1c) !important; /* subtle red */
+    }
+    .network-head th, .top-resources-table th { 
+      background: linear-gradient(to right, #6b21a8, #7e22ce) !important; /* subtle purple */
+    }
+
+    /* Compact Top Legend Styles */
+    .color-legend {
+      display: flex;
+      flex-wrap: wrap;
+      margin: 0 0 24px 0;
+      gap: 10px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      background-color: #f9fafb;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    .color-legend-item { 
+      display: flex;
+      align-items: center;
+      font-size: 13px;
+      margin-right: 8px;
+      font-weight: 500;
+      color: #4b5563;
+    }
+    .swatch { 
+      width: 14px;
+      height: 14px;
+      margin-right: 6px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+    /* Match swatches to table header colors */
+    .color-legend-item:nth-child(1) .swatch { background: linear-gradient(to right, #4338ca, #4f46e5); }
+    .color-legend-item:nth-child(2) .swatch { background: linear-gradient(to right, #065f46, #047857); }
+    .color-legend-item:nth-child(3) .swatch { background: linear-gradient(to right, #b45309, #d97706); }
+    .color-legend-item:nth-child(4) .swatch { background: linear-gradient(to right, #991b1b, #b91c1c); }
+    .color-legend-item:nth-child(5) .swatch { background: linear-gradient(to right, #6b21a8, #7e22ce); }
+    
+    /* Compact Bottom Legend Styles */
+    .metrics-legend {
+      margin-top: 40px;
+      padding: 16px;
+      background-color: #f9fafb;
+      border-radius: 8px;
+      border-left: 3px solid #6366f1;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      font-size: 12px;
+    }
+    .metrics-legend h3 {
+      margin-top: 0;
+      margin-bottom: 12px;
+      color: #111827;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .metrics-legend dl {
+      display: grid;
+      grid-template-columns: 1fr 3fr;
+      row-gap: 10px;
+      column-gap: 16px;
+      margin: 0;
+    }
+    .metrics-legend dt {
+      font-weight: 600;
+      color: #374151;
+      font-size: 12px;
+    }
+    .metrics-legend dd {
+      margin-left: 0;
+      color: #4b5563;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    
+    /* Enhanced Resource Icons */
+    .resource-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      margin-right: 8px;
+      vertical-align: middle;
+      border-radius: 6px;
+      color: white;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .resource-icon:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+    }
+    .resource-icon.js { background: linear-gradient(135deg, #f7df1e, #eac100); color: #323330; }
+    .resource-icon.css { background: linear-gradient(135deg, #2965f1, #2050d3); }
+    .resource-icon.img { background: linear-gradient(135deg, #4ade80, #22c55e); }
+    .resource-icon.font { background: linear-gradient(135deg, #fb923c, #ea580c); }
+    .resource-icon.html { background: linear-gradient(135deg, #e34c26, #c53d1e); }
+    .resource-icon.other { background: linear-gradient(135deg, #94a3b8, #64748b); }
+    
+    /* Enhanced Alert Messages */
+    .alert {
+      padding: 16px 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .alert-warning {
+      background-color: #fffbeb;
+      border-left: 5px solid #f59e0b;
+      color: #92400e;
+    }
+    
+    /* Enhanced Badge Styles */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .badge-primary {
+      background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+      color: #4338ca;
+    }
+    .badge-success {
+      background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+      color: #15803d;
+    }
+
+    /* Resource Details Hover Card */
+    .resource-details {
+      padding: 10px;
+      margin-bottom: 8px;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+      transition: all 0.2s ease;
+    }
+    .resource-details:hover {
+      background-color: #f0f9ff;
+      border-color: #bfdbfe;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+      transform: translateY(-2px);
+    }
+    .resource-details strong {
+      color: #1e40af;
+    }
+    .resource-details small {
+      display: block;
+      margin-top: 4px;
+      color: #64748b;
+    }
+    
+    /* Legend Styles */
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-bottom: 25px;
+      padding: 15px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+    .legend-section {
+      margin-bottom: 2rem;
+      padding: 1.5rem;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .legend-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin-right: 1.5rem;
+    }
+
+    .legend-color {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      margin-right: 8px;
+    }
+    
+    .metrics-legend {
+      margin-top: 1.5rem;
+      border-top: 1px solid #e5e7eb;
+      padding-top: 1.5rem;
+    }
+    
+    /* Resource type legend */
+    .resource-type-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      padding: 0.75rem;
+      background-color: #f9fafb;
+      border-radius: 0.5rem;
+    }
+    
+    .resource-type-legend-item {
+      display: flex;
+      align-items: center;
+      font-size: 0.85rem;
+    }
+    
+    /* Header styles matching browser report */
+    .overall-summary-header {
+      background: linear-gradient(to right, #4f46e5, #6366f1);
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem 0.5rem 0 0;
+    }
+    
+    .html-performance-header {
+      background: linear-gradient(to right, #065f46, #047857);
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem 0.5rem 0 0;
+    }
+    
+    .nonhtml-performance-header {
+      background: linear-gradient(to right, #4338ca, #4f46e5);
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem 0.5rem 0 0;
+    }
+    
+    .resource-type-header {
+      background: linear-gradient(to right, #991b1b, #b91c1c);
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem 0.5rem 0 0;
+    }
+    
+    .network-analysis-header {
+      background: linear-gradient(to right, #6b21a8, #7e22ce);
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem 0.5rem 0 0;
+    }
+    
+    .top-resources-header {
+      background: linear-gradient(to right, #b45309, #d97706);
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem 0.5rem 0 0;
+    }
+    
+    .metrics-legend h4 {
+      margin-top: 0;
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
+    }
+    
+    .metrics-legend dl {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1rem;
+      margin: 0;
+    }
+    
+    .metrics-legend dt {
+      font-weight: 600;
+      color: #4b5563;
+      margin-bottom: 0.25rem;
+    }
+    
+    .metrics-legend dd {
+      margin-left: 0;
+      margin-bottom: 1rem;
+      color: #6b7280;
+      font-size: 0.9rem;
+    }
+    
+    /* Resource cards styling */
+    .resource-cards-cell {
+      padding: 0 !important;
+    }
+    
+    /* Resource type badges */
+    .resource-type-badge {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: white;
+    }
+    
+    .resource-type-badge.html {
+      background-color: #047857;
+    }
+    
+    .resource-type-badge.nonhtml {
+      background-color: #4f46e5;
+    }
+    
+    /* Tooltip styles */
+    [data-tooltip] {
+      position: relative;
+      cursor: pointer;
+    }
+    
+    [data-tooltip]:hover:after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background-color: #333;
+      color: white;
+      padding: 5px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+      font-size: 12px;
+      z-index: 10;
+      max-width: 300px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    /* Metrics explanation styles */
+    .metrics-explanation {
+      margin-top: 1.5rem;
+      padding: 1.5rem;
+      border-radius: 0.5rem;
+      background-color: #f5f7ff;
+      border-left: 4px solid #4338ca;
+    }
+    
+    .metrics-explanation h4 {
+      margin-top: 0;
+      margin-bottom: 1rem;
+      color: #1f2937;
+    }
+    
+    .metrics-explanation-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+    }
+    
+    .metrics-explanation-item h5 {
+      margin-top: 0;
+      margin-bottom: 0.5rem;
+      color: #4338ca;
+      font-weight: 600;
+    }
+    
+    .metrics-explanation-item p {
+      margin: 0;
+      color: #4b5563;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+    
+    /* Summary stats styles */
+    .summary-stats {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin: 1.5rem 0;
+    }
+    
+    .summary-stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    
+    .summary-stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #1f2937;
+      line-height: 1;
+    }
+    
+    .summary-stat-label {
+      font-size: 1rem;
+      color: #6b7280;
+      margin-top: 0.25rem;
+    }
+    
+    .resource-card {
+      display: flex;
+      padding: 0.75rem;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    
+    .resource-card:last-child {
+      border-bottom: none;
+    }
+    
+    .resource-type {
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      margin-right: 0.75rem;
+      flex-shrink: 0;
+    }
+    
+    .resource-type.js {
+      background-color: #f59e0b;
+    }
+    
+    .resource-type.css {
+      background-color: #3b82f6;
+    }
+    
+    .resource-type.image, .resource-type.img {
+      background-color: #10b981;
+    }
+    
+    .resource-type.font {
+      background-color: #8b5cf6;
+    }
+    
+    .resource-type.other {
+      background-color: #6b7280;
+    }
+    
+    .resource-info {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    .resource-url {
+      font-size: 0.85rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #4b5563;
+    }
+    
+    .resource-stats {
+      font-size: 0.8rem;
+      color: #6b7280;
+      margin-top: 0.25rem;
+    }
+    
+
+    /* Interactive tooltip styles */
+    [data-tooltip] {
+      position: relative;
+      cursor: help;
+    }
+    [data-tooltip]:before {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      margin-bottom: 8px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      background-color: #334155;
+      color: white;
+      text-align: center;
+      font-size: 13px;
+      font-weight: normal;
+      line-height: 1.4;
+      z-index: 100;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s ease;
+    }
+    [data-tooltip]:hover:before {
+      opacity: 1;
+      visibility: visible;
+    }
+  </style>
+  
+
+  <style>
+    /* Request counts styling */
+    .request-counts-summary {
+      display: flex;
+      justify-content: space-around;
+      margin: 20px 0;
+      padding: 15px;
+      background-color: #f0f4f8;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .count-box {
+      text-align: center;
+      padding: 10px 20px;
+    }
+    .count-value {
+      font-size: 28px;
+      font-weight: bold;
+      color: #1976d2;
+    }
+    .count-label {
+      font-size: 14px;
+      color: #546e7a;
+      margin-top: 5px;
+    }
+    
+    /* Section header colors */
+    .summary-section h3 { background-color: #5271FF; color: white; padding: 10px 15px; }
+    .core-web-vitals-section h3 { background-color: #38B000; color: white; padding: 10px 15px; }
+    .mantle-metrics-section .metrics-table thead tr:first-child th { background-color: #FFA500; color: white; }
+    .detailed-performance-section .metrics-table thead tr:first-child th { background-color: #9E0059; color: white; }
+    .detailed-performance-section h3 { background-color: #9E0059; color: white; padding: 10px 15px; }
+    .network-resources-section h3 { background-color: #2D3142; color: white; padding: 10px 15px; }
+  </style>
+  
+<h2 class="section-title">Overall Performance Summary</h2>
+<div class="metrics-section"><div class="request-counts-summary">
+    <div class="count-box">
+      <div class="count-value">79</div>
+      <div class="count-label">Total Transactions</div>
+    </div>
+    <div class="count-box">
+      <div class="count-value">3083</div>
+      <div class="count-label">Total Resource Requests</div>
+    </div>
+  </div><table class="overall-summary-table"><thead><tr><th>Component</th><th>Avg (ms)</th><th>Median (ms)</th><th>p90 (ms)</th><th>% of Total</th></tr></thead><tbody><tr class="total-row"><td>Total Page Load Time</td><td>2272.78</td><td>2037.00</td><td>3985.00</td><td>100.0%</td></tr><tr class="server-row"><td>Server Processing (TTFB)</td><td>54.56</td><td>53.75</td><td>68.70</td><td>2.4%</td></tr><tr class="client-row"><td>Client-Side Processing</td><td>2218.23</td><td>1983.25</td><td>3916.30</td><td>97.6%</td></tr></tbody></table></div><div class="legend">
+
+
+  </div>
+<h2 class="section-title">Core Web Vitals</h2>
+<div class="metrics-section">
+<table class="core-web-vitals-table"><thead><tr><th rowspan="2">Transaction</th><th rowspan="2">Requests</th><th colspan="2">FCP (ms)</th><th colspan="2">LCP (ms)</th><th colspan="2">CLS</th><th colspan="2">TTFB (ms)</th></tr><tr><th>Median</th><th>p90</th><th>Median</th><th>p90</th><th>Median</th><th>p90</th><th>Median</th><th>p90</th></tr></thead><tbody>
+<tr>
+        <td>GrafanaHome</td>
+        <td>40</td>
+        <td>420.00</td>
+        <td>700.00</td>
+        <td>420.00</td>
+        <td>716.00</td>
+        <td>0.0000</td>
+        <td>0.0000</td>
+        <td>53.10</td>
+        <td>85.60</td>
+      </tr>
+<tr>
+        <td>GrafanaSiteSearch</td>
+        <td>39</td>
+        <td>1192.00</td>
+        <td>3192.00</td>
+        <td>1192.00</td>
+        <td>3192.00</td>
+        <td>0.0000</td>
+        <td>0.0000</td>
+        <td>54.10</td>
+        <td>66.90</td>
+      </tr>
+</tbody></table></div>
+<h2 class="section-title">Mantle Custom Metrics</h2>
+<p>No Mantle metrics available for this test run.</p>
+<h2 class="section-title">Detailed Performance Analysis</h2>
+<div class="metrics-section"><table class="transaction-stats-table"><thead><tr><th>Transaction</th><th>Requests</th><th colspan="2">Server Processing Time</th><th colspan="2">Network Transfer Time</th><th colspan="2">DOM Processing Time</th><th colspan="2">Script Execution Time</th><th colspan="2">Script Parsing Time</th><th colspan="2">JavaScript Load Time</th><th colspan="2">CSS Load Time</th><th colspan="2">Image Load Time</th><th colspan="2">Font Load Time</th><th colspan="2">Other Resources Load Time</th><th colspan="2">Total Page Load Time</th></tr><tr><th></th><th>Count</th><th>Avg (ms)</th><th>p90 (ms)</th><th>Avg (ms)</th><th>p90 (ms)</th><th>Avg (ms)</th><th>p90 (ms)</th><th>Avg (ms)</th><th>p90 (ms)</th><th>Avg (ms)</th><th>p90 (ms)</th><th>Avg (ms)</th><th>p90 (ms)</th><th>Avg (ms)</th><th>p90 (ms)</th><th>Avg (ms)</th><th>p90 (ms)</th><th>Avg (ms)</th><th>p90 (ms)</th><th>Avg (ms)</th><th>p90 (ms)</th><th>Avg (ms)</th><th>p90 (ms)</th></tr></thead><tbody><tr class=""><td>GrafanaHome</td><td>40</td><td class="server-cell">54.77</td><td class="server-cell">85.60</td><td class="">184.77</td><td class="">326.70</td><td class="">584.18</td><td class="">800.20</td><td class="">633.11</td><td class="">882.60</td><td class="">N/A</td><td class="">N/A</td><td class="">7600.62</td><td class="">11772.10</td><td class="">4899.03</td><td class="">9236.60</td><td class="">19960.60</td><td class="">29563.40</td><td class="">0.00</td><td class="">0.00</td><td class="">8179.58</td><td class="">13331.60</td><td class="client-total-cell">2399.72</td><td class="client-total-cell">3212.00</td></tr><tr class=""><td>GrafanaSiteSearch</td><td>39</td><td class="server-cell">54.34</td><td class="server-cell">66.90</td><td class="">97.64</td><td class="">157.50</td><td class="">435.85</td><td class="">1056.30</td><td class="">130.57</td><td class="">291.40</td><td class="">N/A</td><td class="">N/A</td><td class="">2211.40</td><td class="">4342.30</td><td class="">1816.04</td><td class="">4515.60</td><td class="">1119.28</td><td class="">1964.80</td><td class="">0.00</td><td class="">0.00</td><td class="">5174.35</td><td class="">8513.80</td><td class="client-total-cell">2142.59</td><td class="client-total-cell">5274.00</td></tr></tbody></table></div>
+<h2 class="section-title">Network Resource Analysis</h2>
+<table class="top-resources-table"><thead class="network-head"><tr><th>Transaction</th><th>Total Requests</th><th>Avg Size</th><th>Avg Time</th><th>p90 Time</th><th>Success Rate</th><th>Top 5 Resources (By Avg Size)</th><th>Top 5 Resources (By Avg Time)</th></tr></thead><tbody><tr>
+      <td>GrafanaHome</td>
+      <td>1560</td>
+      <td>45.0 KB</td>
+      <td>541.24</td>
+      <td>945.70</td>
+      <td>100.0%</td>
+      <td>
+          <div class="resource-details" title="https://grafana.com/media/home/workflows/workflow_blur_4.png">
+            <span class="resource-icon css">C</span>
+            <strong>workflow_blu...</strong><br>
+            <small>Reqs: 39 (39 total) | Avg Time: 598.2ms | Avg Size: 356585.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://grafana.com/media/home/workflows/workflow_blur_5.png">
+            <span class="resource-icon css">C</span>
+            <strong>workflow_blu...</strong><br>
+            <small>Reqs: 39 (39 total) | Avg Time: 601.4ms | Avg Size: 348648.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://grafana.com/media/home/workflows/workflow_blur_6.png">
+            <span class="resource-icon css">C</span>
+            <strong>workflow_blu...</strong><br>
+            <small>Reqs: 39 (39 total) | Avg Time: 591.7ms | Avg Size: 328243.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://grafana.com/web/app.26e7e30724c11f930b9fa1a2d2a95cb60b28b6ef74640cf669c02a1fa0710bc9.js">
+            <span class="resource-icon js">J</span>
+            <strong>app.26e7e307...</strong><br>
+            <small>Reqs: 33 (72 total) | Avg Time: 424.8ms | Avg Size: 292989.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://grafana.com/web/app.min.css">
+            <span class="resource-icon css">C</span>
+            <strong>app.min.css</strong><br>
+            <small>Reqs: 19 (58 total) | Avg Time: 170.0ms | Avg Size: 203737.0KB | Success: 100%</small>
+          </div>
+        </td><td>
+          <div class="resource-details" title="https://px.ads.linkedin.com/collect?v=2&fmt=js&pid=1048884&time=1751327195778&li_adsId=381de1bc-e1eb-4d5f-a31f-145d71d7104e&url=https%3A%2F%2Fgrafana.com%2F">
+            <span class="resource-icon img">I</span>
+            <strong>collect</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 2596.2ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://px.ads.linkedin.com/collect?v=2&fmt=js&pid=1048884&time=1751327184008&li_adsId=fca794c7-2d73-42d6-ae05-4a4e8d354884&url=https%3A%2F%2Fgrafana.com%2F">
+            <span class="resource-icon img">I</span>
+            <strong>collect</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 2579.4ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://px.ads.linkedin.com/collect?v=2&fmt=js&pid=1048884&time=1751327184007&li_adsId=d6c61165-6291-4b4b-8dc4-4281176b2ca2&url=https%3A%2F%2Fgrafana.com%2F">
+            <span class="resource-icon img">I</span>
+            <strong>collect</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 2564.3ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://px.ads.linkedin.com/collect?v=2&fmt=js&pid=1048884&time=1751327184010&li_adsId=71f9546b-01d4-4981-8c65-e9063c6ac26a&url=https%3A%2F%2Fgrafana.com%2F">
+            <span class="resource-icon img">I</span>
+            <strong>collect</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 2553.9ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://px.ads.linkedin.com/collect?v=2&fmt=js&pid=1048884&time=1751327184002&li_adsId=7a7a98a6-a17b-4d28-ba8f-c63710727c29&url=https%3A%2F%2Fgrafana.com%2F">
+            <span class="resource-icon img">I</span>
+            <strong>collect</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 2534.4ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        </td></tr><tr>
+      <td>GrafanaSiteSearch</td>
+      <td>1523</td>
+      <td>2.0 KB</td>
+      <td>227.67</td>
+      <td>576.40</td>
+      <td>100.0%</td>
+      <td>
+          <div class="resource-details" title="https://grafana.com/media/events/grafanacon/2025/logo-gcon2025-banner-horizontal.svg">
+            <span class="resource-icon img">I</span>
+            <strong>logo-gcon202...</strong><br>
+            <small>Reqs: 38 (38 total) | Avg Time: 95.0ms | Avg Size: 35942.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://grafana.com/static/img/menu/grafana-spin.gif">
+            <span class="resource-icon img">I</span>
+            <strong>grafana-spin...</strong><br>
+            <small>Reqs: 38 (38 total) | Avg Time: 88.2ms | Avg Size: 16409.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://grafana.com/static/img/grot-chat.svg">
+            <span class="resource-icon img">I</span>
+            <strong>grot-chat.svg</strong><br>
+            <small>Reqs: 39 (39 total) | Avg Time: 374.2ms | Avg Size: 15132.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://grafana.com/web/icons/fonts/gicons.ttf?e6sm6e">
+            <span class="resource-icon css">C</span>
+            <strong>gicons.ttf</strong><br>
+            <small>Reqs: 12 (12 total) | Avg Time: 91.7ms | Avg Size: 13896.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://grafana.com/search/index.json">
+            <span class="resource-icon other">O</span>
+            <strong>index.json</strong><br>
+            <small>Reqs: 4 (4 total) | Avg Time: 159.0ms | Avg Size: 6553.0KB | Success: 100%</small>
+          </div>
+        </td><td>
+          <div class="resource-details" title="https://satgt.grafana.com/rest/v1/delivery?client=grafana&sessionId=5aff87cdfb154d79836cbcb96b2b1d97&version=2.6.0">
+            <span class="resource-icon other">O</span>
+            <strong>delivery</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 1614.6ms | Avg Size: 0.5KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://satgt.grafana.com/rest/v1/delivery?client=grafana&sessionId=f0c06d866fe34011973b46018bf20a24&version=2.6.0">
+            <span class="resource-icon other">O</span>
+            <strong>delivery</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 1431.8ms | Avg Size: 0.5KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://satgt.grafana.com/rest/v1/delivery?client=grafana&sessionId=4c002ccc02184464b6c5bf40274941d0&version=2.6.0">
+            <span class="resource-icon other">O</span>
+            <strong>delivery</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 1401.6ms | Avg Size: 0.5KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://356-yfg-389.mktoresp.com/webevents/visitWebPage?_mchNc=1751327196407&_mchRu=%2Fsearch%2F&_mchQp=%3Fterm%3Dk6&_mchId=356-YFG-389&_mchTk=_mch-grafana.com-616425b28c91cfdc4d2d9971ff5b955&_mchHo=grafana.com&_mchPo=&_mchPc=https%3A&_mchVr=164&_mchEcid=&_mchRe=https%3A%2F%2Fgrafana.com%2F">
+            <span class="resource-icon other">O</span>
+            <strong>visitWebPage</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 1383.2ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://356-yfg-389.mktoresp.com/webevents/visitWebPage?_mchNc=1751327196380&_mchRu=%2Fsearch%2F&_mchQp=%3Fterm%3Dk6&_mchId=356-YFG-389&_mchTk=_mch-grafana.com-69c9da3114fbe7f38fe489a04b092fab&_mchHo=grafana.com&_mchPo=&_mchPc=https%3A&_mchVr=164&_mchEcid=&_mchRe=https%3A%2F%2Fgrafana.com%2F">
+            <span class="resource-icon other">O</span>
+            <strong>visitWebPage</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 1349.0ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        </td></tr></tbody></table>
+
+    <div class="metrics-section">
+      <div class="resource-type-legend">
+        <div class="resource-type-legend-item" style="margin-right: 1.5rem;">
+          <span class="resource-type js" style="margin-right: 0.5rem;">J</span>
+          <span>JS</span>
+        </div>
+        <div class="resource-type-legend-item" style="margin-right: 1.5rem;">
+          <span class="resource-type css" style="margin-right: 0.5rem;">C</span>
+          <span>CSS</span>
+        </div>
+        <div class="resource-type-legend-item" style="margin-right: 1.5rem;">
+          <span class="resource-type image" style="margin-right: 0.5rem;">I</span>
+          <span>Image</span>
+        </div>
+        <div class="resource-type-legend-item" style="margin-right: 1.5rem;">
+          <span class="resource-type font" style="margin-right: 0.5rem;">F</span>
+          <span>Font</span>
+        </div>
+        <div class="resource-type-legend-item" style="margin-right: 1.5rem;">
+          <span class="resource-type other" style="margin-right: 0.5rem;">O</span>
+          <span>Other</span>
+        </div>
+        <div class="resource-type-legend-item" style="margin-right: 1.5rem;">
+          <span>TTFB: Time to First Byte</span>
+        </div>
+        <div class="resource-type-legend-item">
+          <span>TTLB: Time to Last Byte</span>
+        </div>
+      </div>
+      
+      <div class="metrics-explanation">
+        <h4>Metrics Explanation</h4>
+        
+        <div class="metrics-explanation-grid">
+          <div class="metrics-explanation-item">
+            <h5>TTFB (Time To First Byte)</h5>
+            <p>The time from the start of the request until the first byte of the response is received.</p>
+          </div>
+          
+          <div class="metrics-explanation-item">
+            <h5>TTLB (Time To Last Byte)</h5>
+            <p>The total time from the start of the request until the complete response is received.</p>
+          </div>
+          
+          <div class="metrics-explanation-item">
+            <h5>p90 Time</h5>
+            <p>The 90th percentile response time - 90% of requests complete faster than this value.</p>
+          </div>
+          
+          <div class="metrics-explanation-item">
+            <h5>Success Rate</h5>
+            <p>Percentage of requests that returned a successful HTTP status code (200-399).</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  

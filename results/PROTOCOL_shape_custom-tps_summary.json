@@ -1,0 +1,412 @@
+{
+    "metrics": {
+        "http_reqs": {
+            "count": 983,
+            "rate": 11.058518462269697
+        },
+        "http_req_waiting": {
+            "avg": 104.44620244150553,
+            "min": 27.929,
+            "med": 92.688,
+            "max": 764.211,
+            "p(50)": 92.688,
+            "p(90)": 151.8122,
+            "p(95)": 175.30159999999998,
+            "p(99)": 269.87377999999933
+        },
+        "iteration_duration": {
+            "max": 7707.030792,
+            "p(50)": 4164.4606875,
+            "p(90)": 5532.057158700001,
+            "p(95)": 6325.779893649998,
+            "p(99)": 7586.092062,
+            "avg": 4356.2408480294125,
+            "min": 1123.438917,
+            "med": 4164.4606875
+        },
+        "vus": {
+            "max": 3,
+            "value": 1,
+            "min": 0
+        },
+        "group_duration": {
+            "p(99)": 7461.30757731,
+            "avg": 3703.6817732794116,
+            "min": 0.003209,
+            "med": 3626.778354,
+            "max": 7706.844291,
+            "p(50)": 3626.778354,
+            "p(90)": 4863.8021088000005,
+            "p(95)": 5956.4695999
+        },
+        "http_req_failed": {
+            "passes": 7,
+            "fails": 976,
+            "thresholds": {
+                "rate <= 0.02": false
+            },
+            "value": 0.007121057985757884
+        },
+        "data_received": {
+            "count": 54139755,
+            "rate": 609059.4915668954
+        },
+        "iterations": {
+            "count": 34,
+            "rate": 0.38249199157392644
+        },
+        "http_req_tls_handshaking": {
+            "med": 0,
+            "max": 84.436,
+            "p(50)": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "p(99)": 73.10596,
+            "avg": 1.064716174974568,
+            "min": 0
+        },
+        "nonhtml_ttfb": {
+            "min": 27.929,
+            "med": 91.98849999999999,
+            "max": 764.211,
+            "p(50)": 91.98849999999999,
+            "p(90)": 110.12780000000001,
+            "p(95)": 132.91905,
+            "p(99)": 240.06164999999984,
+            "avg": 98.90448692810453
+        },
+        "nonhtml_ttlb": {
+            "p(95)": 157.46394999999995,
+            "p(99)": 273.45153999999985,
+            "avg": 105.13133333333322,
+            "min": 28.054,
+            "med": 96.694,
+            "max": 773.629,
+            "p(50)": 96.694,
+            "p(90)": 119.4842
+        },
+        "http_req_receiving": {
+            "max": 195.44,
+            "p(50)": 1.981,
+            "p(90)": 16.091800000000006,
+            "p(95)": 27.816699999999987,
+            "p(99)": 81.97739999999999,
+            "avg": 8.077566632756865,
+            "min": 0.027,
+            "med": 1.981
+        },
+        "nonhtml_resource_stats": {
+            "p(95)": 192233.3999999999,
+            "p(99)": 320378.95999999996,
+            "avg": 54788.54810810811,
+            "min": 0,
+            "med": 15241,
+            "max": 840851,
+            "p(50)": 15241,
+            "p(90)": 135684
+        },
+        "nonhtml_top_resources": {
+            "avg": 1,
+            "min": 1,
+            "med": 1,
+            "max": 1,
+            "p(50)": 1,
+            "p(90)": 1,
+            "p(95)": 1,
+            "p(99)": 1
+        },
+        "dropped_iterations": {
+            "count": 3,
+            "rate": 0.03374929337416998
+        },
+        "http_req_duration": {
+            "p(90)": 156.48680000000004,
+            "p(95)": 207.73969999999971,
+            "p(99)": 343.76885999999996,
+            "avg": 112.61820142421153,
+            "min": 28.054,
+            "med": 97.965,
+            "max": 773.629,
+            "p(50)": 97.965,
+            "thresholds": {
+                "p(95) < 1000": false,
+                "p(90) < 500": false
+            }
+        },
+        "data_sent": {
+            "count": 424208,
+            "rate": 4772.2400812233
+        },
+        "nonhtml_size": {
+            "min": 651,
+            "med": 15241,
+            "max": 840851,
+            "p(50)": 15241,
+            "p(90)": 135911.90000000002,
+            "p(95)": 192833.69999999998,
+            "p(99)": 320653.43,
+            "avg": 55206.325708061006
+        },
+        "checks": {
+            "passes": 68,
+            "fails": 0,
+            "thresholds": {
+                "rate == 1.00": false
+            },
+            "value": 1
+        },
+        "http_req_sending": {
+            "p(50)": 0.078,
+            "p(90)": 0.13080000000000003,
+            "p(95)": 0.153,
+            "p(99)": 0.4807399999999988,
+            "avg": 0.09443234994913523,
+            "min": 0.011,
+            "med": 0.078,
+            "max": 2.674
+        },
+        "vus_max": {
+            "max": 4,
+            "value": 4,
+            "min": 1
+        },
+        "http_req_blocked": {
+            "avg": 2.3927100712106686,
+            "min": 0,
+            "med": 0.001,
+            "max": 279.174,
+            "p(50)": 0.001,
+            "p(90)": 0.001,
+            "p(95)": 0.002,
+            "p(99)": 140.34815999999998
+        },
+        "http_req_connecting": {
+            "min": 0,
+            "med": 0,
+            "max": 72.175,
+            "p(50)": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "p(99)": 63.10966,
+            "avg": 0.8663397761953204
+        }
+    },
+    "root_group": {
+        "checks": {},
+        "name": "",
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {
+                "taxonomyScTemplate": {
+                    "id": "b9ee579d8ab9735bb8317d445a0f36b0",
+                    "groups": {
+                        "NonHtmlResources": {
+                            "path": "::taxonomyScTemplate::NonHtmlResources",
+                            "id": "0c7ab4fe571dcfc2bfd4905a1e197fd0",
+                            "groups": {},
+                            "checks": {},
+                            "name": "NonHtmlResources"
+                        }
+                    },
+                    "checks": {
+                        "GET taxonomyScTemplate status is 2xx": {
+                            "passes": 3,
+                            "fails": 0,
+                            "name": "GET taxonomyScTemplate status is 2xx",
+                            "path": "::taxonomyScTemplate::GET taxonomyScTemplate status is 2xx",
+                            "id": "e5b1849684ccedefd7763a75bb74bfff"
+                        },
+                        "GET taxonomyScTemplate has body": {
+                            "name": "GET taxonomyScTemplate has body",
+                            "path": "::taxonomyScTemplate::GET taxonomyScTemplate has body",
+                            "id": "6b3103cb70ed52b8bd5bb451faacb516",
+                            "passes": 3,
+                            "fails": 0
+                        }
+                    },
+                    "name": "taxonomyScTemplate",
+                    "path": "::taxonomyScTemplate"
+                },
+                "listScCommerceTemplate": {
+                    "id": "38ca9eaa02d19de26afa804ae1497d8b",
+                    "groups": {
+                        "NonHtmlResources": {
+                            "name": "NonHtmlResources",
+                            "path": "::listScCommerceTemplate::NonHtmlResources",
+                            "id": "c2f71624f96b7bcca2013c2c9871e89e",
+                            "groups": {},
+                            "checks": {}
+                        }
+                    },
+                    "checks": {
+                        "GET listScCommerceTemplate status is 2xx": {
+                            "name": "GET listScCommerceTemplate status is 2xx",
+                            "path": "::listScCommerceTemplate::GET listScCommerceTemplate status is 2xx",
+                            "id": "0648d5fa6bd8db72129b9fb7d1cc4d2b",
+                            "passes": 9,
+                            "fails": 0
+                        },
+                        "GET listScCommerceTemplate has body": {
+                            "path": "::listScCommerceTemplate::GET listScCommerceTemplate has body",
+                            "id": "91ebd5f4c9d1625b200b63240c203482",
+                            "passes": 9,
+                            "fails": 0,
+                            "name": "GET listScCommerceTemplate has body"
+                        }
+                    },
+                    "name": "listScCommerceTemplate",
+                    "path": "::listScCommerceTemplate"
+                },
+                "structuredContentTemplate": {
+                    "groups": {
+                        "NonHtmlResources": {
+                            "groups": {},
+                            "checks": {},
+                            "name": "NonHtmlResources",
+                            "path": "::structuredContentTemplate::NonHtmlResources",
+                            "id": "8914a14ed055213c0a4a6d54f28a4933"
+                        }
+                    },
+                    "checks": {
+                        "GET structuredContentTemplate status is 2xx": {
+                            "name": "GET structuredContentTemplate status is 2xx",
+                            "path": "::structuredContentTemplate::GET structuredContentTemplate status is 2xx",
+                            "id": "1dc04680a9e0daf70a90543366595941",
+                            "passes": 10,
+                            "fails": 0
+                        },
+                        "GET structuredContentTemplate has body": {
+                            "name": "GET structuredContentTemplate has body",
+                            "path": "::structuredContentTemplate::GET structuredContentTemplate has body",
+                            "id": "43e5694d1b0c96667f3ee9dcfc82bf70",
+                            "passes": 10,
+                            "fails": 0
+                        }
+                    },
+                    "name": "structuredContentTemplate",
+                    "path": "::structuredContentTemplate",
+                    "id": "375a3f24f9bf67f1cc2e512bc95fc7d1"
+                },
+                "listScTemplate": {
+                    "groups": {
+                        "NonHtmlResources": {
+                            "path": "::listScTemplate::NonHtmlResources",
+                            "id": "f2eb4e9577789ae0fee3e3e81977959e",
+                            "groups": {},
+                            "checks": {},
+                            "name": "NonHtmlResources"
+                        }
+                    },
+                    "checks": {
+                        "GET listScTemplate status is 2xx": {
+                            "passes": 8,
+                            "fails": 0,
+                            "name": "GET listScTemplate status is 2xx",
+                            "path": "::listScTemplate::GET listScTemplate status is 2xx",
+                            "id": "f22c17940cdb978829e9c7fcb7529f8d"
+                        },
+                        "GET listScTemplate has body": {
+                            "name": "GET listScTemplate has body",
+                            "path": "::listScTemplate::GET listScTemplate has body",
+                            "id": "cd0e4e071337a8cac41b5e0ecd5529bf",
+                            "passes": 8,
+                            "fails": 0
+                        }
+                    },
+                    "name": "listScTemplate",
+                    "path": "::listScTemplate",
+                    "id": "b17fe9011046294465121b4649e0000b"
+                },
+                "exclusiveTemplate": {
+                    "name": "exclusiveTemplate",
+                    "path": "::exclusiveTemplate",
+                    "id": "78fc6e91ffc0fa8955e9dd84d7fb0d9e",
+                    "groups": {
+                        "NonHtmlResources": {
+                            "name": "NonHtmlResources",
+                            "path": "::exclusiveTemplate::NonHtmlResources",
+                            "id": "6f61743d61fb53b2205727260554669e",
+                            "groups": {},
+                            "checks": {}
+                        }
+                    },
+                    "checks": {
+                        "GET exclusiveTemplate status is 2xx": {
+                            "name": "GET exclusiveTemplate status is 2xx",
+                            "path": "::exclusiveTemplate::GET exclusiveTemplate status is 2xx",
+                            "id": "b3b486c27504df0a617566f2e83c1477",
+                            "passes": 2,
+                            "fails": 0
+                        },
+                        "GET exclusiveTemplate has body": {
+                            "path": "::exclusiveTemplate::GET exclusiveTemplate has body",
+                            "id": "04285adfde0aeb66aec8e8a38abc2d1f",
+                            "passes": 2,
+                            "fails": 0,
+                            "name": "GET exclusiveTemplate has body"
+                        }
+                    }
+                },
+                "homeTemplate": {
+                    "name": "homeTemplate",
+                    "path": "::homeTemplate",
+                    "id": "128315e85a6ec1536fbc76b4959d39d3",
+                    "groups": {
+                        "NonHtmlResources": {
+                            "name": "NonHtmlResources",
+                            "path": "::homeTemplate::NonHtmlResources",
+                            "id": "a52f0d711eda18f1ff42d9776a74659e",
+                            "groups": {},
+                            "checks": {}
+                        }
+                    },
+                    "checks": {
+                        "GET homeTemplate status is 2xx": {
+                            "name": "GET homeTemplate status is 2xx",
+                            "path": "::homeTemplate::GET homeTemplate status is 2xx",
+                            "id": "cac125fc986817943d825f5746f6b5cb",
+                            "passes": 1,
+                            "fails": 0
+                        },
+                        "GET homeTemplate has body": {
+                            "name": "GET homeTemplate has body",
+                            "path": "::homeTemplate::GET homeTemplate has body",
+                            "id": "4ce396e4efd1282bf74724a224577953",
+                            "passes": 1,
+                            "fails": 0
+                        }
+                    }
+                },
+                "robotsTemplate": {
+                    "name": "robotsTemplate",
+                    "path": "::robotsTemplate",
+                    "id": "9602f420eafc13cc2a6f9517bafe2455",
+                    "groups": {
+                        "NonHtmlResources": {
+                            "checks": {},
+                            "name": "NonHtmlResources",
+                            "path": "::robotsTemplate::NonHtmlResources",
+                            "id": "2ad0d507bfdd3deed16b3bb5f1b3cafb",
+                            "groups": {}
+                        }
+                    },
+                    "checks": {
+                        "GET robotsTemplate status is 2xx": {
+                            "path": "::robotsTemplate::GET robotsTemplate status is 2xx",
+                            "id": "384d4274b6bb43c4ad1e69a7a9962106",
+                            "passes": 1,
+                            "fails": 0,
+                            "name": "GET robotsTemplate status is 2xx"
+                        },
+                        "GET robotsTemplate has body": {
+                            "id": "ec92a231dfc879e039e687e106b4bab3",
+                            "passes": 1,
+                            "fails": 0,
+                            "name": "GET robotsTemplate has body",
+                            "path": "::robotsTemplate::GET robotsTemplate has body"
+                        }
+                    }
+                }
+            }
+    }
+}

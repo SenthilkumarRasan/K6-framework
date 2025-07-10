@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K6 Performance Dashboard: allrecipes - custom-tps</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.3.0/build/global/luxon.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1/dist/chartjs-adapter-luxon.umd.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #22c55e;
+            --warning-color: #f97316;
+            --danger-color: #ef4444;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+            background-color: var(--gray-50);
+            color: var(--gray-800);
+            line-height: 1.5;
+            margin: 0;
+            padding: 0;
+        }
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        .sidebar {
+            width: 240px;
+            background-color: white;
+            border-right: 1px solid var(--gray-200);
+            padding: 1rem;
+        }
+        .sidebar-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--gray-800);
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        .sidebar-menu {
+            margin-top: 1rem;
+        }
+        .sidebar-menu-item {
+            padding: 0.75rem 0;
+            color: var(--gray-600);
+            display: block;
+            text-decoration: none;
+            border-radius: 0.375rem;
+            font-weight: 500;
+        }
+        .sidebar-menu-item:hover {
+            background-color: var(--gray-100);
+            color: var(--primary-color);
+        }
+        .content {
+            flex: 1;
+            padding: 2rem;
+        }
+        .dashboard-header {
+            margin-bottom: 2rem;
+        }
+        .dashboard-title {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 1rem;
+        }
+        .info-cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .info-card {
+            background-color: white;
+            border-radius: 0.5rem;
+            padding: 1.25rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            flex: 1;
+            min-width: 200px;
+            border-top: 4px solid var(--primary-color);
+        }
+        .info-card .info-label {
+            font-size: 0.875rem;
+            color: var(--gray-500);
+            margin-bottom: 0.5rem;
+        }
+        .info-card .info-value {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+        .card {
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+        .card-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--gray-800);
+            margin: 0;
+        }
+        .card-body {
+            padding: 1.5rem;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th {
+            text-align: left;
+            padding: 0.75rem 1rem;
+            font-weight: 600;
+            color: var(--gray-600);
+            background-color: var(--gray-50);
+            border-bottom: 1px solid var(--gray-200);
+        }
+        td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        .text-center {
+            text-align: center;
+        }
+        .text-danger {
+            color: var(--danger-color);
+        }
+        .text-warning {
+            color: var(--warning-color);
+        }
+        .chart-container {
+            width: 100%;
+            height: 400px;
+        }
+        .footer {
+            margin-top: 2rem;
+            padding: 1rem;
+            color: var(--gray-500);
+            text-align: center;
+            font-size: 0.875rem;
+        }
+        .responsive-table {
+            overflow-x: auto;
+        }
+        .cell-success {
+            background-color: rgba(34, 197, 94, 0.1);
+            color: var(--secondary-color);
+        }
+        .cell-warning {
+            background-color: rgba(249, 115, 22, 0.1);
+            color: var(--warning-color);
+        }
+        .cell-danger {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="sidebar">
+            <div class="sidebar-title">K6 Performance</div>
+            <div class="sidebar-menu">
+                <a href="#summary" class="sidebar-menu-item">Summary</a>
+                <a href="#ttlb" class="sidebar-menu-item">TTLB (Response Time)</a>
+                <a href="#ttfb" class="sidebar-menu-item">TTFB (Wait Time)</a>
+                <a href="#charts" class="sidebar-menu-item">Charts</a>
+                <a href="#errors" class="sidebar-menu-item">Errors</a>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="dashboard-header">
+                <h1 class="dashboard-title" id="summary">K6 Performance Dashboard: allrecipes - custom-tps</h1>
+                <div class="info-cards">
+                    
+    <div class="info-card">
+        <div class="info-label">Test Type</div>
+        <div class="info-value">API</div>
+    </div>
+    <div class="info-card">
+        <div class="info-label">Duration</div>
+        <div class="info-value">152.131s</div>
+    </div>
+    <div class="info-card">
+        <div class="info-label">Total Requests</div>
+        <div class="info-value">714</div>
+    </div>
+    <div class="info-card" style="border-top-color: var(--secondary-color)">
+        <div class="info-label">Failed Requests</div>
+        <div class="info-value ">0</div>
+    </div>
+    <div class="info-card">
+        <div class="info-label">Avg RPS</div>
+        <div class="info-value">4.69</div>
+    </div>
+    <div class="info-card">
+        <div class="info-label">Avg Response Time</div>
+        <div class="info-value">94.38ms</div>
+    </div>
+  
+                </div>
+            </div>
+            
+            <div class="card" id="ttlb">
+                <div class="card-header">
+                    <h2 class="card-title">TTLB (Response Time) by Endpoint</h2>
+                </div>
+                <div class="card-body">
+                    <div class="responsive-table">
+                        <table>
+    <thead>
+      <tr>
+        <th>Endpoint</th>
+        <th class="text-center">Count</th>
+        <th class="text-center">Min</th>
+        <th class="text-center">Avg</th>
+        <th class="text-center">Med</th>
+        <th class="text-center">p90</th>
+        <th class="text-center">p95</th>
+        <th class="text-center">p99</th>
+        <th class="text-center">Max</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+      <td>GetAlbums</td>
+      <td class="text-center">102</td>
+      <td class="text-center">72.22</td>
+      <td class="text-center">81.37</td>
+      <td class="text-center">80.34</td>
+      <td class="text-center">88.54</td>
+      <td class="text-center">92.01</td>
+      <td class="text-center">97.08</td>
+      <td class="text-center">100.78</td>
+    </tr><tr>
+      <td>GetComments</td>
+      <td class="text-center">102</td>
+      <td class="text-center">83.30</td>
+      <td class="text-center">96.62</td>
+      <td class="text-center">91.40</td>
+      <td class="text-center">105.27</td>
+      <td class="text-center">130.55</td>
+      <td class="text-center">157.46</td>
+      <td class="text-center">165.95</td>
+    </tr><tr>
+      <td>GetPhotos</td>
+      <td class="text-center">102</td>
+      <td class="text-center">70.32</td>
+      <td class="text-center">79.50</td>
+      <td class="text-center">77.68</td>
+      <td class="text-center">87.33</td>
+      <td class="text-center">92.96</td>
+      <td class="text-center">99.92</td>
+      <td class="text-center">101.83</td>
+    </tr><tr>
+      <td>GetPosts</td>
+      <td class="text-center">102</td>
+      <td class="text-center">75.06</td>
+      <td class="text-center">85.30</td>
+      <td class="text-center">83.67</td>
+      <td class="text-center">98.53</td>
+      <td class="text-center">102.85</td>
+      <td class="text-center">106.48</td>
+      <td class="text-center">107.18</td>
+    </tr><tr>
+      <td>GetTodos</td>
+      <td class="text-center">102</td>
+      <td class="text-center">70.94</td>
+      <td class="text-center">80.78</td>
+      <td class="text-center">78.11</td>
+      <td class="text-center">90.46</td>
+      <td class="text-center">96.08</td>
+      <td class="text-center">118.73</td>
+      <td class="text-center">148.68</td>
+    </tr><tr>
+      <td>GetUsers</td>
+      <td class="text-center">102</td>
+      <td class="text-center">72.00</td>
+      <td class="text-center">80.60</td>
+      <td class="text-center">78.78</td>
+      <td class="text-center">90.22</td>
+      <td class="text-center">94.55</td>
+      <td class="text-center">99.66</td>
+      <td class="text-center">104.80</td>
+    </tr><tr>
+      <td>PostData</td>
+      <td class="text-center">102</td>
+      <td class="text-center">142.14</td>
+      <td class="text-center">156.53</td>
+      <td class="text-center">152.29</td>
+      <td class="text-center">165.41</td>
+      <td class="text-center">178.03</td>
+      <td class="text-center">288.57</td>
+      <td class="text-center">297.07</td>
+    </tr>
+    </tbody>
+  </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card" id="ttfb">
+                <div class="card-header">
+                    <h2 class="card-title">TTFB (Wait Time) by Endpoint</h2>
+                </div>
+                <div class="card-body">
+                    <div class="responsive-table">
+                        <table>
+    <thead>
+      <tr>
+        <th>Endpoint</th>
+        <th class="text-center">Count</th>
+        <th class="text-center">Min</th>
+        <th class="text-center">Avg</th>
+        <th class="text-center">Med</th>
+        <th class="text-center">p90</th>
+        <th class="text-center">p95</th>
+        <th class="text-center">p99</th>
+        <th class="text-center">Max</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+      <td>GetAlbums</td>
+      <td class="text-center">102</td>
+      <td class="text-center">70.15</td>
+      <td class="text-center">78.96</td>
+      <td class="text-center">77.94</td>
+      <td class="text-center">85.76</td>
+      <td class="text-center">88.17</td>
+      <td class="text-center">94.93</td>
+      <td class="text-center">99.04</td>
+    </tr><tr>
+      <td>GetComments</td>
+      <td class="text-center">102</td>
+      <td class="text-center">71.56</td>
+      <td class="text-center">81.25</td>
+      <td class="text-center">79.47</td>
+      <td class="text-center">89.19</td>
+      <td class="text-center">92.79</td>
+      <td class="text-center">119.00</td>
+      <td class="text-center">125.02</td>
+    </tr><tr>
+      <td>GetPhotos</td>
+      <td class="text-center">102</td>
+      <td class="text-center">70.15</td>
+      <td class="text-center">79.26</td>
+      <td class="text-center">77.61</td>
+      <td class="text-center">87.05</td>
+      <td class="text-center">92.80</td>
+      <td class="text-center">99.77</td>
+      <td class="text-center">101.76</td>
+    </tr><tr>
+      <td>GetPosts</td>
+      <td class="text-center">102</td>
+      <td class="text-center">72.05</td>
+      <td class="text-center">81.63</td>
+      <td class="text-center">79.25</td>
+      <td class="text-center">93.34</td>
+      <td class="text-center">99.23</td>
+      <td class="text-center">101.07</td>
+      <td class="text-center">104.61</td>
+    </tr><tr>
+      <td>GetTodos</td>
+      <td class="text-center">102</td>
+      <td class="text-center">69.80</td>
+      <td class="text-center">80.48</td>
+      <td class="text-center">77.68</td>
+      <td class="text-center">90.34</td>
+      <td class="text-center">95.93</td>
+      <td class="text-center">117.52</td>
+      <td class="text-center">148.49</td>
+    </tr><tr>
+      <td>GetUsers</td>
+      <td class="text-center">102</td>
+      <td class="text-center">71.21</td>
+      <td class="text-center">78.96</td>
+      <td class="text-center">76.88</td>
+      <td class="text-center">88.29</td>
+      <td class="text-center">91.64</td>
+      <td class="text-center">97.97</td>
+      <td class="text-center">102.58</td>
+    </tr><tr>
+      <td>PostData</td>
+      <td class="text-center">102</td>
+      <td class="text-center">141.85</td>
+      <td class="text-center">156.03</td>
+      <td class="text-center">151.59</td>
+      <td class="text-center">164.15</td>
+      <td class="text-center">177.58</td>
+      <td class="text-center">288.29</td>
+      <td class="text-center">296.85</td>
+    </tr>
+    </tbody>
+  </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card" id="charts">
+                <div class="card-header">
+                    <h2 class="card-title">Response Time Over Time</h2>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="responseTimeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Requests Per Second</h2>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="rpsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Active VUs</h2>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="vuChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card" id="errors">
+                <div class="card-header">
+                    <h2 class="card-title">Errors</h2>
+                </div>
+                <div class="card-body">
+                    <div class="responsive-table">
+                        <table>
+      <thead>
+        <tr>
+          <th>Status</th>
+          <th>Transaction</th>
+          <th>Count</th>
+          <th>Error</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td colspan="4" class="text-center">No errors detected in this test run</td>
+        </tr>
+      </tbody>
+    </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer">
+                Generated by K6 Performance Dashboard Generator | 7/8/2025, 4:17:32 PM
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Chart configuration 
+        document.addEventListener('DOMContentLoaded', function() {
+            
+    // Helper function to get chart colors
+    function getColor(index) {
+      const colors = [
+        '#4f46e5', // Indigo-600
+        '#22c55e', // Green-500
+        '#f97316', // Orange-500 
+        '#8b5cf6', // Violet-500
+        '#94a3b8', // Slate-400
+        '#ef4444', // Red-500
+        '#eab308'  // Yellow-500
+      ];
+      return colors[index % colors.length];
+    }
+    
+    // Response Time Chart
+    if (document.getElementById('responseTimeChart')) {
+      new Chart(document.getElementById('responseTimeChart'), {
+        type: 'line',
+        data: {
+          datasets: [{
+      label: 'GetPosts',
+      data: [{x: new Date('2025-07-08T15:20:35.964184-05:00').getTime(), y: 98.9},{x: new Date('2025-07-08T15:20:40.279917-05:00').getTime(), y: 102.45},{x: new Date('2025-07-08T15:20:46.824453-05:00').getTime(), y: 86.909},{x: new Date('2025-07-08T15:20:49.264349-05:00').getTime(), y: 83.639},{x: new Date('2025-07-08T15:20:51.600689-05:00').getTime(), y: 81.132},{x: new Date('2025-07-08T15:20:53.75614-05:00').getTime(), y: 87.625},{x: new Date('2025-07-08T15:20:55.752305-05:00').getTime(), y: 81.848},{x: new Date('2025-07-08T15:20:57.634353-05:00').getTime(), y: 84.172},{x: new Date('2025-07-08T15:20:59.414977-05:00').getTime(), y: 87.29},{x: new Date('2025-07-08T15:21:01.113502-05:00').getTime(), y: 94.924},{x: new Date('2025-07-08T15:21:02.714323-05:00').getTime(), y: 81.043},{x: new Date('2025-07-08T15:21:04.265486-05:00').getTime(), y: 82.918},{x: new Date('2025-07-08T15:21:07.345006-05:00').getTime(), y: 80.361},{x: new Date('2025-07-08T15:21:08.587787-05:00').getTime(), y: 83.184},{x: new Date('2025-07-08T15:21:09.952152-05:00').getTime(), y: 99.21},{x: new Date('2025-07-08T15:21:11.239982-05:00').getTime(), y: 77.236},{x: new Date('2025-07-08T15:21:12.516457-05:00').getTime(), y: 81.041},{x: new Date('2025-07-08T15:21:13.764576-05:00').getTime(), y: 87.835},{x: new Date('2025-07-08T15:21:14.96753-05:00').getTime(), y: 81.657},{x: new Date('2025-07-08T15:21:16.15448-05:00').getTime(), y: 86.664},{x: new Date('2025-07-08T15:21:17.314249-05:00').getTime(), y: 92.259},{x: new Date('2025-07-08T15:21:18.434431-05:00').getTime(), y: 82.773},{x: new Date('2025-07-08T15:21:20.764768-05:00').getTime(), y: 83.635},{x: new Date('2025-07-08T15:21:21.695204-05:00').getTime(), y: 88.211},{x: new Date('2025-07-08T15:21:22.758264-05:00').getTime(), y: 106.482},{x: new Date('2025-07-08T15:21:23.758602-05:00').getTime(), y: 80.012},{x: new Date('2025-07-08T15:21:24.766255-05:00').getTime(), y: 79.733},{x: new Date('2025-07-08T15:21:25.76366-05:00').getTime(), y: 77.306},{x: new Date('2025-07-08T15:21:26.789683-05:00').getTime(), y: 103.239},{x: new Date('2025-07-08T15:21:27.770537-05:00').getTime(), y: 84.491},{x: new Date('2025-07-08T15:21:28.761857-05:00').getTime(), y: 75.352},{x: new Date('2025-07-08T15:21:29.786025-05:00').getTime(), y: 85.026},{x: new Date('2025-07-08T15:21:30.775624-05:00').getTime(), y: 89.486},{x: new Date('2025-07-08T15:21:31.762198-05:00').getTime(), y: 75.69},{x: new Date('2025-07-08T15:21:32.768492-05:00').getTime(), y: 82.056},{x: new Date('2025-07-08T15:21:33.768771-05:00').getTime(), y: 82.32},{x: new Date('2025-07-08T15:21:34.781058-05:00').getTime(), y: 94.624},{x: new Date('2025-07-08T15:21:35.772068-05:00').getTime(), y: 85.585},{x: new Date('2025-07-08T15:21:36.765845-05:00').getTime(), y: 79.227},{x: new Date('2025-07-08T15:21:37.793787-05:00').getTime(), y: 107.179},{x: new Date('2025-07-08T15:21:38.777808-05:00').getTime(), y: 91.039},{x: new Date('2025-07-08T15:21:39.765941-05:00').getTime(), y: 79.373},{x: new Date('2025-07-08T15:21:40.76561-05:00').getTime(), y: 79.066},{x: new Date('2025-07-08T15:21:41.76985-05:00').getTime(), y: 83.218},{x: new Date('2025-07-08T15:21:42.771489-05:00').getTime(), y: 84.85},{x: new Date('2025-07-08T15:21:43.766511-05:00').getTime(), y: 79.858},{x: new Date('2025-07-08T15:21:44.762173-05:00').getTime(), y: 75.469},{x: new Date('2025-07-08T15:21:45.772078-05:00').getTime(), y: 85.456},{x: new Date('2025-07-08T15:21:46.771446-05:00').getTime(), y: 84.77},{x: new Date('2025-07-08T15:21:47.766284-05:00').getTime(), y: 79.648},{x: new Date('2025-07-08T15:21:48.76875-05:00').getTime(), y: 82.052},{x: new Date('2025-07-08T15:21:49.762223-05:00').getTime(), y: 75.511},{x: new Date('2025-07-08T15:21:50.77118-05:00').getTime(), y: 84.502},{x: new Date('2025-07-08T15:21:51.765556-05:00').getTime(), y: 78.822},{x: new Date('2025-07-08T15:21:52.772783-05:00').getTime(), y: 85.993},{x: new Date('2025-07-08T15:21:53.782727-05:00').getTime(), y: 96.013},{x: new Date('2025-07-08T15:21:54.771653-05:00').getTime(), y: 84.886},{x: new Date('2025-07-08T15:21:55.77287-05:00').getTime(), y: 85.192},{x: new Date('2025-07-08T15:21:56.773779-05:00').getTime(), y: 87.048},{x: new Date('2025-07-08T15:21:57.771457-05:00').getTime(), y: 84.844},{x: new Date('2025-07-08T15:21:58.772611-05:00').getTime(), y: 85.889},{x: new Date('2025-07-08T15:21:59.789975-05:00').getTime(), y: 103.152},{x: new Date('2025-07-08T15:22:00.788307-05:00').getTime(), y: 101.507},{x: new Date('2025-07-08T15:22:01.770654-05:00').getTime(), y: 83.674},{x: new Date('2025-07-08T15:22:02.767015-05:00').getTime(), y: 80.11},{x: new Date('2025-07-08T15:22:03.761969-05:00').getTime(), y: 75.064},{x: new Date('2025-07-08T15:22:04.76525-05:00').getTime(), y: 78.368},{x: new Date('2025-07-08T15:22:05.767925-05:00').getTime(), y: 81.105},{x: new Date('2025-07-08T15:22:06.789791-05:00').getTime(), y: 102.905},{x: new Date('2025-07-08T15:22:07.765629-05:00').getTime(), y: 78.751},{x: new Date('2025-07-08T15:22:08.769053-05:00').getTime(), y: 82.113},{x: new Date('2025-07-08T15:22:09.773758-05:00').getTime(), y: 86.794},{x: new Date('2025-07-08T15:22:10.773849-05:00').getTime(), y: 86.964},{x: new Date('2025-07-08T15:22:11.774384-05:00').getTime(), y: 86.758},{x: new Date('2025-07-08T15:22:12.766319-05:00').getTime(), y: 79.239},{x: new Date('2025-07-08T15:22:13.763798-05:00').getTime(), y: 76.581},{x: new Date('2025-07-08T15:22:14.773277-05:00').getTime(), y: 86.436},{x: new Date('2025-07-08T15:22:15.763974-05:00').getTime(), y: 76.995},{x: new Date('2025-07-08T15:22:16.76606-05:00').getTime(), y: 78.966},{x: new Date('2025-07-08T15:22:17.773173-05:00').getTime(), y: 86.142},{x: new Date('2025-07-08T15:22:18.772013-05:00').getTime(), y: 85.01},{x: new Date('2025-07-08T15:22:19.771825-05:00').getTime(), y: 84.733},{x: new Date('2025-07-08T15:22:20.785559-05:00').getTime(), y: 98.525},{x: new Date('2025-07-08T15:22:21.775118-05:00').getTime(), y: 88.037},{x: new Date('2025-07-08T15:22:22.773162-05:00').getTime(), y: 85.997},{x: new Date('2025-07-08T15:22:23.76669-05:00').getTime(), y: 79.551},{x: new Date('2025-07-08T15:22:24.770896-05:00').getTime(), y: 83.707},{x: new Date('2025-07-08T15:22:25.785708-05:00').getTime(), y: 81.687},{x: new Date('2025-07-08T15:22:26.842314-05:00').getTime(), y: 83.883},{x: new Date('2025-07-08T15:22:27.937097-05:00').getTime(), y: 82.201},{x: new Date('2025-07-08T15:22:29.079882-05:00').getTime(), y: 82.619},{x: new Date('2025-07-08T15:22:30.27284-05:00').getTime(), y: 80.324},{x: new Date('2025-07-08T15:22:31.552729-05:00').getTime(), y: 102.847},{x: new Date('2025-07-08T15:22:32.858392-05:00').getTime(), y: 79.493},{x: new Date('2025-07-08T15:22:34.277164-05:00').getTime(), y: 83.213},{x: new Date('2025-07-08T15:22:35.799276-05:00').getTime(), y: 85.139},{x: new Date('2025-07-08T15:22:37.464971-05:00').getTime(), y: 98.479},{x: new Date('2025-07-08T15:22:39.275372-05:00').getTime(), y: 79.33},{x: new Date('2025-07-08T15:22:41.353126-05:00').getTime(), y: 81.566},{x: new Date('2025-07-08T15:22:43.816192-05:00').getTime(), y: 83.674},{x: new Date('2025-07-08T15:22:47.021365-05:00').getTime(), y: 79.312},{x: new Date('2025-07-08T15:22:54.768699-05:00').getTime(), y: 81.348}],
+      borderColor: getColor(0),
+      backgroundColor: 'rgba(99, 102, 241, 0.1)',
+      borderWidth: 2,
+      pointRadius: 0,
+      pointHoverRadius: 6,
+      tension: 0.4,
+      fill: false
+    },{
+      label: 'GetUsers',
+      data: [{x: new Date('2025-07-08T15:20:36.259784-05:00').getTime(), y: 79.735},{x: new Date('2025-07-08T15:20:40.832477-05:00').getTime(), y: 83.968},{x: new Date('2025-07-08T15:20:47.399469-05:00').getTime(), y: 75.086},{x: new Date('2025-07-08T15:20:49.714552-05:00').getTime(), y: 81.778},{x: new Date('2025-07-08T15:20:51.962994-05:00').getTime(), y: 97.2},{x: new Date('2025-07-08T15:20:54.094481-05:00').getTime(), y: 78.803},{x: new Date('2025-07-08T15:20:56.161458-05:00').getTime(), y: 75.484},{x: new Date('2025-07-08T15:20:58.082116-05:00').getTime(), y: 87.057},{x: new Date('2025-07-08T15:20:59.800277-05:00').getTime(), y: 82.19},{x: new Date('2025-07-08T15:21:01.413652-05:00').getTime(), y: 90.998},{x: new Date('2025-07-08T15:21:03.282583-05:00').getTime(), y: 82.95},{x: new Date('2025-07-08T15:21:04.796098-05:00').getTime(), y: 80.425},{x: new Date('2025-07-08T15:21:07.795245-05:00').getTime(), y: 80.438},{x: new Date('2025-07-08T15:21:09.137333-05:00').getTime(), y: 76.115},{x: new Date('2025-07-08T15:21:10.525116-05:00').getTime(), y: 85.932},{x: new Date('2025-07-08T15:21:11.585981-05:00').getTime(), y: 81.06},{x: new Date('2025-07-08T15:21:12.851751-05:00').getTime(), y: 74.831},{x: new Date('2025-07-08T15:21:14.064568-05:00').getTime(), y: 78.783},{x: new Date('2025-07-08T15:21:15.350193-05:00').getTime(), y: 74.395},{x: new Date('2025-07-08T15:21:16.702392-05:00').getTime(), y: 89.539},{x: new Date('2025-07-08T15:21:17.73476-05:00').getTime(), y: 82.359},{x: new Date('2025-07-08T15:21:18.826466-05:00').getTime(), y: 76.788},{x: new Date('2025-07-08T15:21:21.066558-05:00').getTime(), y: 74.962},{x: new Date('2025-07-08T15:21:22.255632-05:00').getTime(), y: 77.88},{x: new Date('2025-07-08T15:21:23.338064-05:00').getTime(), y: 79.633},{x: new Date('2025-07-08T15:21:24.052393-05:00').getTime(), y: 72.003},{x: new Date('2025-07-08T15:21:25.061321-05:00').getTime(), y: 79.639},{x: new Date('2025-07-08T15:21:26.062707-05:00').getTime(), y: 73.816},{x: new Date('2025-07-08T15:21:27.131661-05:00').getTime(), y: 90.362},{x: new Date('2025-07-08T15:21:28.260506-05:00').getTime(), y: 75.464},{x: new Date('2025-07-08T15:21:29.056724-05:00').getTime(), y: 73.162},{x: new Date('2025-07-08T15:21:30.311543-05:00').getTime(), y: 77.452},{x: new Date('2025-07-08T15:21:31.164851-05:00').getTime(), y: 76.689},{x: new Date('2025-07-08T15:21:32.087072-05:00').getTime(), y: 74.556},{x: new Date('2025-07-08T15:21:33.354454-05:00').getTime(), y: 85.173},{x: new Date('2025-07-08T15:21:34.208427-05:00').getTime(), y: 74.279},{x: new Date('2025-07-08T15:21:35.141927-05:00').getTime(), y: 97.868},{x: new Date('2025-07-08T15:21:36.11605-05:00').getTime(), y: 79.979},{x: new Date('2025-07-08T15:21:37.171235-05:00').getTime(), y: 80.076},{x: new Date('2025-07-08T15:21:38.286307-05:00').getTime(), y: 75.224},{x: new Date('2025-07-08T15:21:39.302664-05:00').getTime(), y: 80.358},{x: new Date('2025-07-08T15:21:40.081791-05:00').getTime(), y: 75.104},{x: new Date('2025-07-08T15:21:41.156498-05:00').getTime(), y: 78.84},{x: new Date('2025-07-08T15:21:42.297099-05:00').getTime(), y: 75.096},{x: new Date('2025-07-08T15:21:43.279434-05:00').getTime(), y: 78.216},{x: new Date('2025-07-08T15:21:44.285983-05:00').getTime(), y: 77.275},{x: new Date('2025-07-08T15:21:45.323046-05:00').getTime(), y: 77.278},{x: new Date('2025-07-08T15:21:46.185856-05:00').getTime(), y: 85.065},{x: new Date('2025-07-08T15:21:47.339501-05:00').getTime(), y: 95.042},{x: new Date('2025-07-08T15:21:48.260319-05:00').getTime(), y: 80.418},{x: new Date('2025-07-08T15:21:49.083748-05:00').getTime(), y: 72.567},{x: new Date('2025-07-08T15:21:50.062503-05:00').getTime(), y: 90.219},{x: new Date('2025-07-08T15:21:51.361768-05:00').getTime(), y: 94.545},{x: new Date('2025-07-08T15:21:52.299488-05:00').getTime(), y: 79.473},{x: new Date('2025-07-08T15:21:53.088178-05:00').getTime(), y: 75.401},{x: new Date('2025-07-08T15:21:54.327919-05:00').getTime(), y: 76.115},{x: new Date('2025-07-08T15:21:55.275337-05:00').getTime(), y: 85.6},{x: new Date('2025-07-08T15:21:56.186093-05:00').getTime(), y: 74.779},{x: new Date('2025-07-08T15:21:57.177273-05:00').getTime(), y: 74.487},{x: new Date('2025-07-08T15:21:58.089365-05:00').getTime(), y: 77.269},{x: new Date('2025-07-08T15:21:59.147737-05:00').getTime(), y: 90.295},{x: new Date('2025-07-08T15:22:00.27193-05:00').getTime(), y: 74.613},{x: new Date('2025-07-08T15:22:01.151745-05:00').getTime(), y: 72.937},{x: new Date('2025-07-08T15:22:02.219348-05:00').getTime(), y: 77.253},{x: new Date('2025-07-08T15:22:03.3431-05:00').getTime(), y: 86.062},{x: new Date('2025-07-08T15:22:04.244633-05:00').getTime(), y: 80.48},{x: new Date('2025-07-08T15:22:05.06388-05:00').getTime(), y: 76.038},{x: new Date('2025-07-08T15:22:06.24438-05:00').getTime(), y: 76.768},{x: new Date('2025-07-08T15:22:07.114021-05:00').getTime(), y: 104.797},{x: new Date('2025-07-08T15:22:08.089776-05:00').getTime(), y: 89.488},{x: new Date('2025-07-08T15:22:09.174473-05:00').getTime(), y: 92.559},{x: new Date('2025-07-08T15:22:10.303954-05:00').getTime(), y: 77.159},{x: new Date('2025-07-08T15:22:11.088698-05:00').getTime(), y: 99.659},{x: new Date('2025-07-08T15:22:12.073421-05:00').getTime(), y: 77.706},{x: new Date('2025-07-08T15:22:13.304855-05:00').getTime(), y: 75.908},{x: new Date('2025-07-08T15:22:14.321197-05:00').getTime(), y: 89.548},{x: new Date('2025-07-08T15:22:15.288482-05:00').getTime(), y: 78.176},{x: new Date('2025-07-08T15:22:16.188643-05:00').getTime(), y: 73.878},{x: new Date('2025-07-08T15:22:17.138648-05:00').getTime(), y: 74.425},{x: new Date('2025-07-08T15:22:18.299276-05:00').getTime(), y: 89.223},{x: new Date('2025-07-08T15:22:19.067191-05:00').getTime(), y: 86.171},{x: new Date('2025-07-08T15:22:20.228617-05:00').getTime(), y: 76.998},{x: new Date('2025-07-08T15:22:21.169154-05:00').getTime(), y: 79.101},{x: new Date('2025-07-08T15:22:22.173506-05:00').getTime(), y: 80.133},{x: new Date('2025-07-08T15:22:23.1849-05:00').getTime(), y: 85.988},{x: new Date('2025-07-08T15:22:24.340571-05:00').getTime(), y: 87.974},{x: new Date('2025-07-08T15:22:25.250236-05:00').getTime(), y: 72.853},{x: new Date('2025-07-08T15:22:26.217677-05:00').getTime(), y: 75.151},{x: new Date('2025-07-08T15:22:27.185074-05:00').getTime(), y: 76.022},{x: new Date('2025-07-08T15:22:28.310157-05:00').getTime(), y: 77.413},{x: new Date('2025-07-08T15:22:29.473404-05:00').getTime(), y: 80.422},{x: new Date('2025-07-08T15:22:30.821087-05:00').getTime(), y: 82.538},{x: new Date('2025-07-08T15:22:31.894959-05:00').getTime(), y: 87.647},{x: new Date('2025-07-08T15:22:33.180339-05:00').getTime(), y: 77.194},{x: new Date('2025-07-08T15:22:34.706752-05:00').getTime(), y: 76.331},{x: new Date('2025-07-08T15:22:36.221557-05:00').getTime(), y: 79.083},{x: new Date('2025-07-08T15:22:37.945299-05:00').getTime(), y: 81.929},{x: new Date('2025-07-08T15:22:39.806309-05:00').getTime(), y: 75.042},{x: new Date('2025-07-08T15:22:41.852621-05:00').getTime(), y: 78.626},{x: new Date('2025-07-08T15:22:44.120174-05:00').getTime(), y: 72.773},{x: new Date('2025-07-08T15:22:47.486303-05:00').getTime(), y: 78.782},{x: new Date('2025-07-08T15:22:55.329118-05:00').getTime(), y: 78.288}],
+      borderColor: getColor(1),
+      backgroundColor: 'rgba(99, 102, 241, 0.1)',
+      borderWidth: 2,
+      pointRadius: 0,
+      pointHoverRadius: 6,
+      tension: 0.4,
+      fill: false
+    },{
+      label: 'GetComments',
+      data: [{x: new Date('2025-07-08T15:20:36.836356-05:00').getTime(), y: 165.947},{x: new Date('2025-07-08T15:20:41.34878-05:00').getTime(), y: 101.897},{x: new Date('2025-07-08T15:20:47.975456-05:00').getTime(), y: 155.232},{x: new Date('2025-07-08T15:20:50.05178-05:00').getTime(), y: 87.545},{x: new Date('2025-07-08T15:20:52.33463-05:00').getTime(), y: 91.467},{x: new Date('2025-07-08T15:20:54.418635-05:00').getTime(), y: 91.249},{x: new Date('2025-07-08T15:20:56.620071-05:00').getTime(), y: 83.298},{x: new Date('2025-07-08T15:20:58.618713-05:00').getTime(), y: 89.304},{x: new Date('2025-07-08T15:21:00.219713-05:00').getTime(), y: 105.266},{x: new Date('2025-07-08T15:21:01.861664-05:00').getTime(), y: 94.58},{x: new Date('2025-07-08T15:21:03.671498-05:00').getTime(), y: 102.891},{x: new Date('2025-07-08T15:21:05.359258-05:00').getTime(), y: 97.638},{x: new Date('2025-07-08T15:21:08.37512-05:00').getTime(), y: 155.406},{x: new Date('2025-07-08T15:21:09.706384-05:00').getTime(), y: 88.391},{x: new Date('2025-07-08T15:21:10.927794-05:00').getTime(), y: 94.438},{x: new Date('2025-07-08T15:21:12.144266-05:00').getTime(), y: 91.24},{x: new Date('2025-07-08T15:21:13.363448-05:00').getTime(), y: 87.606},{x: new Date('2025-07-08T15:21:14.476703-05:00').getTime(), y: 104.411},{x: new Date('2025-07-08T15:21:15.827489-05:00').getTime(), y: 90.858},{x: new Date('2025-07-08T15:21:17.158361-05:00').getTime(), y: 97.231},{x: new Date('2025-07-08T15:21:18.229829-05:00').getTime(), y: 100.102},{x: new Date('2025-07-08T15:21:19.227321-05:00').getTime(), y: 90.802},{x: new Date('2025-07-08T15:21:21.673778-05:00').getTime(), y: 157.462},{x: new Date('2025-07-08T15:21:22.683026-05:00').getTime(), y: 86.626},{x: new Date('2025-07-08T15:21:23.749516-05:00').getTime(), y: 101.622},{x: new Date('2025-07-08T15:21:24.552305-05:00').getTime(), y: 84.177},{x: new Date('2025-07-08T15:21:25.54002-05:00').getTime(), y: 109.838},{x: new Date('2025-07-08T15:21:26.492992-05:00').getTime(), y: 90.95},{x: new Date('2025-07-08T15:21:27.694141-05:00').getTime(), y: 92.604},{x: new Date('2025-07-08T15:21:28.742835-05:00').getTime(), y: 95.082},{x: new Date('2025-07-08T15:21:29.376162-05:00').getTime(), y: 86.073},{x: new Date('2025-07-08T15:21:30.705806-05:00').getTime(), y: 99.776},{x: new Date('2025-07-08T15:21:31.74413-05:00').getTime(), y: 100.581},{x: new Date('2025-07-08T15:21:32.67179-05:00').getTime(), y: 100.819},{x: new Date('2025-07-08T15:21:33.678838-05:00').getTime(), y: 88.582},{x: new Date('2025-07-08T15:21:34.682083-05:00').getTime(), y: 89.831},{x: new Date('2025-07-08T15:21:35.590974-05:00').getTime(), y: 128.605},{x: new Date('2025-07-08T15:21:36.497837-05:00').getTime(), y: 88.142},{x: new Date('2025-07-08T15:21:37.746157-05:00').getTime(), y: 86.498},{x: new Date('2025-07-08T15:21:38.873368-05:00').getTime(), y: 92.418},{x: new Date('2025-07-08T15:21:39.858134-05:00').getTime(), y: 104.434},{x: new Date('2025-07-08T15:21:40.547538-05:00').getTime(), y: 88.945},{x: new Date('2025-07-08T15:21:41.497983-05:00').getTime(), y: 84.142},{x: new Date('2025-07-08T15:21:42.749432-05:00').getTime(), y: 88.123},{x: new Date('2025-07-08T15:21:43.634078-05:00').getTime(), y: 98.888},{x: new Date('2025-07-08T15:21:44.800332-05:00').getTime(), y: 84.133},{x: new Date('2025-07-08T15:21:45.718882-05:00').getTime(), y: 89.872},{x: new Date('2025-07-08T15:21:46.612973-05:00').getTime(), y: 90.325},{x: new Date('2025-07-08T15:21:47.766669-05:00').getTime(), y: 95.954},{x: new Date('2025-07-08T15:21:48.566408-05:00').getTime(), y: 85.905},{x: new Date('2025-07-08T15:21:49.582247-05:00').getTime(), y: 85.459},{x: new Date('2025-07-08T15:21:50.572282-05:00').getTime(), y: 91.299},{x: new Date('2025-07-08T15:21:51.741441-05:00').getTime(), y: 92.467},{x: new Date('2025-07-08T15:21:52.722608-05:00').getTime(), y: 93.49},{x: new Date('2025-07-08T15:21:53.394022-05:00').getTime(), y: 83.44},{x: new Date('2025-07-08T15:21:54.936061-05:00').getTime(), y: 136.977},{x: new Date('2025-07-08T15:21:55.783569-05:00').getTime(), y: 99.06},{x: new Date('2025-07-08T15:21:56.658608-05:00').getTime(), y: 89.135},{x: new Date('2025-07-08T15:21:57.706578-05:00').getTime(), y: 86.3},{x: new Date('2025-07-08T15:21:58.567362-05:00').getTime(), y: 89.654},{x: new Date('2025-07-08T15:21:59.588401-05:00').getTime(), y: 94.342},{x: new Date('2025-07-08T15:22:00.658525-05:00').getTime(), y: 98.257},{x: new Date('2025-07-08T15:22:01.590788-05:00').getTime(), y: 86.213},{x: new Date('2025-07-08T15:22:02.733545-05:00').getTime(), y: 90.671},{x: new Date('2025-07-08T15:22:03.827629-05:00').getTime(), y: 98.963},{x: new Date('2025-07-08T15:22:04.783821-05:00').getTime(), y: 91.375},{x: new Date('2025-07-08T15:22:05.401034-05:00').getTime(), y: 89.34},{x: new Date('2025-07-08T15:22:06.788053-05:00').getTime(), y: 91.782},{x: new Date('2025-07-08T15:22:07.670939-05:00').getTime(), y: 90.239},{x: new Date('2025-07-08T15:22:08.429352-05:00').getTime(), y: 89.204},{x: new Date('2025-07-08T15:22:09.525415-05:00').getTime(), y: 91.097},{x: new Date('2025-07-08T15:22:10.869693-05:00').getTime(), y: 92.679},{x: new Date('2025-07-08T15:22:11.550726-05:00').getTime(), y: 108.387},{x: new Date('2025-07-08T15:22:12.639361-05:00').getTime(), y: 84.418},{x: new Date('2025-07-08T15:22:13.650491-05:00').getTime(), y: 100.235},{x: new Date('2025-07-08T15:22:14.731189-05:00').getTime(), y: 98.012},{x: new Date('2025-07-08T15:22:15.722555-05:00').getTime(), y: 93.792},{x: new Date('2025-07-08T15:22:16.648113-05:00').getTime(), y: 111.704},{x: new Date('2025-07-08T15:22:17.669346-05:00').getTime(), y: 91.402},{x: new Date('2025-07-08T15:22:18.875188-05:00').getTime(), y: 89.438},{x: new Date('2025-07-08T15:22:19.401744-05:00').getTime(), y: 104.998},{x: new Date('2025-07-08T15:22:20.602081-05:00').getTime(), y: 84.042},{x: new Date('2025-07-08T15:22:21.608275-05:00').getTime(), y: 99.222},{x: new Date('2025-07-08T15:22:22.610983-05:00').getTime(), y: 91.32},{x: new Date('2025-07-08T15:22:23.592525-05:00').getTime(), y: 96.283},{x: new Date('2025-07-08T15:22:24.720984-05:00').getTime(), y: 87.213},{x: new Date('2025-07-08T15:22:25.715111-05:00').getTime(), y: 96.837},{x: new Date('2025-07-08T15:22:26.744324-05:00').getTime(), y: 89.567},{x: new Date('2025-07-08T15:22:27.562363-05:00').getTime(), y: 96.126},{x: new Date('2025-07-08T15:22:28.754194-05:00').getTime(), y: 89.83},{x: new Date('2025-07-08T15:22:29.834923-05:00').getTime(), y: 130.551},{x: new Date('2025-07-08T15:22:31.334448-05:00').getTime(), y: 101.009},{x: new Date('2025-07-08T15:22:32.266885-05:00').getTime(), y: 95.798},{x: new Date('2025-07-08T15:22:33.756311-05:00').getTime(), y: 90.901},{x: new Date('2025-07-08T15:22:35.185239-05:00').getTime(), y: 84.411},{x: new Date('2025-07-08T15:22:36.559009-05:00').getTime(), y: 91.078},{x: new Date('2025-07-08T15:22:38.264636-05:00').getTime(), y: 92.551},{x: new Date('2025-07-08T15:22:40.333818-05:00').getTime(), y: 83.358},{x: new Date('2025-07-08T15:22:42.369634-05:00').getTime(), y: 86.14},{x: new Date('2025-07-08T15:22:44.699113-05:00').getTime(), y: 88.885},{x: new Date('2025-07-08T15:22:47.94394-05:00').getTime(), y: 95.817},{x: new Date('2025-07-08T15:22:55.654248-05:00').getTime(), y: 93.166}],
+      borderColor: getColor(2),
+      backgroundColor: 'rgba(99, 102, 241, 0.1)',
+      borderWidth: 2,
+      pointRadius: 0,
+      pointHoverRadius: 6,
+      tension: 0.4,
+      fill: false
+    },{
+      label: 'GetTodos',
+      data: [{x: new Date('2025-07-08T15:20:37.308479-05:00').getTime(), y: 80.396},{x: new Date('2025-07-08T15:20:41.922225-05:00').getTime(), y: 82.726},{x: new Date('2025-07-08T15:20:48.459975-05:00').getTime(), y: 93.792},{x: new Date('2025-07-08T15:20:50.50452-05:00').getTime(), y: 80.44},{x: new Date('2025-07-08T15:20:52.670025-05:00').getTime(), y: 72.763},{x: new Date('2025-07-08T15:20:54.937047-05:00').getTime(), y: 79.253},{x: new Date('2025-07-08T15:20:57.014744-05:00').getTime(), y: 75.522},{x: new Date('2025-07-08T15:20:59.177654-05:00').getTime(), y: 86.67},{x: new Date('2025-07-08T15:21:00.528361-05:00').getTime(), y: 84.975},{x: new Date('2025-07-08T15:21:02.392591-05:00').getTime(), y: 88.912},{x: new Date('2025-07-08T15:21:04.231827-05:00').getTime(), y: 88.234},{x: new Date('2025-07-08T15:21:05.76443-05:00').getTime(), y: 83.083},{x: new Date('2025-07-08T15:21:08.854031-05:00').getTime(), y: 73.157},{x: new Date('2025-07-08T15:21:10.137799-05:00').getTime(), y: 76.495},{x: new Date('2025-07-08T15:21:11.353406-05:00').getTime(), y: 77.832},{x: new Date('2025-07-08T15:21:12.51871-05:00').getTime(), y: 72.219},{x: new Date('2025-07-08T15:21:13.765252-05:00').getTime(), y: 74.313},{x: new Date('2025-07-08T15:21:14.776867-05:00').getTime(), y: 90.461},{x: new Date('2025-07-08T15:21:16.265034-05:00').getTime(), y: 74.73},{x: new Date('2025-07-08T15:21:17.671282-05:00').getTime(), y: 118.734},{x: new Date('2025-07-08T15:21:18.627703-05:00').getTime(), y: 79.86},{x: new Date('2025-07-08T15:21:19.754669-05:00').getTime(), y: 75.489},{x: new Date('2025-07-08T15:21:21.990072-05:00').getTime(), y: 71.212},{x: new Date('2025-07-08T15:21:23.189733-05:00').getTime(), y: 96.081},{x: new Date('2025-07-08T15:21:24.156997-05:00').getTime(), y: 80.363},{x: new Date('2025-07-08T15:21:25.115181-05:00').getTime(), y: 75.778},{x: new Date('2025-07-08T15:21:26.048177-05:00').getTime(), y: 73.445},{x: new Date('2025-07-08T15:21:26.86805-05:00').getTime(), y: 81.413},{x: new Date('2025-07-08T15:21:28.097279-05:00').getTime(), y: 82.771},{x: new Date('2025-07-08T15:21:29.301923-05:00').getTime(), y: 73.336},{x: new Date('2025-07-08T15:21:29.846743-05:00').getTime(), y: 78.11},{x: new Date('2025-07-08T15:21:31.253689-05:00').getTime(), y: 74.9},{x: new Date('2025-07-08T15:21:32.040083-05:00').getTime(), y: 91.251},{x: new Date('2025-07-08T15:21:33.161111-05:00').getTime(), y: 84.293},{x: new Date('2025-07-08T15:21:34.059552-05:00').getTime(), y: 73.441},{x: new Date('2025-07-08T15:21:35.218198-05:00').getTime(), y: 148.682},{x: new Date('2025-07-08T15:21:36.142027-05:00').getTime(), y: 100.745},{x: new Date('2025-07-08T15:21:36.958805-05:00').getTime(), y: 72.625},{x: new Date('2025-07-08T15:21:38.276373-05:00').getTime(), y: 93.9},{x: new Date('2025-07-08T15:21:39.318247-05:00').getTime(), y: 72.681},{x: new Date('2025-07-08T15:21:40.242971-05:00').getTime(), y: 76.68},{x: new Date('2025-07-08T15:21:40.88087-05:00').getTime(), y: 77.512},{x: new Date('2025-07-08T15:21:41.871263-05:00').getTime(), y: 75.431},{x: new Date('2025-07-08T15:21:43.226083-05:00').getTime(), y: 76.861},{x: new Date('2025-07-08T15:21:44.158378-05:00').getTime(), y: 79.66},{x: new Date('2025-07-08T15:21:45.102509-05:00').getTime(), y: 84.372},{x: new Date('2025-07-08T15:21:46.028604-05:00').getTime(), y: 77.334},{x: new Date('2025-07-08T15:21:46.957281-05:00').getTime(), y: 84.375},{x: new Date('2025-07-08T15:21:48.320966-05:00').getTime(), y: 81.293},{x: new Date('2025-07-08T15:21:49.066507-05:00').getTime(), y: 73.674},{x: new Date('2025-07-08T15:21:50.113188-05:00').getTime(), y: 84.677},{x: new Date('2025-07-08T15:21:51.115357-05:00').getTime(), y: 73.767},{x: new Date('2025-07-08T15:21:52.156685-05:00').getTime(), y: 86.872},{x: new Date('2025-07-08T15:21:53.258424-05:00').getTime(), y: 77.034},{x: new Date('2025-07-08T15:21:53.903605-05:00').getTime(), y: 73.221},{x: new Date('2025-07-08T15:21:55.269342-05:00').getTime(), y: 79.605},{x: new Date('2025-07-08T15:21:56.340377-05:00').getTime(), y: 80.383},{x: new Date('2025-07-08T15:21:57.074511-05:00').getTime(), y: 72.118},{x: new Date('2025-07-08T15:21:58.161797-05:00').getTime(), y: 79.596},{x: new Date('2025-07-08T15:21:58.920065-05:00').getTime(), y: 81.05},{x: new Date('2025-07-08T15:21:59.974371-05:00').getTime(), y: 82.907},{x: new Date('2025-07-08T15:22:01.08587-05:00').getTime(), y: 87.73},{x: new Date('2025-07-08T15:22:01.950835-05:00').getTime(), y: 73.308},{x: new Date('2025-07-08T15:22:03.309612-05:00').getTime(), y: 85.562},{x: new Date('2025-07-08T15:22:04.279448-05:00').getTime(), y: 93.264},{x: new Date('2025-07-08T15:22:05.225672-05:00').getTime(), y: 77.075},{x: new Date('2025-07-08T15:22:05.718768-05:00').getTime(), y: 98.451},{x: new Date('2025-07-08T15:22:07.313841-05:00').getTime(), y: 73.572},{x: new Date('2025-07-08T15:22:08.222696-05:00').getTime(), y: 81.637},{x: new Date('2025-07-08T15:22:08.924618-05:00').getTime(), y: 79.073},{x: new Date('2025-07-08T15:22:09.822739-05:00').getTime(), y: 83.355},{x: new Date('2025-07-08T15:22:11.377098-05:00').getTime(), y: 78.222},{x: new Date('2025-07-08T15:22:11.981712-05:00').getTime(), y: 77.889},{x: new Date('2025-07-08T15:22:13.019731-05:00').getTime(), y: 74.172},{x: new Date('2025-07-08T15:22:14.172206-05:00').getTime(), y: 74.572},{x: new Date('2025-07-08T15:22:15.186717-05:00').getTime(), y: 77.01},{x: new Date('2025-07-08T15:22:16.008807-05:00').getTime(), y: 79.389},{x: new Date('2025-07-08T15:22:17.183259-05:00').getTime(), y: 79.454},{x: new Date('2025-07-08T15:22:18.105337-05:00').getTime(), y: 80.957},{x: new Date('2025-07-08T15:22:19.280092-05:00').getTime(), y: 75.234},{x: new Date('2025-07-08T15:22:19.803309-05:00').getTime(), y: 81.307},{x: new Date('2025-07-08T15:22:21.027107-05:00').getTime(), y: 73.675},{x: new Date('2025-07-08T15:22:22.172355-05:00').getTime(), y: 72.716},{x: new Date('2025-07-08T15:22:22.950877-05:00').getTime(), y: 74.492},{x: new Date('2025-07-08T15:22:24.095926-05:00').getTime(), y: 82.716},{x: new Date('2025-07-08T15:22:25.130019-05:00').getTime(), y: 73.865},{x: new Date('2025-07-08T15:22:26.163602-05:00').getTime(), y: 78.524},{x: new Date('2025-07-08T15:22:27.081679-05:00').getTime(), y: 73.824},{x: new Date('2025-07-08T15:22:28.032983-05:00').getTime(), y: 97.805},{x: new Date('2025-07-08T15:22:29.12595-05:00').getTime(), y: 73.546},{x: new Date('2025-07-08T15:22:30.160721-05:00').getTime(), y: 74.478},{x: new Date('2025-07-08T15:22:31.641173-05:00').getTime(), y: 75.985},{x: new Date('2025-07-08T15:22:32.834511-05:00').getTime(), y: 84.658},{x: new Date('2025-07-08T15:22:34.096358-05:00').getTime(), y: 77.049},{x: new Date('2025-07-08T15:22:35.673548-05:00').getTime(), y: 70.937},{x: new Date('2025-07-08T15:22:37.001371-05:00').getTime(), y: 76.41},{x: new Date('2025-07-08T15:22:38.620265-05:00').getTime(), y: 77.787},{x: new Date('2025-07-08T15:22:40.752556-05:00').getTime(), y: 75.554},{x: new Date('2025-07-08T15:22:42.889238-05:00').getTime(), y: 73.648},{x: new Date('2025-07-08T15:22:45.001133-05:00').getTime(), y: 87.392},{x: new Date('2025-07-08T15:22:48.483591-05:00').getTime(), y: 82.831},{x: new Date('2025-07-08T15:22:55.981722-05:00').getTime(), y: 76.437}],
+      borderColor: getColor(3),
+      backgroundColor: 'rgba(99, 102, 241, 0.1)',
+      borderWidth: 2,
+      pointRadius: 0,
+      pointHoverRadius: 6,
+      tension: 0.4,
+      fill: false
+    },{
+      label: 'GetAlbums',
+      data: [{x: new Date('2025-07-08T15:20:37.747517-05:00').getTime(), y: 97.082},{x: new Date('2025-07-08T15:20:42.389725-05:00').getTime(), y: 79.691},{x: new Date('2025-07-08T15:20:48.797494-05:00').getTime(), y: 74.755},{x: new Date('2025-07-08T15:20:50.981475-05:00').getTime(), y: 88.56},{x: new Date('2025-07-08T15:20:53.044448-05:00').getTime(), y: 82.494},{x: new Date('2025-07-08T15:20:55.343665-05:00').getTime(), y: 87.584},{x: new Date('2025-07-08T15:20:57.444955-05:00').getTime(), y: 73.951},{x: new Date('2025-07-08T15:20:59.657394-05:00').getTime(), y: 88.539},{x: new Date('2025-07-08T15:21:00.912694-05:00').getTime(), y: 80.676},{x: new Date('2025-07-08T15:21:02.893013-05:00').getTime(), y: 79.043},{x: new Date('2025-07-08T15:21:04.659-05:00').getTime(), y: 77.683},{x: new Date('2025-07-08T15:21:06.087758-05:00').getTime(), y: 86.58},{x: new Date('2025-07-08T15:21:09.246353-05:00').getTime(), y: 81.387},{x: new Date('2025-07-08T15:21:10.429161-05:00').getTime(), y: 77.611},{x: new Date('2025-07-08T15:21:11.781451-05:00').getTime(), y: 89.874},{x: new Date('2025-07-08T15:21:12.928376-05:00').getTime(), y: 75.366},{x: new Date('2025-07-08T15:21:14.150908-05:00').getTime(), y: 87.82},{x: new Date('2025-07-08T15:21:15.191069-05:00').getTime(), y: 87.245},{x: new Date('2025-07-08T15:21:16.622285-05:00').getTime(), y: 88.16},{x: new Date('2025-07-08T15:21:18.246696-05:00').getTime(), y: 76.132},{x: new Date('2025-07-08T15:21:19.128279-05:00').getTime(), y: 77.809},{x: new Date('2025-07-08T15:21:20.191316-05:00').getTime(), y: 82.482},{x: new Date('2025-07-08T15:21:22.448901-05:00').getTime(), y: 84.321},{x: new Date('2025-07-08T15:21:23.641352-05:00').getTime(), y: 92.214},{x: new Date('2025-07-08T15:21:24.444562-05:00').getTime(), y: 80.759},{x: new Date('2025-07-08T15:21:25.41907-05:00').getTime(), y: 79.512},{x: new Date('2025-07-08T15:21:26.623409-05:00').getTime(), y: 84.129},{x: new Date('2025-07-08T15:21:27.393658-05:00').getTime(), y: 75.324},{x: new Date('2025-07-08T15:21:28.504991-05:00').getTime(), y: 94.126},{x: new Date('2025-07-08T15:21:29.703625-05:00').getTime(), y: 86.402},{x: new Date('2025-07-08T15:21:30.135197-05:00').getTime(), y: 74.568},{x: new Date('2025-07-08T15:21:31.673686-05:00').getTime(), y: 83.564},{x: new Date('2025-07-08T15:21:32.487723-05:00').getTime(), y: 100.775},{x: new Date('2025-07-08T15:21:33.663036-05:00').getTime(), y: 75.657},{x: new Date('2025-07-08T15:21:34.521032-05:00').getTime(), y: 74.298},{x: new Date('2025-07-08T15:21:35.564771-05:00').getTime(), y: 80.259},{x: new Date('2025-07-08T15:21:36.546987-05:00').getTime(), y: 96.053},{x: new Date('2025-07-08T15:21:37.382352-05:00').getTime(), y: 84.219},{x: new Date('2025-07-08T15:21:38.681415-05:00').getTime(), y: 79.477},{x: new Date('2025-07-08T15:21:39.751048-05:00').getTime(), y: 74.626},{x: new Date('2025-07-08T15:21:40.741223-05:00').getTime(), y: 84.134},{x: new Date('2025-07-08T15:21:41.236162-05:00').getTime(), y: 77.509},{x: new Date('2025-07-08T15:21:42.161284-05:00').getTime(), y: 78.894},{x: new Date('2025-07-08T15:21:43.554879-05:00').getTime(), y: 82.024},{x: new Date('2025-07-08T15:21:44.514944-05:00').getTime(), y: 82.439},{x: new Date('2025-07-08T15:21:45.514545-05:00').getTime(), y: 77.452},{x: new Date('2025-07-08T15:21:46.482884-05:00').getTime(), y: 81.226},{x: new Date('2025-07-08T15:21:47.534123-05:00').getTime(), y: 87.345},{x: new Date('2025-07-08T15:21:48.658251-05:00').getTime(), y: 78.234},{x: new Date('2025-07-08T15:21:49.633279-05:00').getTime(), y: 87.792},{x: new Date('2025-07-08T15:21:50.609901-05:00').getTime(), y: 85.994},{x: new Date('2025-07-08T15:21:51.471782-05:00').getTime(), y: 78.199},{x: new Date('2025-07-08T15:21:52.49174-05:00').getTime(), y: 81.226},{x: new Date('2025-07-08T15:21:53.732589-05:00').getTime(), y: 75.219},{x: new Date('2025-07-08T15:21:54.464023-05:00').getTime(), y: 76.288},{x: new Date('2025-07-08T15:21:55.790155-05:00').getTime(), y: 81.294},{x: new Date('2025-07-08T15:21:56.703819-05:00').getTime(), y: 83.555},{x: new Date('2025-07-08T15:21:57.603612-05:00').getTime(), y: 72.216},{x: new Date('2025-07-08T15:21:58.507835-05:00').getTime(), y: 73.057},{x: new Date('2025-07-08T15:21:59.416709-05:00').getTime(), y: 80.38},{x: new Date('2025-07-08T15:22:00.338483-05:00').getTime(), y: 85.932},{x: new Date('2025-07-08T15:22:01.529616-05:00').getTime(), y: 77.535},{x: new Date('2025-07-08T15:22:02.520594-05:00').getTime(), y: 77.106},{x: new Date('2025-07-08T15:22:03.631012-05:00').getTime(), y: 79.21},{x: new Date('2025-07-08T15:22:04.763366-05:00').getTime(), y: 79.803},{x: new Date('2025-07-08T15:22:05.557204-05:00').getTime(), y: 78.403},{x: new Date('2025-07-08T15:22:06.151339-05:00').getTime(), y: 79.172},{x: new Date('2025-07-08T15:22:07.850238-05:00').getTime(), y: 80.104},{x: new Date('2025-07-08T15:22:08.715155-05:00').getTime(), y: 81.805},{x: new Date('2025-07-08T15:22:09.367124-05:00').getTime(), y: 75.905},{x: new Date('2025-07-08T15:22:10.319749-05:00').getTime(), y: 82.638},{x: new Date('2025-07-08T15:22:11.928941-05:00').getTime(), y: 79.964},{x: new Date('2025-07-08T15:22:12.508361-05:00').getTime(), y: 81.806},{x: new Date('2025-07-08T15:22:13.477174-05:00').getTime(), y: 87.199},{x: new Date('2025-07-08T15:22:14.731881-05:00').getTime(), y: 80.336},{x: new Date('2025-07-08T15:22:15.646511-05:00').getTime(), y: 80.657},{x: new Date('2025-07-08T15:22:16.379508-05:00').getTime(), y: 82.034},{x: new Date('2025-07-08T15:22:17.516482-05:00').getTime(), y: 72.666},{x: new Date('2025-07-08T15:22:18.599613-05:00').getTime(), y: 77.4},{x: new Date('2025-07-08T15:22:19.640795-05:00').getTime(), y: 74.168},{x: new Date('2025-07-08T15:22:20.28721-05:00').getTime(), y: 80.896},{x: new Date('2025-07-08T15:22:21.530606-05:00').getTime(), y: 80.488},{x: new Date('2025-07-08T15:22:22.511414-05:00').getTime(), y: 80.865},{x: new Date('2025-07-08T15:22:23.488867-05:00').getTime(), y: 77.058},{x: new Date('2025-07-08T15:22:24.624348-05:00').getTime(), y: 80.022},{x: new Date('2025-07-08T15:22:25.619297-05:00').getTime(), y: 75.034},{x: new Date('2025-07-08T15:22:26.462395-05:00').getTime(), y: 88.685},{x: new Date('2025-07-08T15:22:27.550461-05:00').getTime(), y: 83.95},{x: new Date('2025-07-08T15:22:28.319054-05:00').getTime(), y: 80.25},{x: new Date('2025-07-08T15:22:29.522031-05:00').getTime(), y: 86.763},{x: new Date('2025-07-08T15:22:30.497034-05:00').getTime(), y: 92.006},{x: new Date('2025-07-08T15:22:32.085188-05:00').getTime(), y: 80.251},{x: new Date('2025-07-08T15:22:33.316261-05:00').getTime(), y: 78.973},{x: new Date('2025-07-08T15:22:34.447375-05:00').getTime(), y: 77.274},{x: new Date('2025-07-08T15:22:36.052897-05:00').getTime(), y: 74.677},{x: new Date('2025-07-08T15:22:37.369606-05:00').getTime(), y: 79.503},{x: new Date('2025-07-08T15:22:39.009338-05:00').getTime(), y: 91.604},{x: new Date('2025-07-08T15:22:41.151322-05:00').getTime(), y: 73.949},{x: new Date('2025-07-08T15:22:43.331914-05:00').getTime(), y: 81.126},{x: new Date('2025-07-08T15:22:45.549167-05:00').getTime(), y: 78.698},{x: new Date('2025-07-08T15:22:48.986405-05:00').getTime(), y: 82.956},{x: new Date('2025-07-08T15:22:56.343917-05:00').getTime(), y: 75.615}],
+      borderColor: getColor(4),
+      backgroundColor: 'rgba(99, 102, 241, 0.1)',
+      borderWidth: 2,
+      pointRadius: 0,
+      pointHoverRadius: 6,
+      tension: 0.4,
+      fill: false
+    },{
+      label: 'GetPhotos',
+      data: [{x: new Date('2025-07-08T15:20:38.275142-05:00').getTime(), y: 83.662},{x: new Date('2025-07-08T15:20:42.754799-05:00').getTime(), y: 93.949},{x: new Date('2025-07-08T15:20:49.330946-05:00').getTime(), y: 75.716},{x: new Date('2025-07-08T15:20:51.434294-05:00').getTime(), y: 86.89},{x: new Date('2025-07-08T15:20:53.588597-05:00').getTime(), y: 73.801},{x: new Date('2025-07-08T15:20:55.864666-05:00').getTime(), y: 77.183},{x: new Date('2025-07-08T15:20:57.975825-05:00').getTime(), y: 76.205},{x: new Date('2025-07-08T15:21:00.226133-05:00').getTime(), y: 83.251},{x: new Date('2025-07-08T15:21:01.290677-05:00').getTime(), y: 75.028},{x: new Date('2025-07-08T15:21:03.203407-05:00').getTime(), y: 77.912},{x: new Date('2025-07-08T15:21:05.006825-05:00').getTime(), y: 79.83},{x: new Date('2025-07-08T15:21:06.542601-05:00').getTime(), y: 83.424},{x: new Date('2025-07-08T15:21:09.805229-05:00').getTime(), y: 74.405},{x: new Date('2025-07-08T15:21:11.00235-05:00').getTime(), y: 86.343},{x: new Date('2025-07-08T15:21:12.302566-05:00').getTime(), y: 79.481},{x: new Date('2025-07-08T15:21:13.217783-05:00').getTime(), y: 76.503},{x: new Date('2025-07-08T15:21:14.681838-05:00').getTime(), y: 74.256},{x: new Date('2025-07-08T15:21:15.487015-05:00').getTime(), y: 76.121},{x: new Date('2025-07-08T15:21:17.196466-05:00').getTime(), y: 80.562},{x: new Date('2025-07-08T15:21:18.56777-05:00').getTime(), y: 74.64},{x: new Date('2025-07-08T15:21:19.417194-05:00').getTime(), y: 77.329},{x: new Date('2025-07-08T15:21:20.771461-05:00').getTime(), y: 82.419},{x: new Date('2025-07-08T15:21:22.788796-05:00').getTime(), y: 79.265},{x: new Date('2025-07-08T15:21:24.12467-05:00').getTime(), y: 73.715},{x: new Date('2025-07-08T15:21:24.956338-05:00').getTime(), y: 83},{x: new Date('2025-07-08T15:21:25.822493-05:00').getTime(), y: 78.818},{x: new Date('2025-07-08T15:21:26.952932-05:00').getTime(), y: 84.244},{x: new Date('2025-07-08T15:21:27.774819-05:00').getTime(), y: 75.471},{x: new Date('2025-07-08T15:21:28.809295-05:00').getTime(), y: 79.23},{x: new Date('2025-07-08T15:21:29.9837-05:00').getTime(), y: 74.208},{x: new Date('2025-07-08T15:21:30.411666-05:00').getTime(), y: 71.173},{x: new Date('2025-07-08T15:21:32.137209-05:00').getTime(), y: 78.891},{x: new Date('2025-07-08T15:21:32.861319-05:00').getTime(), y: 92.958},{x: new Date('2025-07-08T15:21:34.004449-05:00').getTime(), y: 75.894},{x: new Date('2025-07-08T15:21:35.054947-05:00').getTime(), y: 76.346},{x: new Date('2025-07-08T15:21:35.98959-05:00').getTime(), y: 75.261},{x: new Date('2025-07-08T15:21:36.868048-05:00').getTime(), y: 90.195},{x: new Date('2025-07-08T15:21:37.79388-05:00').getTime(), y: 74.48},{x: new Date('2025-07-08T15:21:39.222149-05:00').getTime(), y: 73.529},{x: new Date('2025-07-08T15:21:40.285513-05:00').getTime(), y: 75.693},{x: new Date('2025-07-08T15:21:41.165237-05:00').getTime(), y: 80.024},{x: new Date('2025-07-08T15:21:41.550302-05:00').getTime(), y: 75.532},{x: new Date('2025-07-08T15:21:42.622263-05:00').getTime(), y: 75.182},{x: new Date('2025-07-08T15:21:44.040313-05:00').getTime(), y: 73.735},{x: new Date('2025-07-08T15:21:45.058206-05:00').getTime(), y: 76.013},{x: new Date('2025-07-08T15:21:46.034871-05:00').getTime(), y: 77.677},{x: new Date('2025-07-08T15:21:46.820729-05:00').getTime(), y: 81.077},{x: new Date('2025-07-08T15:21:47.814088-05:00').getTime(), y: 77.115},{x: new Date('2025-07-08T15:21:49.124185-05:00').getTime(), y: 80.406},{x: new Date('2025-07-08T15:21:50.067922-05:00').getTime(), y: 74.934},{x: new Date('2025-07-08T15:21:50.979554-05:00').getTime(), y: 73.334},{x: new Date('2025-07-08T15:21:51.826993-05:00').getTime(), y: 80.328},{x: new Date('2025-07-08T15:21:52.850555-05:00').getTime(), y: 78.883},{x: new Date('2025-07-08T15:21:54.162628-05:00').getTime(), y: 77.091},{x: new Date('2025-07-08T15:21:54.936099-05:00').getTime(), y: 75.563},{x: new Date('2025-07-08T15:21:56.266415-05:00').getTime(), y: 88.465},{x: new Date('2025-07-08T15:21:57.124936-05:00').getTime(), y: 85.581},{x: new Date('2025-07-08T15:21:58.024069-05:00').getTime(), y: 71.839},{x: new Date('2025-07-08T15:21:59.039654-05:00').getTime(), y: 74.127},{x: new Date('2025-07-08T15:21:59.901441-05:00').getTime(), y: 98.022},{x: new Date('2025-07-08T15:22:00.819749-05:00').getTime(), y: 77.488},{x: new Date('2025-07-08T15:22:02.038922-05:00').getTime(), y: 74.996},{x: new Date('2025-07-08T15:22:03.03532-05:00').getTime(), y: 78.769},{x: new Date('2025-07-08T15:22:03.968159-05:00').getTime(), y: 82.328},{x: new Date('2025-07-08T15:22:05.065649-05:00').getTime(), y: 81.87},{x: new Date('2025-07-08T15:22:05.942214-05:00').getTime(), y: 76.3},{x: new Date('2025-07-08T15:22:06.476565-05:00').getTime(), y: 74.289},{x: new Date('2025-07-08T15:22:08.203194-05:00').getTime(), y: 82.183},{x: new Date('2025-07-08T15:22:09.292973-05:00').getTime(), y: 88.049},{x: new Date('2025-07-08T15:22:09.764579-05:00').getTime(), y: 88.135},{x: new Date('2025-07-08T15:22:10.826022-05:00').getTime(), y: 76.036},{x: new Date('2025-07-08T15:22:12.426082-05:00').getTime(), y: 71.815},{x: new Date('2025-07-08T15:22:12.83139-05:00').getTime(), y: 79.677},{x: new Date('2025-07-08T15:22:13.834123-05:00').getTime(), y: 86.727},{x: new Date('2025-07-08T15:22:15.230179-05:00').getTime(), y: 81.063},{x: new Date('2025-07-08T15:22:15.982907-05:00').getTime(), y: 78.982},{x: new Date('2025-07-08T15:22:16.838537-05:00').getTime(), y: 80.906},{x: new Date('2025-07-08T15:22:17.859125-05:00').getTime(), y: 79.722},{x: new Date('2025-07-08T15:22:19.155376-05:00').getTime(), y: 83.492},{x: new Date('2025-07-08T15:22:20.14077-05:00').getTime(), y: 72.266},{x: new Date('2025-07-08T15:22:20.661511-05:00').getTime(), y: 78.18},{x: new Date('2025-07-08T15:22:21.877563-05:00').getTime(), y: 75.696},{x: new Date('2025-07-08T15:22:23.052407-05:00').getTime(), y: 72.573},{x: new Date('2025-07-08T15:22:24.041042-05:00').getTime(), y: 77.454},{x: new Date('2025-07-08T15:22:25.153467-05:00').getTime(), y: 76.048},{x: new Date('2025-07-08T15:22:26.053044-05:00').getTime(), y: 85.98},{x: new Date('2025-07-08T15:22:26.860667-05:00').getTime(), y: 78.726},{x: new Date('2025-07-08T15:22:28.084535-05:00').getTime(), y: 82.216},{x: new Date('2025-07-08T15:22:28.778138-05:00').getTime(), y: 101.825},{x: new Date('2025-07-08T15:22:29.90019-05:00').getTime(), y: 76.59},{x: new Date('2025-07-08T15:22:30.852008-05:00').getTime(), y: 74.841},{x: new Date('2025-07-08T15:22:32.469376-05:00').getTime(), y: 87.326},{x: new Date('2025-07-08T15:22:33.709046-05:00').getTime(), y: 96.741},{x: new Date('2025-07-08T15:22:34.746367-05:00').getTime(), y: 80.583},{x: new Date('2025-07-08T15:22:36.440376-05:00').getTime(), y: 75.497},{x: new Date('2025-07-08T15:22:37.720756-05:00').getTime(), y: 78.553},{x: new Date('2025-07-08T15:22:39.436774-05:00').getTime(), y: 81.638},{x: new Date('2025-07-08T15:22:41.519748-05:00').getTime(), y: 99.919},{x: new Date('2025-07-08T15:22:43.732413-05:00').getTime(), y: 70.319},{x: new Date('2025-07-08T15:22:46.04987-05:00').getTime(), y: 75.771},{x: new Date('2025-07-08T15:22:49.38513-05:00').getTime(), y: 74.483},{x: new Date('2025-07-08T15:22:56.752416-05:00').getTime(), y: 76.442}],
+      borderColor: getColor(5),
+      backgroundColor: 'rgba(99, 102, 241, 0.1)',
+      borderWidth: 2,
+      pointRadius: 0,
+      pointHoverRadius: 6,
+      tension: 0.4,
+      fill: false
+    },{
+      label: 'PostData',
+      data: [{x: new Date('2025-07-08T15:20:38.8845-05:00').getTime(), y: 164.497},{x: new Date('2025-07-08T15:20:43.235838-05:00').getTime(), y: 182.174},{x: new Date('2025-07-08T15:20:49.88414-05:00').getTime(), y: 297.074},{x: new Date('2025-07-08T15:20:51.906478-05:00').getTime(), y: 152.362},{x: new Date('2025-07-08T15:20:54.127121-05:00').getTime(), y: 164.495},{x: new Date('2025-07-08T15:20:56.479368-05:00').getTime(), y: 148.623},{x: new Date('2025-07-08T15:20:58.550171-05:00').getTime(), y: 151.252},{x: new Date('2025-07-08T15:21:00.629299-05:00').getTime(), y: 151.446},{x: new Date('2025-07-08T15:21:01.891515-05:00').getTime(), y: 156.847},{x: new Date('2025-07-08T15:21:03.600285-05:00').getTime(), y: 149.381},{x: new Date('2025-07-08T15:21:05.521615-05:00').getTime(), y: 159.029},{x: new Date('2025-07-08T15:21:07.11441-05:00').getTime(), y: 168.69},{x: new Date('2025-07-08T15:21:10.339975-05:00').getTime(), y: 288.574},{x: new Date('2025-07-08T15:21:11.353552-05:00').getTime(), y: 145.096},{x: new Date('2025-07-08T15:21:12.762683-05:00').getTime(), y: 158.281},{x: new Date('2025-07-08T15:21:13.74826-05:00').getTime(), y: 150.365},{x: new Date('2025-07-08T15:21:15.331333-05:00').getTime(), y: 157.933},{x: new Date('2025-07-08T15:21:15.954098-05:00').getTime(), y: 155.205},{x: new Date('2025-07-08T15:21:17.654729-05:00').getTime(), y: 147.991},{x: new Date('2025-07-08T15:21:19.138886-05:00').getTime(), y: 149.125},{x: new Date('2025-07-08T15:21:19.86508-05:00').getTime(), y: 147.691},{x: new Date('2025-07-08T15:21:21.424879-05:00').getTime(), y: 175.611},{x: new Date('2025-07-08T15:21:23.33592-05:00').getTime(), y: 146.408},{x: new Date('2025-07-08T15:21:24.542588-05:00').getTime(), y: 148.069},{x: new Date('2025-07-08T15:21:25.596217-05:00').getTime(), y: 159.972},{x: new Date('2025-07-08T15:21:26.178371-05:00').getTime(), y: 152.468},{x: new Date('2025-07-08T15:21:27.498344-05:00').getTime(), y: 144.943},{x: new Date('2025-07-08T15:21:28.144305-05:00').getTime(), y: 164.308},{x: new Date('2025-07-08T15:21:29.456033-05:00').getTime(), y: 150.181},{x: new Date('2025-07-08T15:21:30.525009-05:00').getTime(), y: 146.909},{x: new Date('2025-07-08T15:21:30.762517-05:00').getTime(), y: 148.302},{x: new Date('2025-07-08T15:21:32.509516-05:00').getTime(), y: 153.192},{x: new Date('2025-07-08T15:21:33.371461-05:00').getTime(), y: 165.633},{x: new Date('2025-07-08T15:21:34.622533-05:00').getTime(), y: 144.125},{x: new Date('2025-07-08T15:21:35.414326-05:00').getTime(), y: 143.144},{x: new Date('2025-07-08T15:21:36.446067-05:00').getTime(), y: 152.288},{x: new Date('2025-07-08T15:21:37.285771-05:00').getTime(), y: 156.384},{x: new Date('2025-07-08T15:21:38.384495-05:00').getTime(), y: 147.149},{x: new Date('2025-07-08T15:21:39.715378-05:00').getTime(), y: 178.028},{x: new Date('2025-07-08T15:21:40.789865-05:00').getTime(), y: 143.12},{x: new Date('2025-07-08T15:21:41.651184-05:00').getTime(), y: 151.772},{x: new Date('2025-07-08T15:21:41.970122-05:00').getTime(), y: 144.952},{x: new Date('2025-07-08T15:21:43.141026-05:00').getTime(), y: 147.387},{x: new Date('2025-07-08T15:21:44.462717-05:00').getTime(), y: 150.856},{x: new Date('2025-07-08T15:21:45.486787-05:00').getTime(), y: 155.978},{x: new Date('2025-07-08T15:21:46.663256-05:00').getTime(), y: 147.894},{x: new Date('2025-07-08T15:21:47.284149-05:00').getTime(), y: 142.995},{x: new Date('2025-07-08T15:21:48.310575-05:00').getTime(), y: 154.505},{x: new Date('2025-07-08T15:21:49.544979-05:00').getTime(), y: 150.216},{x: new Date('2025-07-08T15:21:50.598872-05:00').getTime(), y: 155.395},{x: new Date('2025-07-08T15:21:51.469161-05:00').getTime(), y: 142.185},{x: new Date('2025-07-08T15:21:52.211287-05:00').getTime(), y: 145.528},{x: new Date('2025-07-08T15:21:53.436649-05:00').getTime(), y: 154.43},{x: new Date('2025-07-08T15:21:54.507047-05:00').getTime(), y: 142.141},{x: new Date('2025-07-08T15:21:55.355594-05:00').getTime(), y: 145.921},{x: new Date('2025-07-08T15:21:56.889982-05:00').getTime(), y: 163.066},{x: new Date('2025-07-08T15:21:57.646105-05:00').getTime(), y: 147.256},{x: new Date('2025-07-08T15:21:58.519917-05:00').getTime(), y: 147.95},{x: new Date('2025-07-08T15:21:59.544544-05:00').getTime(), y: 150.505},{x: new Date('2025-07-08T15:22:00.352113-05:00').getTime(), y: 160.502},{x: new Date('2025-07-08T15:22:01.413138-05:00').getTime(), y: 165.407},{x: new Date('2025-07-08T15:22:02.628332-05:00').getTime(), y: 157.457},{x: new Date('2025-07-08T15:22:03.594981-05:00').getTime(), y: 147.939},{x: new Date('2025-07-08T15:22:04.603372-05:00').getTime(), y: 159.198},{x: new Date('2025-07-08T15:22:05.470734-05:00').getTime(), y: 154.094},{x: new Date('2025-07-08T15:22:06.44783-05:00').getTime(), y: 153.758},{x: new Date('2025-07-08T15:22:07.126852-05:00').getTime(), y: 153.889},{x: new Date('2025-07-08T15:22:08.747537-05:00').getTime(), y: 153.226},{x: new Date('2025-07-08T15:22:09.941071-05:00').getTime(), y: 157.062},{x: new Date('2025-07-08T15:22:10.20275-05:00').getTime(), y: 161.781},{x: new Date('2025-07-08T15:22:11.340384-05:00').getTime(), y: 156.609},{x: new Date('2025-07-08T15:22:12.893076-05:00').getTime(), y: 148.753},{x: new Date('2025-07-08T15:22:13.403876-05:00').getTime(), y: 159.233},{x: new Date('2025-07-08T15:22:14.355069-05:00').getTime(), y: 148.689},{x: new Date('2025-07-08T15:22:15.798896-05:00').getTime(), y: 146.567},{x: new Date('2025-07-08T15:22:16.416642-05:00').getTime(), y: 193.928},{x: new Date('2025-07-08T15:22:17.344203-05:00').getTime(), y: 153.493},{x: new Date('2025-07-08T15:22:18.366301-05:00').getTime(), y: 143.51},{x: new Date('2025-07-08T15:22:19.519255-05:00').getTime(), y: 148.411},{x: new Date('2025-07-08T15:22:20.618629-05:00').getTime(), y: 147.099},{x: new Date('2025-07-08T15:22:21.289998-05:00').getTime(), y: 150.861},{x: new Date('2025-07-08T15:22:22.292092-05:00').getTime(), y: 144.21},{x: new Date('2025-07-08T15:22:23.526233-05:00').getTime(), y: 145.183},{x: new Date('2025-07-08T15:22:24.670028-05:00').getTime(), y: 157.72},{x: new Date('2025-07-08T15:22:25.663146-05:00').getTime(), y: 152.776},{x: new Date('2025-07-08T15:22:26.705162-05:00').getTime(), y: 174.689},{x: new Date('2025-07-08T15:22:27.278995-05:00').getTime(), y: 145.662},{x: new Date('2025-07-08T15:22:28.469306-05:00').getTime(), y: 160.622},{x: new Date('2025-07-08T15:22:29.338456-05:00').getTime(), y: 148.259},{x: new Date('2025-07-08T15:22:30.413982-05:00').getTime(), y: 156.065},{x: new Date('2025-07-08T15:22:31.296709-05:00').getTime(), y: 144.206},{x: new Date('2025-07-08T15:22:33.109643-05:00').getTime(), y: 161.8},{x: new Date('2025-07-08T15:22:34.230995-05:00').getTime(), y: 153.404},{x: new Date('2025-07-08T15:22:35.112944-05:00').getTime(), y: 144.653},{x: new Date('2025-07-08T15:22:36.834882-05:00').getTime(), y: 151.681},{x: new Date('2025-07-08T15:22:38.139812-05:00').getTime(), y: 178.274},{x: new Date('2025-07-08T15:22:39.918859-05:00').getTime(), y: 152.477},{x: new Date('2025-07-08T15:22:41.981951-05:00').getTime(), y: 157.907},{x: new Date('2025-07-08T15:22:44.242896-05:00').getTime(), y: 155.657},{x: new Date('2025-07-08T15:22:46.545917-05:00').getTime(), y: 150.007},{x: new Date('2025-07-08T15:22:50.012505-05:00').getTime(), y: 153.664},{x: new Date('2025-07-08T15:22:57.332144-05:00').getTime(), y: 148.053}],
+      borderColor: getColor(6),
+      backgroundColor: 'rgba(99, 102, 241, 0.1)',
+      borderWidth: 2,
+      pointRadius: 0,
+      pointHoverRadius: 6,
+      tension: 0.4,
+      fill: false
+    }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: 'nearest',
+            intersect: false
+          },
+          plugins: {
+            title: {
+              display: true,
+              text: 'Response Time by Transaction'
+            },
+            tooltip: {
+              mode: 'index',
+              intersect: false
+            },
+            legend: {
+              position: 'bottom'
+            }
+          },
+          scales: {
+            x: {
+              type: 'time',
+              time: {
+                unit: 'second'
+              },
+              title: {
+                display: true,
+                text: 'Time'
+              }
+            },
+            y: {
+              title: {
+                display: true,
+                text: 'Response Time (ms)'
+              }
+            }
+          }
+        }
+      });
+    }
+    
+    // RPS Chart
+    if (document.getElementById('rpsChart')) {
+      new Chart(document.getElementById('rpsChart'), {
+        type: 'line',
+        data: {
+          datasets: [{
+            label: 'Requests Per Second',
+            data: [{x: 1752006025000, y: 0},{x: 1752006026000, y: 0},{x: 1752006027000, y: 0},{x: 1752006028000, y: 0},{x: 1752006029000, y: 0},{x: 1752006030000, y: 0},{x: 1752006031000, y: 0},{x: 1752006032000, y: 0},{x: 1752006033000, y: 0},{x: 1752006034000, y: 0},{x: 1752006035000, y: 1},{x: 1752006036000, y: 2},{x: 1752006037000, y: 2},{x: 1752006038000, y: 2},{x: 1752006039000, y: 0},{x: 1752006040000, y: 2},{x: 1752006041000, y: 2},{x: 1752006042000, y: 2},{x: 1752006043000, y: 1},{x: 1752006044000, y: 0},{x: 1752006045000, y: 0},{x: 1752006046000, y: 1},{x: 1752006047000, y: 2},{x: 1752006048000, y: 2},{x: 1752006049000, y: 4},{x: 1752006050000, y: 3},{x: 1752006051000, y: 4},{x: 1752006052000, y: 2},{x: 1752006053000, y: 3},{x: 1752006054000, y: 4},{x: 1752006055000, y: 3},{x: 1752006056000, y: 3},{x: 1752006057000, y: 4},{x: 1752006058000, y: 3},{x: 1752006059000, y: 4},{x: 1752006060000, y: 5},{x: 1752006061000, y: 5},{x: 1752006062000, y: 3},{x: 1752006063000, y: 4},{x: 1752006064000, y: 4},{x: 1752006065000, y: 4},{x: 1752006066000, y: 2},{x: 1752006067000, y: 3},{x: 1752006068000, y: 3},{x: 1752006069000, y: 5},{x: 1752006070000, y: 5},{x: 1752006071000, y: 6},{x: 1752006072000, y: 7},{x: 1752006073000, y: 5},{x: 1752006074000, y: 6},{x: 1752006075000, y: 6},{x: 1752006076000, y: 4},{x: 1752006077000, y: 6},{x: 1752006078000, y: 6},{x: 1752006079000, y: 6},{x: 1752006080000, y: 3},{x: 1752006081000, y: 5},{x: 1752006082000, y: 5},{x: 1752006083000, y: 6},{x: 1752006084000, y: 8},{x: 1752006085000, y: 7},{x: 1752006086000, y: 8},{x: 1752006087000, y: 6},{x: 1752006088000, y: 7},{x: 1752006089000, y: 8},{x: 1752006090000, y: 7},{x: 1752006091000, y: 5},{x: 1752006092000, y: 8},{x: 1752006093000, y: 6},{x: 1752006094000, y: 7},{x: 1752006095000, y: 8},{x: 1752006096000, y: 8},{x: 1752006097000, y: 6},{x: 1752006098000, y: 6},{x: 1752006099000, y: 7},{x: 1752006100000, y: 8},{x: 1752006101000, y: 9},{x: 1752006102000, y: 5},{x: 1752006103000, y: 6},{x: 1752006104000, y: 7},{x: 1752006105000, y: 7},{x: 1752006106000, y: 9},{x: 1752006107000, y: 6},{x: 1752006108000, y: 6},{x: 1752006109000, y: 7},{x: 1752006110000, y: 8},{x: 1752006111000, y: 7},{x: 1752006112000, y: 7},{x: 1752006113000, y: 7},{x: 1752006114000, y: 7},{x: 1752006115000, y: 6},{x: 1752006116000, y: 7},{x: 1752006117000, y: 7},{x: 1752006118000, y: 8},{x: 1752006119000, y: 8},{x: 1752006120000, y: 6},{x: 1752006121000, y: 7},{x: 1752006122000, y: 6},{x: 1752006123000, y: 8},{x: 1752006124000, y: 6},{x: 1752006125000, y: 9},{x: 1752006126000, y: 6},{x: 1752006127000, y: 6},{x: 1752006128000, y: 8},{x: 1752006129000, y: 8},{x: 1752006130000, y: 6},{x: 1752006131000, y: 7},{x: 1752006132000, y: 7},{x: 1752006133000, y: 7},{x: 1752006134000, y: 6},{x: 1752006135000, y: 8},{x: 1752006136000, y: 7},{x: 1752006137000, y: 7},{x: 1752006138000, y: 6},{x: 1752006139000, y: 8},{x: 1752006140000, y: 7},{x: 1752006141000, y: 7},{x: 1752006142000, y: 7},{x: 1752006143000, y: 6},{x: 1752006144000, y: 7},{x: 1752006145000, y: 7},{x: 1752006146000, y: 8},{x: 1752006147000, y: 6},{x: 1752006148000, y: 7},{x: 1752006149000, y: 7},{x: 1752006150000, y: 6},{x: 1752006151000, y: 5},{x: 1752006152000, y: 5},{x: 1752006153000, y: 5},{x: 1752006154000, y: 6},{x: 1752006155000, y: 4},{x: 1752006156000, y: 5},{x: 1752006157000, y: 5},{x: 1752006158000, y: 3},{x: 1752006159000, y: 5},{x: 1752006160000, y: 2},{x: 1752006161000, y: 5},{x: 1752006162000, y: 2},{x: 1752006163000, y: 3},{x: 1752006164000, y: 3},{x: 1752006165000, y: 2},{x: 1752006166000, y: 2},{x: 1752006167000, y: 3},{x: 1752006168000, y: 2},{x: 1752006169000, y: 1},{x: 1752006170000, y: 1},{x: 1752006171000, y: 0},{x: 1752006172000, y: 0},{x: 1752006173000, y: 0},{x: 1752006174000, y: 1},{x: 1752006175000, y: 3},{x: 1752006176000, y: 2},{x: 1752006177000, y: 1}],
+            borderColor: '#22c55e',
+            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+            borderWidth: 2,
+            pointRadius: 0,
+            fill: true,
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: {
+              display: true,
+              text: 'Requests Per Second'
+            },
+            tooltip: {
+              mode: 'index',
+              intersect: false
+            }
+          },
+          scales: {
+            x: {
+              type: 'time',
+              time: {
+                unit: 'second'
+              },
+              title: {
+                display: true,
+                text: 'Time'
+              }
+            },
+            y: {
+              title: {
+                display: true,
+                text: 'RPS'
+              },
+              min: 0
+            }
+          }
+        }
+      });
+    }
+    
+    // VU Chart
+    if (document.getElementById('vuChart')) {
+      new Chart(document.getElementById('vuChart'), {
+        type: 'line',
+        data: {
+          datasets: [{
+            label: 'Virtual Users',
+            data: [{x: new Date('2025-07-08T15:20:25.681771-05:00').getTime(), y: 0},{x: new Date('2025-07-08T15:20:26.68178-05:00').getTime(), y: 0},{x: new Date('2025-07-08T15:20:27.681769-05:00').getTime(), y: 0},{x: new Date('2025-07-08T15:20:28.681781-05:00').getTime(), y: 0},{x: new Date('2025-07-08T15:20:29.681804-05:00').getTime(), y: 0},{x: new Date('2025-07-08T15:20:30.681797-05:00').getTime(), y: 0},{x: new Date('2025-07-08T15:20:31.681817-05:00').getTime(), y: 0},{x: new Date('2025-07-08T15:20:32.681835-05:00').getTime(), y: 0},{x: new Date('2025-07-08T15:20:33.681845-05:00').getTime(), y: 0},{x: new Date('2025-07-08T15:20:34.681842-05:00').getTime(), y: 0},{x: new Date('2025-07-08T15:20:35.681887-05:00').getTime(), y: 1},{x: new Date('2025-07-08T15:20:36.681884-05:00').getTime(), y: 1},{x: new Date('2025-07-08T15:20:37.681902-05:00').getTime(), y: 1},{x: new Date('2025-07-08T15:20:38.681928-05:00').getTime(), y: 1},{x: new Date('2025-07-08T15:20:39.681909-05:00').getTime(), y: 0},{x: new Date('2025-07-08T15:20:40.681924-05:00').getTime(), y: 1},{x: new Date('2025-07-08T15:20:41.681949-05:00').getTime(), y: 1},{x: new Date('2025-07-08T15:20:42.681951-05:00').getTime(), y: 1},{x: new Date('2025-07-08T15:20:43.68195-05:00').getTime(), y: 1},{x: new Date('2025-07-08T15:20:44.681996-05:00').getTime(), y: 0},{x: new Date('2025-07-08T15:20:45.681977-05:00').getTime(), y: 0},{x: new Date('2025-07-08T15:20:46.681997-05:00').getTime(), y: 1},{x: new Date('2025-07-08T15:20:47.681999-05:00').getTime(), y: 1},{x: new Date('2025-07-08T15:20:48.682036-05:00').getTime(), y: 1},{x: new Date('2025-07-08T15:20:49.682076-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:20:50.682034-05:00').getTime(), y: 1},{x: new Date('2025-07-08T15:20:51.682056-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:20:52.682067-05:00').getTime(), y: 1},{x: new Date('2025-07-08T15:20:53.68207-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:20:54.682086-05:00').getTime(), y: 1},{x: new Date('2025-07-08T15:20:55.682098-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:20:56.682189-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:20:57.682125-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:20:58.682163-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:20:59.682185-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:21:00.682183-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:21:01.682243-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:21:02.682206-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:21:03.682205-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:21:04.682201-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:21:05.682236-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:21:06.682287-05:00').getTime(), y: 1},{x: new Date('2025-07-08T15:21:07.682247-05:00').getTime(), y: 1},{x: new Date('2025-07-08T15:21:08.682261-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:21:09.682299-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:21:10.682281-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:21:11.682297-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:21:12.682332-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:21:13.68235-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:21:14.682326-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:21:15.682355-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:21:16.69456-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:21:17.682377-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:21:18.682378-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:21:19.682423-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:21:20.682424-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:21:21.682442-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:21:22.682416-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:21:23.682455-05:00').getTime(), y: 4},{x: new Date('2025-07-08T15:21:24.682466-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:21:25.682491-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:21:26.682496-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:21:27.68249-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:21:28.682541-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:21:29.688472-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:21:30.682521-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:21:31.682585-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:21:32.682568-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:21:33.682583-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:21:34.682593-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:21:35.682606-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:21:36.682591-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:21:37.682628-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:21:38.682618-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:21:39.682645-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:21:40.682638-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:21:41.682646-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:21:42.682686-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:21:43.682679-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:21:44.682702-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:21:45.68271-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:21:46.682706-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:21:47.682778-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:21:48.682781-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:21:49.68279-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:21:50.682758-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:21:51.682795-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:21:52.682783-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:21:53.682796-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:21:54.682814-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:21:55.683379-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:21:56.682863-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:21:57.68287-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:21:58.68318-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:21:59.68288-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:22:00.682909-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:22:01.68291-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:22:02.68295-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:22:03.682954-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:22:04.682949-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:22:05.68295-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:22:06.682968-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:22:07.682997-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:22:08.682989-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:22:09.682997-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:22:10.68301-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:22:11.683071-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:22:12.683061-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:22:13.683073-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:22:14.683069-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:22:15.683087-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:22:16.68309-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:22:17.683129-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:22:18.683135-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:22:19.683139-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:22:20.683144-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:22:21.683134-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:22:22.683149-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:22:23.683191-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:22:24.683167-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:22:25.683206-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:22:26.68321-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:22:27.683245-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:22:28.683248-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:22:29.683257-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:22:30.683269-05:00').getTime(), y: 3},{x: new Date('2025-07-08T15:22:31.683251-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:22:32.683265-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:22:33.683298-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:22:34.683465-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:22:35.683292-05:00').getTime(), y: 1},{x: new Date('2025-07-08T15:22:36.683317-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:22:37.683354-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:22:38.683366-05:00').getTime(), y: 1},{x: new Date('2025-07-08T15:22:39.683371-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:22:40.683388-05:00').getTime(), y: 1},{x: new Date('2025-07-08T15:22:41.68339-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:22:42.683387-05:00').getTime(), y: 1},{x: new Date('2025-07-08T15:22:43.683396-05:00').getTime(), y: 1},{x: new Date('2025-07-08T15:22:44.683419-05:00').getTime(), y: 2},{x: new Date('2025-07-08T15:22:45.683432-05:00').getTime(), y: 1},{x: new Date('2025-07-08T15:22:46.683791-05:00').getTime(), y: 1},{x: new Date('2025-07-08T15:22:47.683466-05:00').getTime(), y: 1},{x: new Date('2025-07-08T15:22:48.683461-05:00').getTime(), y: 1},{x: new Date('2025-07-08T15:22:49.683532-05:00').getTime(), y: 1},{x: new Date('2025-07-08T15:22:50.683475-05:00').getTime(), y: 0},{x: new Date('2025-07-08T15:22:51.683516-05:00').getTime(), y: 0},{x: new Date('2025-07-08T15:22:52.68351-05:00').getTime(), y: 0},{x: new Date('2025-07-08T15:22:53.685546-05:00').getTime(), y: 0},{x: new Date('2025-07-08T15:22:54.683539-05:00').getTime(), y: 0},{x: new Date('2025-07-08T15:22:55.683571-05:00').getTime(), y: 1},{x: new Date('2025-07-08T15:22:56.684177-05:00').getTime(), y: 1},{x: new Date('2025-07-08T15:22:57.721722-05:00').getTime(), y: 1}],
+            borderColor: '#8b5cf6',
+            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+            borderWidth: 2,
+            pointRadius: 0,
+            fill: true,
+            stepped: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: {
+              display: true,
+              text: 'Active Virtual Users'
+            },
+            tooltip: {
+              mode: 'index',
+              intersect: false
+            }
+          },
+          scales: {
+            x: {
+              type: 'time',
+              time: {
+                unit: 'second'
+              },
+              title: {
+                display: true,
+                text: 'Time'
+              }
+            },
+            y: {
+              title: {
+                display: true,
+                text: 'VUs'
+              },
+              min: 0
+            }
+          }
+        }
+      });
+    }
+  
+        });
+    </script>
+</body>
+</html>

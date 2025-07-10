@@ -18,6 +18,7 @@ const {
 // Configuration
 const config = {
   inputFile: process.argv[2] || 'results/results.json',
+  outputFile: process.argv[3], // Optional custom output filename
   mantleMetricKeys: [
     'browser_mantle_first_ad_load', 'browser_mantle_first_ad_render', 'browser_mantle_first_ad_request',
     'browser_mantle_first_ad_response', 'browser_mantle_gtm_loaded', 'browser_mantle_gpt_loaded',
@@ -128,6 +129,13 @@ function processK6Output() {
       lcp: {}, fcp: {}, cls: {}, ttfb: {}, // Note: ttfb_browser changed to ttfb to match report
       // Page Load & Success (used by generateBrowserReport directly or via buildHtml...Table)
       pageLoadTime: {}, browser_page_load_success: {},
+      // Browser timing metrics
+      serverProcessingTime: {}, networkTime: {}, domProcessingTime: {},
+      resourceLoadTime: {}, scriptExecutionTime: {}, scriptParsingTime: {},
+      criticalRenderingTime: {}, totalDownloadTime: {}, criticalPathTime: {},
+      parallelDownloadEfficiency: {},
+      // Resource timing metrics
+      jsLoadTime: {}, cssLoadTime: {}, imgLoadTime: {}, fontLoadTime: {}, otherResourceLoadTime: {},
       // Protocol specific (remain as is)
       protocol_ttfb: {}, protocol_ttlb: {}, protocol_req_success_rate: {},
       // Resource details by type
@@ -265,7 +273,6 @@ function processK6Output() {
 
     // Generate the appropriate report based on test type
     if (testType === 'BROWSER') {
-      addFallbackDataIfNeeded(data, uniqueTemplates);
       generateBrowserReport(data, uniqueTemplates, state);
     } else if (testType === 'PROTOCOL' || testType === 'API') {
       const { generateProtocolReport } = require('./generate-protocol-report.js');
@@ -349,132 +356,19 @@ function processK6Output() {
     }
     
     // Write the HTML report
-    const reportFilename = config.inputFile.replace('.json', '_report.html');
+    // Use custom output filename if provided, otherwise use the default pattern
+    const reportFilename = config.outputFile || config.inputFile.replace('.json', '_report.html');
     fs.writeFileSync(reportFilename, state.htmlReportContent.join('\n'), 'utf8');
     
     // Write debug data to a separate file for troubleshooting
-    const debugReportPath = config.inputFile.replace('.json', '_debug_data.json');
-    fs.writeFileSync(debugReportPath, JSON.stringify(data, null, 2), 'utf8');
+
   } catch (error) {
     console.error(`Error processing k6 output: ${error.message}`);
     console.error(error.stack);
   }
 }
 
-// Helper function to add fallback data if metrics are missing or insufficient
-function addFallbackDataIfNeeded(data, templates) {
-  // Add fallback data for all templates to ensure consistent reporting
-  
-  // Define the correct template names from the CSV file
-  const correctTemplateNames = [
-    'taxonomyScTemplate',
-    'listScCommerceTemplate',
-    'structuredContentTemplate',
-    'listScTemplate',
-    'exclusiveTemplate',
-    'homeTemplate',
-    'robotsTemplate'
-  ];
-  
-  // If templates array doesn't contain the correct template names, replace it
-  if (!templates.some(t => correctTemplateNames.includes(t))) {
-    // Replace incorrect template names with correct ones from CSV file
-    templates.length = 0; // Clear the array
-    correctTemplateNames.forEach(t => templates.push(t)); // Add correct template names
-  }
 
-  // Add fallback data for each template
-  templates.forEach((template, index) => {
-    // Use index to vary the metrics slightly between templates
-    const variationFactor = 1 + (index * 0.1); // 1.0, 1.1, 1.2, etc.
-    
-    // Get real values from k6 output if available
-    const realNetworkTime = 1000; // From k6 output: browser_network_time avg=1s
-    const realServerTime = 365.79; // From k6 output: browser_server_processing_time avg=365.79ms
-    const realDomTime = 228.51; // From k6 output: browser_dom_processing_time avg=228.51ms
-    const realScriptExecTime = 138.58; // From k6 output: browser_script_execution_time avg=138.58ms
-    const realScriptParseTime = 0; // From k6 output: browser_script_parsing_time avg=0s
-    const realPageLoadTime = 1513.79; // From k6 output: browser_page_load_time avg=1513.789474
-    
-    // Core Web Vitals fallback data
-    if (!data.lcp) data.lcp = {};
-    if (!data.fcp) data.fcp = {};
-    if (!data.cls) data.cls = {};
-    if (!data.ttfb) data.ttfb = {};
-    
-    // Page Timing fallback data
-    if (!data.pageLoadTime) data.pageLoadTime = {};
-    if (!data.serverProcessingTime) data.serverProcessingTime = {};
-    if (!data.networkTime) data.networkTime = {};
-    if (!data.domProcessingTime) data.domProcessingTime = {};
-    if (!data.resourceLoadTime) data.resourceLoadTime = {};
-    if (!data.scriptExecutionTime) data.scriptExecutionTime = {};
-    if (!data.scriptParsingTime) data.scriptParsingTime = {};
-    if (!data.jsLoadTime) data.jsLoadTime = {};
-    if (!data.cssLoadTime) data.cssLoadTime = {};
-    if (!data.imgLoadTime) data.imgLoadTime = {};
-    if (!data.fontLoadTime) data.fontLoadTime = {};
-    if (!data.otherResourceLoadTime) data.otherResourceLoadTime = {};
-    
-    // Core Web Vitals fallback data
-    data.lcp[template] = [2500 * variationFactor, 2300 * variationFactor, 2700 * variationFactor];
-    data.fcp[template] = [1200 * variationFactor, 1100 * variationFactor, 1300 * variationFactor];
-    data.cls[template] = [0.1 * variationFactor, 0.08 * variationFactor, 0.12 * variationFactor];
-    data.ttfb[template] = [500 * variationFactor, 450 * variationFactor, 550 * variationFactor];
-
-    // Page Timing fallback data - use real values from k6 output when available
-    data.pageLoadTime[template] = [realPageLoadTime * variationFactor, realPageLoadTime * 0.9 * variationFactor, realPageLoadTime * 1.1 * variationFactor];
-    data.serverProcessingTime[template] = [realServerTime * variationFactor, realServerTime * 0.9 * variationFactor, realServerTime * 1.1 * variationFactor];
-    data.networkTime[template] = [realNetworkTime * variationFactor, realNetworkTime * 0.9 * variationFactor, realNetworkTime * 1.1 * variationFactor];
-    data.domProcessingTime[template] = [realDomTime * variationFactor, realDomTime * 0.9 * variationFactor, realDomTime * 1.1 * variationFactor];
-    data.resourceLoadTime[template] = [800 * variationFactor, 750 * variationFactor, 850 * variationFactor];
-    data.scriptExecutionTime[template] = [realScriptExecTime * variationFactor, realScriptExecTime * 0.9 * variationFactor, realScriptExecTime * 1.1 * variationFactor];
-    data.scriptParsingTime[template] = [realScriptParseTime * variationFactor, realScriptParseTime * 0.9 * variationFactor, realScriptParseTime * 1.1 * variationFactor];
-    
-    // Resource timing aggregates
-    data.jsLoadTime[template] = [600 * variationFactor, 550 * variationFactor, 650 * variationFactor];
-    data.cssLoadTime[template] = [450 * variationFactor, 400 * variationFactor, 500 * variationFactor];
-    data.imgLoadTime[template] = [700 * variationFactor, 650 * variationFactor, 750 * variationFactor];
-    data.fontLoadTime[template] = [200 * variationFactor, 180 * variationFactor, 220 * variationFactor];
-    data.otherResourceLoadTime[template] = [300 * variationFactor, 270 * variationFactor, 330 * variationFactor];
-  });
-
-  // Add fallback resource details if needed
-  const hasResourceData = Object.keys(data.resource_details).some(type => 
-    data.resource_details[type] && data.resource_details[type].length > 0
-  );
-  
-  if (!hasResourceData) {
-    const resourceTypes = ['js', 'css', 'img', 'font', 'other'];
-    const urlPrefixes = {
-      'js': 'https://example.com/static/js/main.',
-      'css': 'https://example.com/static/css/styles.',
-      'img': 'https://example.com/static/images/hero.',
-      'font': 'https://example.com/static/fonts/opensans.',
-      'other': 'https://example.com/static/misc/data.'
-    };
-
-    templates.forEach(template => {
-      resourceTypes.forEach(type => {
-        if (!data.resource_details[type] || data.resource_details[type].length === 0) {
-          data.resource_details[type] = [];
-        }
-
-        // Add 3 sample resources of each type for each template
-        for (let i = 0; i < 3; i++) {
-          data.resource_details[type].push({
-            url: `${urlPrefixes[type]}${i}.${type}`,
-            duration: 200 + (i * 50) + (Math.random() * 100),
-            size: 10000 + (i * 5000) + (Math.random() * 5000),
-            status: 200,
-            transaction: template,
-            initiatorType: type
-          });
-        }
-      });
-    });
-  }
-}
 
 module.exports = { processK6Output };
 

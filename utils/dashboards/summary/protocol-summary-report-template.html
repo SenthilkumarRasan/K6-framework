@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en" style="scroll-behavior: smooth;">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K6 Protocol Summary Report</title>
+    <!-- Tailwind CSS CDN for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Font: Inter for a clean, professional look -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles for the report to override/enhance Tailwind */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* Light blue-gray background */
+            color: #334155; /* Darker text for readability */
+        }
+
+        /* Enhanced Section Title Style */
+        .section-title {
+            color: #111827;
+            font-size: 22px;
+            font-weight: 700;
+            margin: 48px 0 16px 0;
+            position: relative;
+            display: inline-block;
+            padding-bottom: 8px;
+        }
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 4px;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6);
+            border-radius: 4px;
+        }
+
+        /* Modern Table Styling */
+        .custom-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-bottom: 32px;
+            font-size: 14px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .custom-table thead th {
+            background-color: #4f46e5; /* Deep purple header */
+            color: white;
+            padding: 12px 16px;
+            font-weight: 600;
+            text-align: left;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+        .custom-table tbody td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e5e7eb;
+            background-color: white;
+        }
+        .custom-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+        .custom-table tbody tr:hover td {
+            background-color: #f9fafb;
+        }
+
+        /* Special table styling for different resource types */
+        .html-table thead th {
+            background-color: #1e40af; /* Blue for HTML resources */
+        }
+        .nonhtml-table thead th {
+            background-color: #047857; /* Green for non-HTML resources */
+        }
+        .resource-type-table thead th {
+            background-color: #b91c1c; /* Red for resource types */
+        }
+        .network-table thead th {
+            background-color: #3730a3; /* Indigo for network analysis */
+        }
+
+        /* Summary stats cards */
+        .summary-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        .summary-stat-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 16px;
+            border-left: 4px solid #4f46e5;
+        }
+        .summary-stat-card.primary {
+            border-left-color: #4f46e5;
+        }
+        .summary-stat-card.success {
+            border-left-color: #10b981;
+        }
+        .summary-stat-card.warning {
+            border-left-color: #f59e0b;
+        }
+        .summary-stat-card.danger {
+            border-left-color: #ef4444;
+        }
+        .summary-stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .summary-stat-label {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        /* Responsive layout */
+        @media (max-width: 768px) {
+            .summary-stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        /* Left Navigation Styling */
+        .container-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: #1a202c; /* Dark background for sidebar */
+            color: #e2e8f0; /* Light text color */
+            padding: 1.5rem;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+            flex-shrink: 0;
+        }
+
+        .sidebar h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: #6366f1; /* Accent color for title */
+        }
+
+        .sidebar nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar nav ul li {
+            margin-bottom: 0.75rem;
+        }
+
+        .sidebar nav ul li a {
+            color: #e2e8f0;
+            text-decoration: none;
+            display: block;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            transition: background-color 0.2s ease;
+        }
+
+        .sidebar nav ul li a:hover {
+            background-color: #2d3748;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container-layout {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Main Dashboard Container -->
+    <div class="container-layout">        
+        <!-- Left Navigation Sidebar -->
+        <aside class="sidebar">
+            <h2>K6 Report</h2>
+            <nav>
+                <ul>
+                    <li><a href="#overview-section">Performance Summary</a></li>
+                    <li><a href="#html-resources-section">HTML Resources</a></li>
+                    <li><a href="#nonhtml-resources-section">Non-HTML Resources</a></li>
+                    <li><a href="#resource-types-section">Resource Types</a></li>
+                    <li><a href="#network-analysis-section">Network Analysis</a></li>
+                    <li><a href="#metrics-legend-section">Metrics Legend</a></li>
+                </ul>
+            </nav>
+        </aside>
+        <main class="flex-1 p-6 lg:p-8">
+            <!-- Header Section -->
+            <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 pb-4 border-b border-slate-200">
+                <h1 class="text-3xl font-extrabold text-slate-800 mb-4 sm:mb-0">Protocol Summary Report</h1>
+            </header>
+
+            <!-- Performance Summary -->
+            <section id="overview-section" class="mb-8">
+                <h2 class="section-title">Performance Summary</h2>
+                <div id="performance-summary">
+                    <!-- Server-side rendered performance summary will be inserted here -->
+                </div>
+
+                <!-- Overall Summary Table -->
+                <div id="overall-metrics">
+                    <!-- Server-side rendered overall metrics table will be inserted here -->
+                </div>
+            </section>
+
+            <!-- HTML Resources Section -->
+            <section id="html-resources-section" class="mb-8">
+                <h2 class="section-title">HTML Resources</h2>
+                <div id="html-resources">
+                    <!-- Server-side rendered HTML resources table will be inserted here -->
+                </div>
+            </section>
+
+            <!-- Non-HTML Resources Section -->
+            <section id="nonhtml-resources-section" class="mb-8">
+                <h2 class="section-title">Non-HTML Resources</h2>
+                <div id="nonhtml-resources">
+                    <!-- Server-side rendered non-HTML resources table will be inserted here -->
+                </div>
+            </section>
+
+            <!-- Resource Types Section -->
+            <section id="resource-types-section" class="mb-8">
+                <h2 class="section-title">Resource Types by Transaction</h2>
+                <div id="resource-types">
+                    <!-- Server-side rendered resource types table will be inserted here -->
+                </div>
+            </section>
+
+            <!-- Network Resource Analysis -->
+            <section id="network-analysis-section" class="mb-8">
+                <h2 class="section-title">Network Resource Analysis</h2>
+                <div id="network-analysis">
+                    <!-- Server-side rendered network analysis table will be inserted here -->
+                </div>
+            </section>
+
+            <!-- Metrics Legend -->
+            <section id="metrics-legend-section" class="mb-8 metrics-explanation">
+                <h2 class="section-title">Metrics Legend</h2>
+                <div class="overflow-x-auto">
+                    <table class="custom-table metrics-definition-table">
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="font-medium">HTML Resources</td>
+                                <td>Main HTML page requests, typically the initial page load for each transaction.</td>
+                            </tr>
+                            <tr>
+                                <td class="font-medium">Non-HTML Resources</td>
+                                <td>Secondary resources loaded by HTML pages, such as JavaScript, CSS, images, fonts, etc.</td>
+                            </tr>
+                            <tr>
+                                <td class="font-medium">TTFB<br><span class="font-normal text-xs">(Time To First Byte)</span></td>
+                                <td>Time elapsed between sending the request and receiving the first byte of the response. This measures server processing time and network latency.</td>
+                            </tr>
+                            <tr>
+                                <td class="font-medium">TTLB<br><span class="font-normal text-xs">(Time To Last Byte)</span></td>
+                                <td>Total time from request start to receiving the complete response. This includes TTFB plus content download time.</td>
+                            </tr>
+                            <tr>
+                                <td class="font-medium">Avg</td>
+                                <td>Average (mean) value of all measurements.</td>
+                            </tr>
+                            <tr>
+                                <td class="font-medium">Med</td>
+                                <td>Median value - the middle point where 50% of measurements are above and 50% below.</td>
+                            </tr>
+                            <tr>
+                                <td class="font-medium">p90</td>
+                                <td>90th percentile - 90% of measurements are below this value. Useful for understanding worst-case performance.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-slate-800 text-white p-4 text-center text-sm">
+            <p><span id="generationTime"></span></p>
+        </footer>
+    </div>
+</body>
+</html>

@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en" style="scroll-behavior: smooth;">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K6 Performance Report</title>
+    <!-- Tailwind CSS CDN for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Font: Inter for a clean, professional look -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles for the report to override/enhance Tailwind */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* Light blue-gray background */
+            color: #334155; /* Darker text for readability */
+        }
+
+        /* Enhanced Section Title Style */
+        .section-title {
+            color: #111827;
+            font-size: 22px;
+            font-weight: 700;
+            margin: 48px 0 16px 0;
+            position: relative;
+            display: inline-block;
+            padding-bottom: 8px;
+        }
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 4px;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6);
+            border-radius: 4px;
+        }
+
+        /* Modern Table Styling */
+        .custom-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-bottom: 32px;
+            font-size: 14px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .custom-table thead th {
+            background-color: #4f46e5; /* Deep purple header */
+            color: white;
+            padding: 12px 16px;
+            font-weight: 600;
+            text-align: left;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+        .custom-table tbody td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e5e7eb;
+            background-color: white;
+        }
+        .custom-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+        .custom-table tbody tr:hover td {
+            background-color: #f9fafb;
+        }
+
+        /* Data row background size animation */
+        .custom-table tr {
+            position: relative;
+        }
+        .custom-table tr::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: calc(var(--data-percent, 0.5) * 100%);
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.05), rgba(99, 102, 241, 0));
+            z-index: 0;
+            transition: width 0.3s ease;
+        }
+        .custom-table tr:hover::before {
+            width: calc((var(--data-percent, 0.5) * 100%) + 5%);
+        }
+        .custom-table td {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Summary Stats */
+        .summary-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .summary-stat-card {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            border-left: 4px solid;
+            transition: transform 0.2s ease;
+        }
+        .summary-stat-card:hover {
+            transform: translateY(-2px);
+        }
+        .summary-stat-card.primary { border-color: #4f46e5; }
+        .summary-stat-card.success { border-color: #22c55e; }
+        .summary-stat-card.warning { border-color: #eab308; }
+        .summary-stat-card.danger { border-color: #ef4444; }
+
+        .summary-stat-value {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: #1f2937;
+            line-height: 1;
+        }
+        .summary-stat-label {
+            font-size: 0.9rem;
+            color: #6b7280;
+            margin-top: 0.5rem;
+            font-weight: 500;
+        }
+
+        /* Metrics Explanation / Legend */
+        .metrics-explanation {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            background-color: #f5f7ff;
+            border-left: 4px solid #4338ca;
+        }
+        .metrics-explanation h4 {
+            margin-top: 0;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Main Dashboard Container -->
+    <div class="flex flex-1 flex-col lg:flex-row">
+
+        <!-- Sidebar -->
+        <aside class="w-full lg:w-64 bg-slate-800 text-white p-6 lg:p-8 shadow-lg rounded-br-lg lg:rounded-tr-none lg:rounded-br-none">
+            <div class="text-2xl font-bold mb-8 text-indigo-300">K6 Report</div>
+            <nav>
+                <ul>
+                    <li class="mb-4">
+                        <a href="#overview-section" class="flex items-center p-3 rounded-lg hover:bg-slate-700 transition-colors duration-200 text-indigo-200 font-medium">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m0 0l7 7m-7-7v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001 1h3m0-10v10a1 1 0 01-1 1h-3"></path></svg>
+                            Overview
+                        </a>
+                    </li>
+                    <li class="mb-4">
+                        <a href="#transaction-performance-section" class="flex items-center p-3 rounded-lg hover:bg-slate-700 transition-colors duration-200 text-slate-300">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-1.25-3M15 10V5a3 3 0 00-3-3H9a3 3 0 00-3 3v5m6 0h.01M12 12h-.01"></path></svg>
+                            Transaction Performance
+                        </a>
+                    </li>
+                    <li class="mb-4">
+                        <a href="#metrics-legend-section" class="flex items-center p-3 rounded-lg hover:bg-slate-700 transition-colors duration-200 text-slate-300">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                            Metrics Legend
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 p-6 lg:p-8">
+            <!-- Header Section -->
+            <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 pb-4 border-b border-slate-200">
+                <h1 class="text-3xl font-extrabold text-slate-800 mb-4 sm:mb-0">Performance Report</h1>
+                <div class="text-sm text-slate-600">
+                    <p><strong>Run Start Time:</strong> <span id="runStartTime">7/9/2025, 8:59:58 PM</span></p>
+                    <p><strong>Run End Time:</strong> <span id="runEndTime"></span></p>
+                    <p><strong>Test Type:</strong> <span id="testType"></span></p>
+                    <p><strong>AUT:</strong> <span id="aut"></span></p>
+                    <p><strong>Scenario:</strong> <span id="scenario"></span></p>
+                </div>
+            </header>
+
+            <!-- Performance Summary -->
+            <section id="overview-section" class="mb-8">
+                <h2 class="section-title">Performance Summary</h2>
+                <div id="performance-summary">
+                    <!-- Server-side rendered performance summary will be inserted here -->
+                </div>
+
+                <!-- Overall Summary Table -->
+                <div class="overflow-x-auto" id="overall-metrics">
+                    <!-- Server-side rendered overall metrics table will be inserted here -->
+                </div>
+            
+<div class="mt-6">
+
+      <div class="overflow-x-auto">
+        <table class="custom-table w-full">
+          <thead>
+            <tr>
+              <th>REQUESTS</th>
+              <th>COUNT</th>
+              <th>SUCCESS RATE</th>
+              <th colspan="3">TTFB (MS)</th>
+              <th colspan="3">TTLB (MS)</th>
+            </tr>
+            <tr>
+              <th></th>
+              <th></th>
+              <th></th>
+              <th>AVG</th>
+              <th>MEDIAN</th>
+              <th>P90</th>
+              <th>AVG</th>
+              <th>MEDIAN</th>
+              <th>P90</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>All Endpoints</td>
+              <td>538</td>
+              <td>100.00%</td>
+              <td>109.23</td>
+              <td>108.85</td>
+              <td>111.85</td>
+              <td>109.46</td>
+              <td>109.02</td>
+              <td>112.13</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    
+</div>
+</section>
+
+            <!-- Transaction Performance by Endpoint -->
+            <section id="endpoint-section" class="mb-8">
+                <h2 class="section-title">Transaction Performance by Endpoint</h2>
+<div class="mt-6">
+
+      <div class="overflow-x-auto">
+        <table class="custom-table w-full">
+          <thead>
+            <tr>
+              <th>ENDPOINT</th>
+              <th>REQUESTS</th>
+              <th>SUCCESS RATE</th>
+              <th colspan="3">TTFB (MS)</th>
+              <th colspan="3">TTLB (MS)</th>
+            </tr>
+            <tr>
+              <th></th>
+              <th></th>
+              <th></th>
+              <th>AVG</th>
+              <th>MEDIAN</th>
+              <th>P90</th>
+              <th>AVG</th>
+              <th>MEDIAN</th>
+              <th>P90</th>
+            </tr>
+          </thead>
+          <tbody>
+    
+          <tr>
+            <td>https://quickpizza.grafana.com/api/users</td>
+            <td>1</td>
+            <td>100.00</td>
+            <td>178.32</td>
+            <td>178.32</td>
+            <td>178.32</td>
+            <td>180.51</td>
+            <td>180.51</td>
+            <td>180.51</td>
+          </tr>
+        
+          <tr>
+            <td>https://quickpizza.grafana.com/api/users/token/login</td>
+            <td>1</td>
+            <td>100.00</td>
+            <td>177.95</td>
+            <td>177.95</td>
+            <td>177.95</td>
+            <td>179.36</td>
+            <td>179.36</td>
+            <td>179.36</td>
+          </tr>
+        
+          <tr>
+            <td>Create</td>
+            <td>134</td>
+            <td>100.00</td>
+            <td>107.91</td>
+            <td>107.46</td>
+            <td>111.85</td>
+            <td>108.22</td>
+            <td>107.72</td>
+            <td>112.18</td>
+          </tr>
+        
+          <tr>
+            <td>Fetch</td>
+            <td>134</td>
+            <td>100.00</td>
+            <td>109.94</td>
+            <td>109.92</td>
+            <td>112.46</td>
+            <td>110.18</td>
+            <td>110.20</td>
+            <td>112.72</td>
+          </tr>
+        
+          <tr>
+            <td>Update</td>
+            <td>134</td>
+            <td>100.00</td>
+            <td>108.61</td>
+            <td>108.32</td>
+            <td>110.92</td>
+            <td>108.80</td>
+            <td>108.48</td>
+            <td>111.03</td>
+          </tr>
+        
+          <tr>
+            <td>Delete</td>
+            <td>134</td>
+            <td>100.00</td>
+            <td>109.44</td>
+            <td>109.26</td>
+            <td>111.86</td>
+            <td>109.58</td>
+            <td>109.42</td>
+            <td>111.96</td>
+          </tr>
+        
+          </tbody>
+        </table>
+      </div>
+    
+</div>
+
+                <div class="overflow-x-auto" id="endpoint-performance">
+                    <!-- Server-side rendered endpoint performance table will be inserted here -->
+                </div>
+            </section>
+
+            <!-- End of Transaction Performance Section -->
+
+            <!-- Metrics Legend -->
+            <section id="metrics-legend-section" class="mb-8 metrics-explanation">
+                <h2 class="section-title">Metrics Legend</h2>
+                <div class="overflow-x-auto">
+                    <table class="custom-table metrics-definition-table">
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="metric-name">Requests</td>
+                                <td>Total number of calls made to this endpoint/transaction during the test.</td>
+                            </tr>
+                            <tr>
+                                <td class="metric-name">Success Rate</td>
+                                <td>Percentage of calls that returned a successful HTTP status code (2xx or 3xx).</td>
+                            </tr>
+                            <tr>
+                                <td class="metric-name">TTFB<br><span class="font-normal text-xs">(Time To First Byte)</span></td>
+                                <td>Time elapsed between sending the request and receiving the first byte of the response. This measures server processing time and network latency.</td>
+                            </tr>
+                            <tr>
+                                <td class="metric-name">TTLB<br><span class="font-normal text-xs">(Time To Last Byte)</span></td>
+                                <td>Total time elapsed between sending the request and receiving the complete response. This includes TTFB plus the time to download the entire response.</td>
+                            </tr>
+                            <tr>
+                                <td class="metric-name">Avg<br><span class="font-normal text-xs">(Average)</span></td>
+                                <td>The mean value of all measurements for this metric.</td>
+                            </tr>
+                            <tr>
+                                <td class="metric-name">Median</td>
+                                <td>The middle value of all measurements for this metric when sorted. Less affected by outliers than the average.</td>
+                            </tr>
+                            <tr>
+                                <td class="metric-name">p90<br><span class="font-normal text-xs">(90th Percentile)</span></td>
+                                <td>90% of measurements were at or below this value. Useful for understanding the experience of most users while excluding extreme outliers.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Define renderReport function and attach it to the window object so it can be called globally
+        window.renderReport = function(data) {
+            // Add defensive check for missing data
+            if (!data || !data.reportInfo) {
+                console.error('Invalid report data structure - missing reportInfo');
+                document.getElementById('mainContent').innerHTML = '<div class="alert alert-danger">Error: Invalid report data format</div>';
+                return;
+            }
+            
+            // Ensure summaryMetrics exists
+            if (!data.summaryMetrics) {
+                console.log('Missing summaryMetrics - creating from overallSummary');
+                data.summaryMetrics = {
+                    totalEndpoints: data.overallSummary?.totalEndpoints || 0,
+                    totalRequests: data.overallSummary?.totalRequests || 0,
+                    overallSuccessRate: data.overallSummary?.successRate?.replace('%', '') || 100,
+                    avgTtfb: data.overallSummary?.ttfbAvg?.replace('ms', '') || 0,
+                    avgTtlB: data.overallSummary?.ttlbAvg?.replace('ms', '') || 0
+                };
+            }
+            
+            // Update Report Info
+            document.getElementById('runStartTime').textContent = data.reportInfo.startTime || data.reportInfo.runStartTime || 'N/A';
+            document.getElementById('runEndTime').textContent = data.reportInfo.endTime || data.reportInfo.runEndTime || 'N/A';
+            document.getElementById('testType').textContent = data.reportInfo.testType || 'API';
+            document.getElementById('aut').textContent = data.reportInfo.applicationName || data.reportInfo.aut || 'N/A';
+            document.getElementById('scenario').textContent = data.reportInfo.scenario || 'N/A';
+
+            // Update Summary KPI Cards with defensive coding
+            document.getElementById('totalEndpoints').textContent = data.summaryMetrics.totalEndpoints || '0';
+            document.getElementById('totalRequests').textContent = data.summaryMetrics.totalRequests || '0';
+            document.getElementById('overallSuccessRate').innerHTML = (data.summaryMetrics.overallSuccessRate || '100') + '<span class="text-lg">%</span>';
+            
+            // Special handling for TTFB which was showing as 0
+            const ttfbValue = data.summaryMetrics.avgTtfb || data.summary?.ttfb?.avg?.toFixed(2) || '0';
+            document.getElementById('avgTtfb').innerHTML = ttfbValue + '<span class="text-lg">ms</span>';
+            
+            // Handle TTLB
+            const ttlbValue = data.summaryMetrics.avgTtlB || data.summary?.ttlb?.avg?.toFixed(2) || '0';
+            document.getElementById('avgTtlB').innerHTML = ttlbValue + '<span class="text-lg">ms</span>';
+            
+            console.log('Rendered report with metrics:', data.summaryMetrics);
+
+            // Populate Overall Summary Table
+            const overallSummaryTableBody = document.getElementById('overallSummaryTableBody');
+            overallSummaryTableBody.innerHTML = ''; // Clear existing content
+            const overallRow = `
+                <tr style="--data-percent: 0.8;">
+                    <td><strong>${data.overallSummary.requestsLabel}</strong></td>
+                    <td><strong>${data.overallSummary.count}</strong></td>
+                    <td><strong>${data.overallSummary.successRate}</strong></td>
+                    <td><strong>${data.overallSummary.ttfbAvg}</strong></td>
+                    <td><strong>${data.overallSummary.ttfbMedian}</strong></td>
+                    <td><strong>${data.overallSummary.ttfbP90}</strong></td>
+                    <td><strong>${data.overallSummary.ttlbAvg}</strong></td>
+                    <td><strong>${data.overallSummary.ttlbMedian}</strong></td>
+                    <td><strong>${data.overallSummary.ttlbP90}</strong></td>
+                </tr>
+            `;
+            overallSummaryTableBody.insertAdjacentHTML('beforeend', overallRow);
+            
+            // Populate Endpoint Performance Table
+            const endpointPerformanceTableBody = document.getElementById('endpointPerformanceTableBody');
+            endpointPerformanceTableBody.innerHTML = ''; // Clear existing content
+            
+            // Check if endpoint performance data exists
+            if (!data.endpointPerformance || !Array.isArray(data.endpointPerformance) || data.endpointPerformance.length === 0) {
+                console.warn('No endpoint performance data available to display');
+                // Add a message in the table
+                endpointPerformanceTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="text-center p-3">No endpoint performance data available</td>
+                    </tr>
+                `;
+            } else {
+                // Process each endpoint
+                data.endpointPerformance.forEach(endpoint => {
+                    // Only add rows for endpoints with requests
+                    if (endpoint.requests > 0) {
+                        const row = `
+                            <tr>
+                                <td>${endpoint.endpoint || 'Unknown'}</td>
+                                <td>${endpoint.requests || 0}</td>
+                                <td>${endpoint.successRate || '0.00'}</td>
+                                <td>${endpoint.ttfbAvg || '0.00ms'}</td>
+                                <td>${endpoint.ttfbMedian || '0.00ms'}</td>
+                                <td>${endpoint.ttfbP90 || '0.00ms'}</td>
+                                <td>${endpoint.ttlbAvg || '0.00ms'}</td>
+                                <td>${endpoint.ttlbMedian || '0.00ms'}</td>
+                                <td>${endpoint.ttlbP90 || '0.00ms'}</td>
+                            </tr>
+                        `;
+                        endpointPerformanceTableBody.insertAdjacentHTML('beforeend', row);
+                    }
+                });
+            }
+        }; // End of window.renderReport function
+    </script>
+</body>
+</html>

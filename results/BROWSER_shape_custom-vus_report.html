@@ -1,0 +1,1549 @@
+<h1>K6 Performance Test Report</h1>
+<p><strong>Run Start Time:</strong> 7/7/2025, 11:35:37 PM</p>
+<p><strong>Run End Time:</strong> 7/7/2025, 11:40:38 PM</p>
+<p><strong>Base URL:</strong> https://www.shape.com</p>
+<p><strong>Test Type:</strong> BROWSER</p>
+<p><strong>AUT:</strong> shape</p>
+<p><strong>Scenario:</strong> custom-vus</p>
+
+  <style>
+    /* Base Styles */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.6;
+      color: #374151;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+      background-color: #f9fafb;
+    }
+    
+    h1, h2, h3, h4 {
+      color: #111827;
+      margin-top: 1.5em;
+      margin-bottom: 0.75em;
+    }
+    
+    h1 {
+      font-size: 1.75rem;
+      border-bottom: 3px solid #4f46e5;
+      padding-bottom: 0.5rem;
+      display: inline-block;
+    }
+    
+    h3.section-header {
+      font-size: 1.25rem;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid;
+    }
+    
+    h3.section-header.overall-summary-header {
+      border-color: #4338ca;
+    }
+    
+    h3.section-header.html-performance-header {
+      border-color: #065f46;
+    }
+    
+    h3.section-header.nonhtml-performance-header {
+      border-color: #4338ca;
+    }
+    
+    h3.section-header.resource-type-header {
+      border-color: #991b1b;
+    }
+    
+    h3.section-header.network-analysis-header {
+      border-color: #6b21a8;
+    }
+
+    /* Modern Table Styling */
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      margin-bottom: 32px;
+      font-size: 14px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    
+    th {
+      color: #fff;
+      padding: 14px 16px;
+      text-align: left;
+      font-weight: 600;
+      letter-spacing: 0.025em;
+    }
+    
+    /* Table header gradient styles for different table types */
+    .overall-summary-table th { background: linear-gradient(to right, #3730a3, #4338ca); }
+    .html-performance-table th { background: linear-gradient(to right, #065f46, #047857); }
+    .nonhtml-performance-table th { background: linear-gradient(to right, #4338ca, #4f46e5); }
+    .resource-type-table th { background: linear-gradient(to right, #991b1b, #b91c1c); }
+    .network-analysis-table th { background: linear-gradient(to right, #6b21a8, #7e22ce); }
+    
+    /* Table header gradient styles for different table types */
+    .core-web-vitals-table th { background: linear-gradient(to right, #991b1b, #b91c1c); }
+    .mantle-metrics-table th { background: linear-gradient(to right, #b45309, #d97706); }
+    .pageload-table th { background: linear-gradient(to right, #065f46, #047857); }
+    .protocol-ttfb-table th { background: linear-gradient(to right, #4338ca, #4f46e5); }
+    .protocol-ttlb-table th { background: linear-gradient(to right, #6b21a8, #7e22ce); }
+    .resource-type-table th { background: linear-gradient(to right, #991b1b, #b91c1c); }
+    .top-resources-table th { background: linear-gradient(to right, #6b21a8, #7e22ce); }
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid #e5e7eb;
+      background-color: #fff;
+      transition: background-color 0.2s ease;
+    }
+    tr:nth-child(even) td { 
+      background-color: #f9fafb;
+    }
+    /* Enhanced row hover effect with data visualization */
+    tr {
+      position: relative;
+    }
+    tr:hover td { 
+      background-color: #eef2ff !important;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    /* Add data visualization with bars for numeric cells */
+    td:nth-child(n+2) {
+      position: relative;
+    }
+    
+    td:nth-child(n+2)::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      height: 3px;
+      width: 0;
+      background: linear-gradient(to right, #3b82f6, #10b981);
+      opacity: 0.5;
+      transition: width 0.3s ease;
+    }
+    
+    /* Show the bars on hover */
+    tr:hover td:nth-child(n+2)::before {
+      width: calc(100% * var(--data-percent, 0.5));
+    }
+    .metrics-section {
+      margin-bottom: 32px;
+    }
+
+    /* Enhanced Section Title Style */
+    .section-title, .metrics-header, .section-header {
+      color: #111827;
+      font-size: 22px;
+      font-weight: 700;
+      margin: 48px 0 16px 0;
+      position: relative;
+      display: inline-block;
+      padding-bottom: 8px;
+      background-color: transparent !important;
+      border: none !important;
+    }
+    .section-title::after, .metrics-header::after, .section-header::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 60px;
+      height: 4px;
+      background: linear-gradient(90deg, #6366f1, #8b5cf6);
+      border-radius: 4px;
+    }
+
+    /* Subtle Medium Table Header Colors */
+    .overall-head th, .overall-table th, .overall-summary-table th { 
+      background: linear-gradient(to right, #4338ca, #4f46e5) !important; /* subtle indigo */
+    }
+    .html-head th, .timing-breakdown th { 
+      background: linear-gradient(to right, #065f46, #047857) !important; /* subtle green */
+    }
+    .nonhtml-head th, .mantle-metrics-table th, .transaction-stats-table th { 
+      background: linear-gradient(to right, #b45309, #d97706) !important; /* subtle amber */
+    }
+    .resource-head th, .resource-type-table th, .core-web-vitals-table th { 
+      background: linear-gradient(to right, #991b1b, #b91c1c) !important; /* subtle red */
+    }
+    .network-head th, .top-resources-table th { 
+      background: linear-gradient(to right, #6b21a8, #7e22ce) !important; /* subtle purple */
+    }
+
+    /* Compact Top Legend Styles */
+    .color-legend {
+      display: flex;
+      flex-wrap: wrap;
+      margin: 0 0 24px 0;
+      gap: 10px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      background-color: #f9fafb;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    .color-legend-item { 
+      display: flex;
+      align-items: center;
+      font-size: 13px;
+      margin-right: 8px;
+      font-weight: 500;
+      color: #4b5563;
+    }
+    .swatch { 
+      width: 14px;
+      height: 14px;
+      margin-right: 6px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+    /* Match swatches to table header colors */
+    .color-legend-item:nth-child(1) .swatch { background: linear-gradient(to right, #4338ca, #4f46e5); }
+    .color-legend-item:nth-child(2) .swatch { background: linear-gradient(to right, #065f46, #047857); }
+    .color-legend-item:nth-child(3) .swatch { background: linear-gradient(to right, #b45309, #d97706); }
+    .color-legend-item:nth-child(4) .swatch { background: linear-gradient(to right, #991b1b, #b91c1c); }
+    .color-legend-item:nth-child(5) .swatch { background: linear-gradient(to right, #6b21a8, #7e22ce); }
+    
+    /* Compact Bottom Legend Styles */
+    .metrics-legend {
+      margin-top: 40px;
+      padding: 16px;
+      background-color: #f9fafb;
+      border-radius: 8px;
+      border-left: 3px solid #6366f1;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      font-size: 12px;
+    }
+    .metrics-legend h3 {
+      margin-top: 0;
+      margin-bottom: 12px;
+      color: #111827;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .metrics-legend dl {
+      display: grid;
+      grid-template-columns: 1fr 3fr;
+      row-gap: 10px;
+      column-gap: 16px;
+      margin: 0;
+    }
+    .metrics-legend dt {
+      font-weight: 600;
+      color: #374151;
+      font-size: 12px;
+    }
+    .metrics-legend dd {
+      margin-left: 0;
+      color: #4b5563;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    
+    /* Enhanced Resource Icons */
+    .resource-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      margin-right: 8px;
+      vertical-align: middle;
+      border-radius: 6px;
+      color: white;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .resource-icon:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+    }
+    .resource-icon.js { background: linear-gradient(135deg, #f7df1e, #eac100); color: #323330; }
+    .resource-icon.css { background: linear-gradient(135deg, #2965f1, #2050d3); }
+    .resource-icon.img { background: linear-gradient(135deg, #4ade80, #22c55e); }
+    .resource-icon.font { background: linear-gradient(135deg, #fb923c, #ea580c); }
+    .resource-icon.html { background: linear-gradient(135deg, #e34c26, #c53d1e); }
+    .resource-icon.other { background: linear-gradient(135deg, #94a3b8, #64748b); }
+    
+    /* Enhanced Alert Messages */
+    .alert {
+      padding: 16px 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .alert-warning {
+      background-color: #fffbeb;
+      border-left: 5px solid #f59e0b;
+      color: #92400e;
+    }
+    
+    /* Enhanced Badge Styles */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .badge-primary {
+      background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+      color: #4338ca;
+    }
+    .badge-success {
+      background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+      color: #15803d;
+    }
+
+    /* Resource Details Hover Card */
+    .resource-details {
+      padding: 10px;
+      margin-bottom: 8px;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+      transition: all 0.2s ease;
+    }
+    .resource-details:hover {
+      background-color: #f0f9ff;
+      border-color: #bfdbfe;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+      transform: translateY(-2px);
+    }
+    .resource-details strong {
+      color: #1e40af;
+    }
+    .resource-details small {
+      display: block;
+      margin-top: 4px;
+      color: #64748b;
+    }
+    
+    /* Legend Styles */
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-bottom: 25px;
+      padding: 15px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+    .legend-section {
+      margin-bottom: 2rem;
+      padding: 1.5rem;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .legend-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin-right: 1.5rem;
+    }
+
+    .legend-color {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      margin-right: 8px;
+    }
+    
+    .metrics-legend {
+      margin-top: 1.5rem;
+      border-top: 1px solid #e5e7eb;
+      padding-top: 1.5rem;
+    }
+    
+    /* Resource type legend */
+    .resource-type-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      padding: 0.75rem;
+      background-color: #f9fafb;
+      border-radius: 0.5rem;
+    }
+    
+    .resource-type-legend-item {
+      display: flex;
+      align-items: center;
+      font-size: 0.85rem;
+    }
+    
+    /* Header styles matching browser report */
+    .overall-summary-header {
+      background: linear-gradient(to right, #4f46e5, #6366f1);
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem 0.5rem 0 0;
+    }
+    
+    .html-performance-header {
+      background: linear-gradient(to right, #065f46, #047857);
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem 0.5rem 0 0;
+    }
+    
+    .nonhtml-performance-header {
+      background: linear-gradient(to right, #4338ca, #4f46e5);
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem 0.5rem 0 0;
+    }
+    
+    .resource-type-header {
+      background: linear-gradient(to right, #991b1b, #b91c1c);
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem 0.5rem 0 0;
+    }
+    
+    .network-analysis-header {
+      background: linear-gradient(to right, #6b21a8, #7e22ce);
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem 0.5rem 0 0;
+    }
+    
+    .top-resources-header {
+      background: linear-gradient(to right, #b45309, #d97706);
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem 0.5rem 0 0;
+    }
+    
+    .metrics-legend h4 {
+      margin-top: 0;
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
+    }
+    
+    .metrics-legend dl {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1rem;
+      margin: 0;
+    }
+    
+    .metrics-legend dt {
+      font-weight: 600;
+      color: #4b5563;
+      margin-bottom: 0.25rem;
+    }
+    
+    .metrics-legend dd {
+      margin-left: 0;
+      margin-bottom: 1rem;
+      color: #6b7280;
+      font-size: 0.9rem;
+    }
+    
+    /* Resource cards styling */
+    .resource-cards-cell {
+      padding: 0 !important;
+    }
+    
+    /* Resource type badges */
+    .resource-type-badge {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: white;
+    }
+    
+    .resource-type-badge.html {
+      background-color: #047857;
+    }
+    
+    .resource-type-badge.nonhtml {
+      background-color: #4f46e5;
+    }
+    
+    /* Tooltip styles */
+    [data-tooltip] {
+      position: relative;
+      cursor: pointer;
+    }
+    
+    [data-tooltip]:hover:after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background-color: #333;
+      color: white;
+      padding: 5px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+      font-size: 12px;
+      z-index: 10;
+      max-width: 300px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    /* Metrics explanation styles */
+    .metrics-explanation {
+      margin-top: 1.5rem;
+      padding: 1.5rem;
+      border-radius: 0.5rem;
+      background-color: #f5f7ff;
+      border-left: 4px solid #4338ca;
+    }
+    
+    .metrics-explanation h4 {
+      margin-top: 0;
+      margin-bottom: 1rem;
+      color: #1f2937;
+    }
+    
+    .metrics-explanation-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+    }
+    
+    .metrics-explanation-item h5 {
+      margin-top: 0;
+      margin-bottom: 0.5rem;
+      color: #4338ca;
+      font-weight: 600;
+    }
+    
+    .metrics-explanation-item p {
+      margin: 0;
+      color: #4b5563;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+    
+    /* Summary stats styles */
+    .summary-stats {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin: 1.5rem 0;
+    }
+    
+    .summary-stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    
+    .summary-stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #1f2937;
+      line-height: 1;
+    }
+    
+    .summary-stat-label {
+      font-size: 1rem;
+      color: #6b7280;
+      margin-top: 0.25rem;
+    }
+    
+    .resource-card {
+      display: flex;
+      padding: 0.75rem;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    
+    .resource-card:last-child {
+      border-bottom: none;
+    }
+    
+    .resource-type {
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      margin-right: 0.75rem;
+      flex-shrink: 0;
+    }
+    
+    .resource-type.js {
+      background-color: #f59e0b;
+    }
+    
+    .resource-type.css {
+      background-color: #3b82f6;
+    }
+    
+    .resource-type.image, .resource-type.img {
+      background-color: #10b981;
+    }
+    
+    .resource-type.font {
+      background-color: #8b5cf6;
+    }
+    
+    .resource-type.other {
+      background-color: #6b7280;
+    }
+    
+    .resource-info {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    .resource-url {
+      font-size: 0.85rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #4b5563;
+    }
+    
+    .resource-stats {
+      font-size: 0.8rem;
+      color: #6b7280;
+      margin-top: 0.25rem;
+    }
+    
+
+    /* Interactive tooltip styles */
+    [data-tooltip] {
+      position: relative;
+      cursor: help;
+    }
+    [data-tooltip]:before {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      margin-bottom: 8px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      background-color: #334155;
+      color: white;
+      text-align: center;
+      font-size: 13px;
+      font-weight: normal;
+      line-height: 1.4;
+      z-index: 100;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s ease;
+    }
+    [data-tooltip]:hover:before {
+      opacity: 1;
+      visibility: visible;
+    }
+  </style>
+  
+
+  <style>
+    /* Request counts styling */
+    .request-counts-summary {
+      display: flex;
+      justify-content: space-around;
+      margin: 20px 0;
+      padding: 15px;
+      background-color: #f0f4f8;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .count-box {
+      text-align: center;
+      padding: 10px 20px;
+    }
+    .count-value {
+      font-size: 28px;
+      font-weight: bold;
+      color: #1976d2;
+    }
+    .count-label {
+      font-size: 14px;
+      color: #546e7a;
+      margin-top: 5px;
+    }
+    
+    /* Section header colors */
+    .summary-section h3 { background-color: #5271FF; color: white; padding: 10px 15px; }
+    .core-web-vitals-section h3 { background-color: #38B000; color: white; padding: 10px 15px; }
+    .mantle-metrics-section .metrics-table thead tr:first-child th { background-color: #FFA500; color: white; }
+    .detailed-performance-section .metrics-table thead tr:first-child th { background-color: #9E0059; color: white; }
+    .detailed-performance-section h3 { background-color: #9E0059; color: white; padding: 10px 15px; }
+    .network-resources-section h3 { background-color: #2D3142; color: white; padding: 10px 15px; }
+  </style>
+  
+<h2 class="section-title">Overall Performance Summary</h2>
+<div class="metrics-section"><div class="request-counts-summary">
+    <div class="count-box">
+      <div class="count-value">77</div>
+      <div class="count-label">Total Transactions</div>
+    </div>
+    <div class="count-box">
+      <div class="count-value">2844</div>
+      <div class="count-label">Total Resource Requests</div>
+    </div>
+  </div><table class="overall-summary-table"><thead><tr><th>Component</th><th>Avg (ms)</th><th>Median (ms)</th><th>p90 (ms)</th><th>% of Total</th></tr></thead><tbody><tr class="total-row"><td>Total Page Load Time</td><td>739.87</td><td>728.00</td><td>912.00</td><td>100.0%</td></tr><tr class="server-row"><td>Server Processing (TTFB)</td><td>156.45</td><td>144.10</td><td>210.00</td><td>21.1%</td></tr><tr class="client-row"><td>Client-Side Processing</td><td>583.42</td><td>583.90</td><td>702.00</td><td>78.9%</td></tr></tbody></table></div><div class="legend">
+
+
+  </div>
+<h2 class="section-title">Core Web Vitals</h2>
+<div class="metrics-section">
+<table class="core-web-vitals-table"><thead><tr><th rowspan="2">Transaction</th><th rowspan="2">Requests</th><th colspan="2">FCP (ms)</th><th colspan="2">LCP (ms)</th><th colspan="2">CLS</th><th colspan="2">TTFB (ms)</th></tr><tr><th>Median</th><th>p90</th><th>Median</th><th>p90</th><th>Median</th><th>p90</th><th>Median</th><th>p90</th></tr></thead><tbody>
+<tr>
+        <td>exclusiveTemplate</td>
+        <td>4</td>
+        <td>548.00</td>
+        <td>556.00</td>
+        <td>548.00</td>
+        <td>556.00</td>
+        <td>0.0000</td>
+        <td>0.0000</td>
+        <td>262.20</td>
+        <td>354.50</td>
+      </tr>
+<tr>
+        <td>homeTemplate</td>
+        <td>3</td>
+        <td>412.00</td>
+        <td>476.00</td>
+        <td>412.00</td>
+        <td>476.00</td>
+        <td>0.0000</td>
+        <td>0.0000</td>
+        <td>143.20</td>
+        <td>163.70</td>
+      </tr>
+<tr>
+        <td>listScCommerceTemplate</td>
+        <td>15</td>
+        <td>460.00</td>
+        <td>496.00</td>
+        <td>460.00</td>
+        <td>496.00</td>
+        <td>0.0000</td>
+        <td>0.0000</td>
+        <td>179.50</td>
+        <td>222.90</td>
+      </tr>
+<tr>
+        <td>listScTemplate</td>
+        <td>21</td>
+        <td>360.00</td>
+        <td>396.00</td>
+        <td>360.00</td>
+        <td>396.00</td>
+        <td>0.0000</td>
+        <td>0.0000</td>
+        <td>143.30</td>
+        <td>153.40</td>
+      </tr>
+<tr>
+        <td>robotsTemplate</td>
+        <td>2</td>
+        <td>220.00</td>
+        <td>220.00</td>
+        <td>220.00</td>
+        <td>220.00</td>
+        <td>0.0000</td>
+        <td>0.0000</td>
+        <td>96.20</td>
+        <td>99.50</td>
+      </tr>
+<tr>
+        <td>structuredContentTemplate</td>
+        <td>27</td>
+        <td>372.00</td>
+        <td>492.00</td>
+        <td>372.00</td>
+        <td>492.00</td>
+        <td>0.0000</td>
+        <td>0.0000</td>
+        <td>137.00</td>
+        <td>155.10</td>
+      </tr>
+<tr>
+        <td>sweepstakesHubTemplate</td>
+        <td>1</td>
+        <td>312.00</td>
+        <td>312.00</td>
+        <td>312.00</td>
+        <td>312.00</td>
+        <td>0.0000</td>
+        <td>0.0000</td>
+        <td>118.90</td>
+        <td>118.90</td>
+      </tr>
+<tr>
+        <td>taxonomyScTemplate</td>
+        <td>4</td>
+        <td>456.00</td>
+        <td>536.00</td>
+        <td>456.00</td>
+        <td>536.00</td>
+        <td>0.0000</td>
+        <td>0.0000</td>
+        <td>189.90</td>
+        <td>254.60</td>
+      </tr>
+</tbody></table></div>
+<h2 class="section-title">Mantle Custom Metrics</h2>
+<div class="metrics-section">
+<table class="mantle-metrics-table"><thead><tr><th rowspan="2">Transaction</th><th rowspan="2">Requests</th>
+<th colspan="2">Mantle First Ad Load (ms)</th>
+<th colspan="2">Mantle First Ad Render (ms)</th>
+<th colspan="2">Mantle First Ad Request (ms)</th>
+<th colspan="2">Mantle First Ad Response (ms)</th>
+<th colspan="2">Mantle GPT Loaded (ms)</th>
+<th colspan="2">Mantle Scroll Depth (%)</th>
+<th colspan="2">Mantle Third Party Fired (ms)</th>
+<th colspan="2">Mantle Deferred Fired (ms)</th>
+<th colspan="2">Mantle First Scroll (ms)</th>
+<th colspan="2">Mantle Ads Rendered (count)</th>
+<th colspan="2">Mantle Ads Viewable (count)</th>
+</tr><tr>
+<th>Avg</th><th>p90</th>
+<th>Avg</th><th>p90</th>
+<th>Avg</th><th>p90</th>
+<th>Avg</th><th>p90</th>
+<th>Avg</th><th>p90</th>
+<th>Min</th><th>Max</th>
+<th>Avg</th><th>p90</th>
+<th>Avg</th><th>p90</th>
+<th>Avg</th><th>p90</th>
+<th>Min</th><th>Max</th>
+<th>Min</th><th>Max</th>
+</tr></thead><tbody>
+<tr><td>exclusiveTemplate</td><td>4</td>
+<td>2560.67</td><td>2976.00</td>
+<td>2542.25</td><td>2976.00</td>
+<td>1869.00</td><td>1985.00</td>
+<td>2530.25</td><td>2962.00</td>
+<td>1047.25</td><td>1167.00</td>
+<td>6637.00</td><td>44948.50</td>
+<td>2555.50</td><td>2991.00</td>
+<td>2557.00</td><td>2992.00</td>
+<td>4472.00</td><td>5117.00</td>
+<td>1.00</td><td>1.00</td>
+<td>1.00</td><td>1.00</td>
+</tr>
+<tr><td>homeTemplate</td><td>3</td>
+<td>2721.33</td><td>2814.00</td>
+<td>2722.00</td><td>2815.00</td>
+<td>1692.00</td><td>1744.00</td>
+<td>2703.00</td><td>2789.00</td>
+<td>969.33</td><td>1026.00</td>
+<td>6977.50</td><td>6977.50</td>
+<td>2737.33</td><td>2835.00</td>
+<td>2738.33</td><td>2836.00</td>
+<td>5076.00</td><td>5234.00</td>
+<td>6.00</td><td>6.00</td>
+<td>1.00</td><td>1.00</td>
+</tr>
+<tr><td>listScCommerceTemplate</td><td>15</td>
+<td>2129.07</td><td>2372.00</td>
+<td>2129.20</td><td>2372.00</td>
+<td>1738.27</td><td>1844.00</td>
+<td>2115.00</td><td>2348.00</td>
+<td>966.47</td><td>1070.00</td>
+<td>9051.00</td><td>20288.00</td>
+<td>2142.33</td><td>2391.00</td>
+<td>2143.73</td><td>2392.00</td>
+<td>4391.93</td><td>4742.00</td>
+<td>4.00</td><td>4.00</td>
+<td>1.00</td><td>1.00</td>
+</tr>
+<tr><td>listScTemplate</td><td>21</td>
+<td>2856.93</td><td>4123.00</td>
+<td>2448.63</td><td>2737.00</td>
+<td>1705.89</td><td>1697.00</td>
+<td>2439.89</td><td>2728.00</td>
+<td>915.52</td><td>979.00</td>
+<td>4444.00</td><td>9998.50</td>
+<td>2459.32</td><td>2747.00</td>
+<td>2460.47</td><td>2748.00</td>
+<td>4438.71</td><td>4847.00</td>
+<td>4.00</td><td>5.00</td>
+<td>1.00</td><td>2.00</td>
+</tr>
+<tr><td>robotsTemplate</td><td>2</td>
+<td>N/A</td><td>N/A</td>
+<td>N/A</td><td>N/A</td>
+<td>N/A</td><td>N/A</td>
+<td>N/A</td><td>N/A</td>
+<td>N/A</td><td>N/A</td>
+<td>N/A</td><td>N/A</td>
+<td>N/A</td><td>N/A</td>
+<td>N/A</td><td>N/A</td>
+<td>N/A</td><td>N/A</td>
+<td>N/A</td><td>N/A</td>
+<td>N/A</td><td>N/A</td>
+</tr>
+<tr><td>structuredContentTemplate</td><td>27</td>
+<td>2773.38</td><td>4178.00</td>
+<td>2502.89</td><td>2852.00</td>
+<td>1736.96</td><td>1825.00</td>
+<td>2494.19</td><td>2839.00</td>
+<td>968.15</td><td>1132.00</td>
+<td>3711.50</td><td>10425.00</td>
+<td>2513.70</td><td>2861.00</td>
+<td>2514.78</td><td>2862.00</td>
+<td>4630.62</td><td>5642.00</td>
+<td>5.00</td><td>5.00</td>
+<td>1.00</td><td>2.00</td>
+</tr>
+<tr><td>sweepstakesHubTemplate</td><td>1</td>
+<td>2374.00</td><td>2374.00</td>
+<td>2374.00</td><td>2374.00</td>
+<td>1638.00</td><td>1638.00</td>
+<td>2359.00</td><td>2359.00</td>
+<td>1092.00</td><td>1092.00</td>
+<td>2598.50</td><td>2598.50</td>
+<td>2389.00</td><td>2389.00</td>
+<td>2390.00</td><td>2390.00</td>
+<td>4130.00</td><td>4130.00</td>
+<td>1.00</td><td>1.00</td>
+<td>1.00</td><td>1.00</td>
+</tr>
+<tr><td>taxonomyScTemplate</td><td>4</td>
+<td>2616.50</td><td>2714.00</td>
+<td>2585.00</td><td>2687.00</td>
+<td>1702.50</td><td>1793.00</td>
+<td>2576.00</td><td>2684.00</td>
+<td>965.25</td><td>1141.00</td>
+<td>1671.50</td><td>5185.00</td>
+<td>2596.75</td><td>2698.00</td>
+<td>2597.75</td><td>2699.00</td>
+<td>4413.00</td><td>4763.00</td>
+<td>1.00</td><td>2.00</td>
+<td>1.00</td><td>1.00</td>
+</tr>
+</tbody></table></div>
+<h2 class="section-title">Detailed Performance Analysis</h2>
+<div class="metrics-section"><table class="transaction-stats-table"><thead><tr><th>Transaction</th><th>Requests</th><th colspan="2">Server Processing Time</th><th colspan="2">Network Transfer Time</th><th colspan="2">DOM Processing Time</th><th colspan="2">Script Execution Time</th><th colspan="2">Script Parsing Time</th><th colspan="2">JavaScript Load Time</th><th colspan="2">CSS Load Time</th><th colspan="2">Image Load Time</th><th colspan="2">Font Load Time</th><th colspan="2">Other Resources Load Time</th><th colspan="2">Total Page Load Time</th></tr><tr><th></th><th>Count</th><th>Avg (ms)</th><th>p90 (ms)</th><th>Avg (ms)</th><th>p90 (ms)</th><th>Avg (ms)</th><th>p90 (ms)</th><th>Avg (ms)</th><th>p90 (ms)</th><th>Avg (ms)</th><th>p90 (ms)</th><th>Avg (ms)</th><th>p90 (ms)</th><th>Avg (ms)</th><th>p90 (ms)</th><th>Avg (ms)</th><th>p90 (ms)</th><th>Avg (ms)</th><th>p90 (ms)</th><th>Avg (ms)</th><th>p90 (ms)</th><th>Avg (ms)</th><th>p90 (ms)</th></tr></thead><tbody><tr class=""><td>exclusiveTemplate</td><td>4</td><td class="server-cell">251.47</td><td class="server-cell">354.50</td><td class="">426.95</td><td class="">536.30</td><td class="">73.68</td><td class="">157.40</td><td class="">64.77</td><td class="">127.90</td><td class="">N/A</td><td class="">N/A</td><td class="">12909.22</td><td class="">13550.00</td><td class="">1407.15</td><td class="">1444.10</td><td class="">4470.25</td><td class="">5779.40</td><td class="">0.00</td><td class="">0.00</td><td class="">21560.30</td><td class="">24002.50</td><td class="client-total-cell">770.25</td><td class="client-total-cell">859.00</td></tr><tr class=""><td>homeTemplate</td><td>3</td><td class="server-cell">148.93</td><td class="server-cell">163.70</td><td class="">276.87</td><td class="">291.00</td><td class="">84.83</td><td class="">126.60</td><td class="">29.00</td><td class="">78.90</td><td class="">N/A</td><td class="">N/A</td><td class="">14366.87</td><td class="">15465.80</td><td class="">1428.77</td><td class="">1660.60</td><td class="">5992.07</td><td class="">8891.50</td><td class="">0.00</td><td class="">0.00</td><td class="">35338.20</td><td class="">40562.00</td><td class="client-total-cell">835.67</td><td class="client-total-cell">912.00</td></tr><tr class=""><td>listScCommerceTemplate</td><td>15</td><td class="server-cell">186.61</td><td class="server-cell">222.90</td><td class="">333.29</td><td class="">409.70</td><td class="">76.95</td><td class="">130.10</td><td class="">27.13</td><td class="">65.40</td><td class="">N/A</td><td class="">N/A</td><td class="">13851.51</td><td class="">17055.60</td><td class="">1473.95</td><td class="">1584.20</td><td class="">5249.81</td><td class="">6469.70</td><td class="">0.00</td><td class="">0.00</td><td class="">31256.13</td><td class="">34517.50</td><td class="client-total-cell">746.73</td><td class="client-total-cell">868.00</td></tr><tr class=""><td>listScTemplate</td><td>21</td><td class="server-cell">144.45</td><td class="server-cell">153.40</td><td class="">244.04</td><td class="">264.70</td><td class="">79.37</td><td class="">96.90</td><td class="">76.58</td><td class="">80.10</td><td class="">N/A</td><td class="">N/A</td><td class="">11292.49</td><td class="">13238.30</td><td class="">1397.43</td><td class="">1531.90</td><td class="">4318.55</td><td class="">6838.60</td><td class="">0.00</td><td class="">0.00</td><td class="">29824.06</td><td class="">35062.80</td><td class="client-total-cell">692.52</td><td class="client-total-cell">851.00</td></tr><tr class=""><td>robotsTemplate</td><td>2</td><td class="server-cell">96.20</td><td class="server-cell">99.50</td><td class="">165.55</td><td class="">166.20</td><td class="">6.60</td><td class="">6.90</td><td class="">0.25</td><td class="">0.30</td><td class="">N/A</td><td class="">N/A</td><td class="">810.00</td><td class="">819.90</td><td class="">767.15</td><td class="">798.10</td><td class="">54.25</td><td class="">61.70</td><td class="">0.00</td><td class="">0.00</td><td class="">0.00</td><td class="">0.00</td><td class="client-total-cell">325.00</td><td class="client-total-cell">339.00</td></tr><tr class=""><td>structuredContentTemplate</td><td>27</td><td class="server-cell">137.44</td><td class="server-cell">155.10</td><td class="">251.35</td><td class="">312.30</td><td class="">96.24</td><td class="">123.90</td><td class="">89.31</td><td class="">60.40</td><td class="">N/A</td><td class="">N/A</td><td class="">12604.00</td><td class="">15114.60</td><td class="">1438.09</td><td class="">1629.00</td><td class="">5422.34</td><td class="">7392.90</td><td class="">0.00</td><td class="">0.00</td><td class="">32811.24</td><td class="">36373.60</td><td class="client-total-cell">760.67</td><td class="client-total-cell">922.00</td></tr><tr class=""><td>sweepstakesHubTemplate</td><td>1</td><td class="server-cell">118.90</td><td class="server-cell">118.90</td><td class="">188.00</td><td class="">188.00</td><td class="">92.40</td><td class="">92.40</td><td class="">1.50</td><td class="">1.50</td><td class="">N/A</td><td class="">N/A</td><td class="">14240.30</td><td class="">14240.30</td><td class="">1439.50</td><td class="">1439.50</td><td class="">6874.30</td><td class="">6874.30</td><td class="">0.00</td><td class="">0.00</td><td class="">24196.10</td><td class="">24196.10</td><td class="client-total-cell">760.00</td><td class="client-total-cell">760.00</td></tr><tr class=""><td>taxonomyScTemplate</td><td>4</td><td class="server-cell">184.78</td><td class="server-cell">254.60</td><td class="">312.55</td><td class="">400.10</td><td class="">84.92</td><td class="">100.30</td><td class="">2.10</td><td class="">2.60</td><td class="">N/A</td><td class="">N/A</td><td class="">12100.78</td><td class="">13346.00</td><td class="">1150.55</td><td class="">1232.20</td><td class="">5372.62</td><td class="">7406.50</td><td class="">0.00</td><td class="">0.00</td><td class="">23371.95</td><td class="">25326.70</td><td class="client-total-cell">850.75</td><td class="client-total-cell">988.00</td></tr></tbody></table></div>
+<h2 class="section-title">Network Resource Analysis</h2>
+<table class="top-resources-table"><thead class="network-head"><tr><th>Transaction</th><th>Total Requests</th><th>Avg Size</th><th>Avg Time</th><th>p90 Time</th><th>Success Rate</th><th>Top 5 Resources (By Avg Size)</th><th>Top 5 Resources (By Avg Time)</th></tr></thead><tbody><tr>
+      <td>exclusiveTemplate</td>
+      <td>149</td>
+      <td>13.3 KB</td>
+      <td>597.70</td>
+      <td>944.50</td>
+      <td>100.0%</td>
+      <td>
+          <div class="resource-details" title="https://www.shape.com/thmb/J7gP2selGVf75aIOMb5m63rMR50=/3000x0/filters:no_upscale():max_bytes(200000):strip_icc():format(webp)/squat-AdobeStock_126675411-0f81d18662564309945eeb66f63db4e2.jpg">
+            <span class="resource-icon css">C</span>
+            <strong>squat-AdobeS...</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 251.1ms | Avg Size: 198222.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://www.shape.com/thmb/nF8jvjK-eukQfZyjKdshofuvx3A=/3000x0/filters:no_upscale():max_bytes(200000):strip_icc():format(webp)/shp-2024-beauty-awards-hero-b461b173aa674d108bee1c25827a2041.jpg">
+            <span class="resource-icon css">C</span>
+            <strong>shp-2024-bea...</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 262.9ms | Avg Size: 188086.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://www.shape.com/thmb/8HvYYC7NH8tZp4CTIYi4laXiGn0=/3000x0/filters:no_upscale():max_bytes(200000):strip_icc():format(webp)/shp-sneaker-awards-primary-dcarr-3x1-0127-2d4dae9892ed459a8af43ab738bcfec8.jpg">
+            <span class="resource-icon css">C</span>
+            <strong>shp-sneaker-...</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 106.6ms | Avg Size: 187650.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://www.shape.com/thmb/QVN-HfSbX3-mus68WNGozStEbus=/3000x0/filters:no_upscale():max_bytes(200000):strip_icc():format(webp)/anna-3-b2a70982b8bd4c49a40b24e1e7eb1653.jpg">
+            <span class="resource-icon css">C</span>
+            <strong>anna-3-b2a70...</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 112.5ms | Avg Size: 155040.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://connect.facebook.net/en_US/fbevents.js">
+            <span class="resource-icon js">J</span>
+            <strong>fbevents.js</strong><br>
+            <small>Reqs: 4 (53 total) | Avg Time: 611.4ms | Avg Size: 76855.0KB | Success: 100%</small>
+          </div>
+        </td><td>
+          <div class="resource-details" title="https://i.liadm.com/sync-container?duid=9ae72f4c5f1c--01jzm5aemx4tt1kts9hypt03g7&appId=a-01b0&euns=0&s=&version=v3.12.0&cd=.shape.com&pv=c326f033-2a1c-4dac-8c1c-78474fe1a834">
+            <span class="resource-icon other">O</span>
+            <strong>sync-container</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 3115.6ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://i.liadm.com/sync-container?duid=9ae72f4c5f1c--01jzm56v7h6aspr5h0m6y7ptdr&appId=a-01b0&euns=0&s=&version=v3.12.0&cd=.shape.com&pv=1a3a390e-28cc-4ccc-971b-333c414940d4">
+            <span class="resource-icon other">O</span>
+            <strong>sync-container</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 3111.5ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://www.google.com/recaptcha/api2/aframe">
+            <span class="resource-icon other">O</span>
+            <strong>api2/aframe</strong><br>
+            <small>Reqs: 1 (22 total) | Avg Time: 1772.2ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://idsync.rlcdn.com/459989.gif?partner_uid=83506bbe-ac95-4431-9b9b-b00fec0c3525">
+            <span class="resource-icon img">I</span>
+            <strong>459989.gif</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 1506.5ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://www.lightboxcdn.com/vendor/b83129aa-f1a4-4092-992d-b496a35c946b/lightbox_inline.js">
+            <span class="resource-icon js">J</span>
+            <strong>lightbox_inl...</strong><br>
+            <small>Reqs: 1 (25 total) | Avg Time: 1500.9ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        </td></tr><tr>
+      <td>homeTemplate</td>
+      <td>114</td>
+      <td>8.8 KB</td>
+      <td>779.41</td>
+      <td>1547.60</td>
+      <td>100.0%</td>
+      <td>
+          <div class="resource-details" title="https://connect.facebook.net/en_US/fbevents.js">
+            <span class="resource-icon js">J</span>
+            <strong>fbevents.js</strong><br>
+            <small>Reqs: 3 (53 total) | Avg Time: 610.3ms | Avg Size: 76855.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://g.3gl.net/jp/7813/v4.0.6/InitialLoadScript.js">
+            <span class="resource-icon js">J</span>
+            <strong>InitialLoadS...</strong><br>
+            <small>Reqs: 3 (63 total) | Avg Time: 1144.2ms | Avg Size: 73092.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://www.shape.com/static/fonts/playfair-display-700.woff2">
+            <span class="resource-icon css">C</span>
+            <strong>playfair-dis...</strong><br>
+            <small>Reqs: 3 (77 total) | Avg Time: 74.0ms | Avg Size: 31352.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://www.shape.com/static/fonts/playfair-display.woff2">
+            <span class="resource-icon css">C</span>
+            <strong>playfair-dis...</strong><br>
+            <small>Reqs: 3 (77 total) | Avg Time: 78.5ms | Avg Size: 28944.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://www.shape.com/static/4.11.0/cache/eNqVVV12piAM3dBwWMS8dhMRonIGiSX4tbP7CWj9OTqUPihJuJeEJIDmBMkZPUFIHrVh1tmCv_R9wk0woJo9GBzJW4xPoAmjsw6CdsHi544oU-DCYaBppoAhsYYoBqFvozIUkkzokSYsvxqJR5hRbdoRENnFI58JEZxXL2eRSjBFquE74C0fRoHlxxhs-W5pOBAfzg4o44huGNPvEcKAb45lexgfjZW1Bk8deGGBLWQ4V6AVd182wMsNMkdBL8l5l_4qMZ3lCrmnOEmGEKIZVVbOcoU3IXNupg5CzsRVbQt23ViJ9RDbqP3iPZuIGAr9qrYtwWQc-EIvPbKrTxV55tU5ubd82VdHEG1Tp_YeP10nJwiq-NOyhfbo5n_t1xMlqdg6VNrvGVcvS8GuJdnFH1G9C3_4orTRLSULPKoluBdG3gr0aK0sKNeep2Ebao7xgz2mHONGuVkqif0J--7769rMdb9dmjc0o8n5YZ1oVtSrWQ7pWX4Ks5lzd2dKR9bbcMco1SOkJWINzSkupoD2V6W8Yuu_QlxROUuD61syxPKedBC_xm92IM3J6ZC-d6DTKBeUmkloh9jA20aVXAZctAZ2L52_Ot2lBpacFgHIeSm7vGi1e4nfF4jbm1vEGjjIxGsFr2JLkUQve1AjRrpq_wD3sXfI.min.css">
+            <span class="resource-icon css">C</span>
+            <strong>eNqVVV12piAM...</strong><br>
+            <small>Reqs: 3 (3 total) | Avg Time: 80.1ms | Avg Size: 25634.0KB | Success: 100%</small>
+          </div>
+        </td><td>
+          <div class="resource-details" title="https://i.liadm.com/sync-container?duid=9ae72f4c5f1c--01jzm55eyskjm66byxjycv1dfa&appId=a-01b0&euns=0&s=&version=v3.12.0&cd=.shape.com&pv=896741df-ee93-426a-870b-d0b113d0047a">
+            <span class="resource-icon other">O</span>
+            <strong>sync-container</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 3757.7ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://i.liadm.com/sync-container?duid=9ae72f4c5f1c--01jzm58asdwp825ct54mjrqwy7&appId=a-01b0&euns=0&s=&version=v3.12.0&cd=.shape.com&pv=bb3252fb-010f-4fcd-8d9b-a885d1c083eb">
+            <span class="resource-icon other">O</span>
+            <strong>sync-container</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 3658.4ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://securepubads.g.doubleclick.net/gampad/ads?pvsid=6884363904954196&correlator=3210645018439163&eid=95353385%2C31093266%2C83321073&output=ldjh&gdfp_req=1&vrg=202506300101&ptt=17&impl=fif&iu_parts=3865%2Cddm.shape.com%2Ctier1%2Ctaxonomy%2Chomepage&enc_prev_ius=0%2F1%2F2%2F3%2F4&prev_iu_szs=300x250%7C300x600%7C300x1050%7C160x600&ifi=4&didk=1449979053&dids=square-flex-3&adfs=705440735&sfv=1-0-45&eri=1&sc=1&cookie_enabled=1&abxe=1&dt=1751949520794&lmt=1751949520&adxs=933&adys=7648&biw=1265&bih=720&scr_x=0&scr_y=0&btvi=3&ucis=4&oid=2&u_his=2&u_h=720&u_w=1280&u_ah=720&u_aw=1280&u_cd=24&u_sd=1&u_tz=-300&dmc=8&bc=31&nvt=1&uach=WyIiLCIiLCIiLCIiLCIiLG51bGwsMCxudWxsLCIiLG51bGwsMF0.&uas=3&url=https%3A%2F%2Fwww.shape.com%2F%3FglobeNoTest&vis=1&psz=300x290&msz=300x290&fws=516&ohw=1265&topics=1&tps=1&htps=10&a3p=EjQKCnB1YmNpZC5vcmcSJGM0YTY0M2FjLWY5NDAtNDIxZi1hYTFiLTc3M2JmMWZjODhlNVgBEsUBCgp1aWRhcGkuY29tErQBQWdBQUVxdGczU21GdVZKZkVnMUk2RHdIOGZDODkwb2htVzhyaHU0SUpsZzlwUVJHaUlLcUphWW5SZXZKZ3IzVjRDZUFuVzgwYU5KMVJvdmgyY2FxTlVQV0t4Q3RWTjNvZHFvRC8xRXJKUVRvbjd2cXRjdFJkMmNEYkttdGZheFFnRndscVg5WVhRVGZQWk1IaGRpdmhSRmI5d25JSFo1ajBPOTk4L2Y0Y0g3UERjdDYvUT09WAESNgoMYWRzZXJ2ZXIub3JnEiQ4Njc3MDVmYy1iNDNkLTQwYmEtYjk2My0zZmMzN2VlYWQ3MDRYARIdCg5lc3AuY3JpdGVvLmNvbRjl2dDC_jJIAFICCGQSPgoFb3BlbngSLGV5SnBJam9pVG5kRWMxUlhjRE5TV0ZOTWJtMVpOVUZ4Vm5Od2R6MDlJbjA9GOze0ML-MkgA&nt=1&psd=WzMxLFtdLG51bGwsM10.&dlt=1751949519298&idt=778&ppid=cb49b4f5-33e9-4a72-9461-352e2cf72a68&prev_scp=floor_id%3D71c5d3ae4a8f45859f3d59ede5c75093%26floor%3D5%26pc%3D1%26leaid%3D156569%26docId%3D5496366%26viewtype%3Dhome%26type%3Dtaxonomy%26t%3D100%26au%3D156569%26tier%3DL%26jny%3D0%26leuid%3D159413951742241%26id%3D5496366%26adconsent%3Dy%26srid%3DXYDcv%26slot%3Dsquare-flex-3%26amznbid%3D1%26amznp%3D1%26vid%3D0&cust_params=ugc%3D0%26hgt%3D720%26wdth%3D1280%26abtest%3Dlcid1%26tax0%3DShape%26rid%3Dn50c3a70708c147e38e4ee7b07080a73004%26sid%3Dn50c3a70708c147e38e4ee7b07080a73004%26w%3DextraLarge%26ab%3D%26CFTL%3Dno_label%26pv%3D1%26muid%3Dcb49b4f5-33e9-4a72-9461-352e2cf72a68&adks=1330903410&frm=20&eoidce=1&pbbce=1&td=1&egid=7856&tan=a2c86274-29b7-4c7f-9495-35521d8e628e&tdf=2">
+            <span class="resource-icon other">O</span>
+            <strong>gampad/ads</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 2220.4ms | Avg Size: 8.3KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://idsync.rlcdn.com/459989.gif?partner_uid=cb49b4f5-33e9-4a72-9461-352e2cf72a68">
+            <span class="resource-icon img">I</span>
+            <strong>459989.gif</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 2206.0ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://securepubads.g.doubleclick.net/gampad/ads?pvsid=2842746864535103&correlator=2954450957436733&eid=95353385%2C31093267%2C83321072&output=ldjh&gdfp_req=1&vrg=202507010101&ptt=17&impl=fif&iu_parts=3865%2Cddm.shape.com%2Ctier1%2Ctaxonomy%2Chomepage&enc_prev_ius=0%2F1%2F2%2F3%2F4&prev_iu_szs=300x250%7C300x600%7C300x1050%7C160x600&ifi=5&didk=1449979026&dids=square-flex-4&adfs=1058791492&sfv=1-0-45&eri=1&sc=1&cookie_enabled=1&abxe=1&dt=1751949426793&lmt=1751949426&adxs=933&adys=10424&biw=1265&bih=720&scr_x=0&scr_y=0&btvi=4&ucis=5&oid=2&u_his=2&u_h=720&u_w=1280&u_ah=720&u_aw=1280&u_cd=24&u_sd=1&u_tz=-300&dmc=8&bc=31&nvt=1&uach=WyIiLCIiLCIiLCIiLCIiLG51bGwsMCxudWxsLCIiLG51bGwsMF0.&uas=3&url=https%3A%2F%2Fwww.shape.com%2F%3FglobeNoTest&vis=1&psz=300x290&msz=300x290&fws=516&ohw=1265&topics=9&tps=9&htps=10&a3p=EjQKCnB1YmNpZC5vcmcSJGU4Y2FiNWJhLWE2ZDEtNDhmMS1iOTg3LWE1MGVjYTc0MWJkYlgBEsUBCgp1aWRhcGkuY29tErQBQWdBQUVxdXZFKysrZDJLWXB2bExTYkx0UC8zN3RJdkkyVWhzdHR1ZDdTNFZCa2orbk5Fa3V1TjJmRHdlVUNTeG1mdGNoNE1zR0ZtdFhmaGw2L1R6aEpJSytyTG9kbjdLenpQRGxkVmZLTjJXTmkzVGVkYmljZno1MW9RQTlteWc4eGVRV3hzbVlySjFVdk5Gb1ZyR2RvUHRpZ0hINHhiUW95RDFDRVFKYk5EcHBYellOUT09WAESHQoOZXNwLmNyaXRlby5jb20YzPrKwv4ySABSAghkEj4KBW9wZW54EixleUpwSWpvaWVtZDRaMjFFVTNoU1NYRlFWeXREVkVRd04zUnRVVDA5SW4wPRjG_crC_jJIAA..&nt=1&psd=WzMxLFtdLG51bGwsM10.&dlt=1751949425264&idt=710&ppid=ecd6bdaa-a2c9-474f-956f-e913eb6d1e01&prev_scp=floor_id%3D71c5d3ae4a8f45859f3d59ede5c75093%26floor%3D5%26pc%3D1%26leaid%3D156569%26docId%3D5496366%26viewtype%3Dhome%26type%3Dtaxonomy%26t%3D100%26au%3D156569%26tier%3DL%26jny%3D0%26leuid%3D159413951742241%26id%3D5496366%26adconsent%3Dy%26srid%3DGUthg%26slot%3Dsquare-flex-4%26amznbid%3D1%26amznp%3D1%26vid%3D0&cust_params=ugc%3D0%26hgt%3D720%26wdth%3D1280%26abtest%3Dlcid1%26tax0%3DShape%26rid%3Dneb091e3253034a8188a2d5d36112977a04%26sid%3Dneb091e3253034a8188a2d5d36112977a04%26w%3DextraLarge%26ab%3D%26CFTL%3Dno_label%26pv%3D1%26muid%3Decd6bdaa-a2c9-474f-956f-e913eb6d1e01&adks=1748068884&frm=20&eoidce=1&pbbce=1&td=1&egid=7856&tan=1eaa28f9-14e5-4686-9b6f-1c0a3c007848&tdf=2">
+            <span class="resource-icon other">O</span>
+            <strong>gampad/ads</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 2032.7ms | Avg Size: 8.1KB | Success: 100%</small>
+          </div>
+        </td></tr><tr>
+      <td>listScCommerceTemplate</td>
+      <td>568</td>
+      <td>9.2 KB</td>
+      <td>644.24</td>
+      <td>1166.00</td>
+      <td>100.0%</td>
+      <td>
+          <div class="resource-details" title="https://connect.facebook.net/en_US/fbevents.js">
+            <span class="resource-icon js">J</span>
+            <strong>fbevents.js</strong><br>
+            <small>Reqs: 13 (53 total) | Avg Time: 727.3ms | Avg Size: 76855.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://g.3gl.net/jp/7813/v4.0.6/InitialLoadScript.js">
+            <span class="resource-icon js">J</span>
+            <strong>InitialLoadS...</strong><br>
+            <small>Reqs: 15 (63 total) | Avg Time: 717.6ms | Avg Size: 73092.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://www.shape.com/thmb/hAsHc0PG7qIA4PHZq3nTMzMUY40=/750x0/filters:no_upscale():max_bytes(150000):strip_icc():format(webp)/best-high-protein-cereals-tout-c8ee46e850c54cdfb01e235969bcc40b.jpg">
+            <span class="resource-icon css">C</span>
+            <strong>best-high-pr...</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 86.5ms | Avg Size: 41070.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://www.shape.com/thmb/t-LIrt8OQ9bP3n-ELGKBWoBXLUU=/750x0/filters:no_upscale():max_bytes(150000):strip_icc():format(webp)/shp-half-marathon-gear-sep-24-test-asics-gel-venture-9-womens-shoe-jthompson-0133-5c2acf90986c4078b99e6d69abeed6f1.jpeg">
+            <span class="resource-icon css">C</span>
+            <strong>shp-half-mar...</strong><br>
+            <small>Reqs: 3 (3 total) | Avg Time: 109.1ms | Avg Size: 38814.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://www.shape.com/static/4.11.0/cache/eNqtWN2WpCgMfqHl-BB7u9d7OwchpUwj2PxUd739BMQSSxqxey6qSEK-EJKA0c466gTrJqqchI5Z2wUJ_NMdJ8REByCzpAxGLTmYktIERnBBVScUh8-nRpyiQm0CPc1agXK2owYFCLcjnYEkrqaYRsK0cjjxyl-BSmEdsYt_id52pbmXYHMzhgpJ7oKDjohI1fR7alNQGaHcFj3j8XeI5abxIfgAOI4ghtH9O1I1wH_oKygwRWHF1iB1TyWiKI9gmqexVe9oVtG7GHBOq847IYV7EBTldAV802bCCAE1bCSByekKbgJrQ0X2VIVI7Nk2Z5eNRV83sg1681JaZgBUhO_ZNhNWM0FlhMcaebKljJRxdUyoLRn31WtqeFOl3iR8ih6PCK3qZ2aXw1Na5qvyu2ntMGPLUCm_sl49LVF3ScmTvASVQr3ZHdMG59pxakfilbiDsSlBRWnFIN6dUg9pqC0MH1aCCz4myEFSCewV9HHt9TINeX-9rkulQh_a4-jMJzHaK-7nnG6LrtMM9QR7e5A92Q7fUpAZKglrmwmOZ_A92-4L_shEzRtW90ZW4NYZz5w3wJ-Prvg4Xv4rwEUrZGoQt1JFTID5TmqzwdE8yN7oF8o3MaA_hNE57Oqa74xKiTWRRT9Jrjy700h6qRme2LDHGW_hd68dXHNndJOMf6eZ91MMUGgVDoIz8G8_zfFC2XO_PoQbib0PF0O4dBVrEM4cSEEKK88Gp5kzwDRe3gfJt6z8sr7P_fUzGIlW7pDTf8N0eE4LNazj3zBZPEnlHCKLHS7DLsM7p9VWCKWJi8ZKsos1gbPUCLs6lh2v_cwPj9lm7WybsUMmLyYWoUCwAjLhvo6SHzq4WPp_155ft7RYWdp9NwI2mB31TuMbEB54rWfg51v__RHU8ZpfiXNI9oZ1lDS8JzCKT1YL8kk0npHlcMRjMOBtDObxhfhaUd7oe1aIyP0wt7mFr4NAWfQaT9WTakGl5W8AvKfsLXP8daqhP1oh6S1qz55dDlxYJrXFUL6w3194Akd3TMVU_wi1v0Q80bW8reoXVPEojdpg26SlE7UukDpnBF6HmMIdQ4SDqSGpaYWuYaWdS0t_2-rlulp6I7MjNemLCGqSXPodI1mbWrJ0ZqJx-axJ7Q3WDjN-6m1OVz-OhC8RJHwiiS5vbA1k3_26x9RHL5JWzIvy8UICFveDt5gwjJTZCh7vUL48TJ_UiXb8-wMxC3zp.min.css">
+            <span class="resource-icon css">C</span>
+            <strong>eNqtWN2WpCgM...</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 54.3ms | Avg Size: 38091.0KB | Success: 100%</small>
+          </div>
+        </td><td>
+          <div class="resource-details" title="https://i.liadm.com/sync-container?duid=9ae72f4c5f1c--01jzm52zm5yprpach835ndy3qc&appId=a-01b0&euns=0&s=&version=v3.12.0&cd=.shape.com&pv=4a729ad8-b48f-49d2-914f-f637492a4350">
+            <span class="resource-icon other">O</span>
+            <strong>sync-container</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 3114.6ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://pixel.adsafeprotected.com/services/pub?anId=926268&slot=%7Bid:square-flex-2,ss:%5B300.250,300.600,160.600%5D,p:3865/ddm.shape.com/tier1/listsc/ApparelandGear%7D&slot=%7Bid:square-fixed-1,ss:%5B300.250%5D,p:3865/ddm.shape.com/tier1/listsc/ApparelandGear%7D&wr=1280.720&sr=1280.720&url=https%253A%252F%252Fwww.shape.com%252Fbest-gifts-nurses-7973850%253FglobeNoTest">
+            <span class="resource-icon other">O</span>
+            <strong>services/pub</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 3001.9ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://pixel.adsafeprotected.com/services/pub?anId=926268&slot=%7Bid:leaderboard-flex-1,ss:%5B728.90,970.90,970.250%5D,p:3865/ddm.shape.com/tier1/listsc/FoodNutrition%7D&slot=%7Bid:square-flex-1,ss:%5B300.250,300.600,300.1050,160.600%5D,p:3865/ddm.shape.com/tier1/listsc/FoodNutrition%7D&wr=1280.720&sr=1280.720&url=https%253A%252F%252Fwww.shape.com%252Fhigh-protein-cereal-6834171%253FglobeNoTest">
+            <span class="resource-icon other">O</span>
+            <strong>services/pub</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 3000.7ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://gum.criteo.com/syncframe?origin=publishertagids&topUrl=www.shape.com#{%22bundle%22:{%22origin%22:0},%22optout%22:{%22value%22:false,%22origin%22:0},%22tld%22:%22shape.com%22,%22topUrl%22:%22www.shape.com%22,%22version%22:161,%22origin%22:%22publishertagids%22,%22requestId%22:%220.49698527652008506%22}">
+            <span class="resource-icon other">O</span>
+            <strong>syncframe</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 2468.7ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://btloader.com/trustedIframe.html?o=5657833865478144&tid=2JE49fk6-fE5h5i9kXX-97e8529738&upapi=true">
+            <span class="resource-icon other">O</span>
+            <strong>trustedIfram...</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 2174.1ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        </td></tr><tr>
+      <td>listScTemplate</td>
+      <td>784</td>
+      <td>9.2 KB</td>
+      <td>614.11</td>
+      <td>1263.00</td>
+      <td>100.0%</td>
+      <td>
+          <div class="resource-details" title="https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202506260101/pubads_impl.js">
+            <span class="resource-icon js">J</span>
+            <strong>pubads_impl.js</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 221.1ms | Avg Size: 174291.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202507010101/pubads_impl.js?cb=31093267">
+            <span class="resource-icon js">J</span>
+            <strong>pubads_impl.js</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 231.1ms | Avg Size: 174219.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://www.shape.com/static/4.11.0/static/cache/eNqlltFu2zAMRX9oQdAC-4Csy4YAC9o12d5liXbZyKJAUU68rx-TdcNeBpjaUxyDR5RJ6V6uizhBvx4p1Ahl3dUUrr-vZZ0ZOgz6ELDI27-VJ4Z366WQi5HOGy84oSAUAyhlk1ycNbhsgssCvBz2lBJ42YXDXARGE1ggyd4lN8CoT0ffG2hGAbJnDdDVYcA0GJA-b8IBeAL-jgFoOTlAAkbfXlx05VnCE9OkiS1ceG8vjaZIgjJ_wXSy0xEn2CXRJexsdsgNlJYWPkUiNpz1XLu3cgZ7Rpawv8UsR8qL45ZU4vsHSsIUlzMVw709U03YY8sWawHtmkFmck5wqeUDBvtFuLRQ2uzxGtnCcu1QJaoFFQlNGGOOELGXFpoypKYi-ZeaTkarmRDOmVgMUsgAYbboO2jgBCuGpNIHvNLXOTrDEq7d08b8Hz5mKEqWb4KxmLzISFzGaCQK_gAjospzt8VgI-5txN8GY-hOZT1BfjZ-kOAIVOVrhWq4FtS96ij0uTo27DDQ6DA96nTB6kpHeiaSj7d3bcp_uDmO8f4vDz_BfCa2NO637htb4J3AQDwf2aUSlaG016VMo5tc2Z54fHLsRusOVOA6NWHtjM11urK96DktuuNis9PDnLy1TL_mb821S71hNq38D134E7m9gK_XhX8CZdrfRA.js">
+            <span class="resource-icon js">J</span>
+            <strong>eNqlltFu2zAM...</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 128.0ms | Avg Size: 145975.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://www.shape.com/thmb/GOtdQsZEZbJAJJRQcXaz1SZE4SI=/750x0/filters:no_upscale():max_bytes(150000):strip_icc():format(webp)/Chili-GettyImages-1316423047-2000-d91315010e504d3e9d1dfe6696dbeb2c.jpg">
+            <span class="resource-icon css">C</span>
+            <strong>Chili-GettyI...</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 197.4ms | Avg Size: 133794.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://connect.facebook.net/en_US/fbevents.js">
+            <span class="resource-icon js">J</span>
+            <strong>fbevents.js</strong><br>
+            <small>Reqs: 12 (53 total) | Avg Time: 608.1ms | Avg Size: 76855.0KB | Success: 100%</small>
+          </div>
+        </td><td>
+          <div class="resource-details" title="https://i.liadm.com/sync-container?duid=9ae72f4c5f1c--01jzm5avykc56580gh22sqvdvj&appId=a-01b0&euns=0&s=&version=v3.12.0&cd=.shape.com&pv=f21f7b08-96e5-4402-a42e-5392b351cfde">
+            <span class="resource-icon other">O</span>
+            <strong>sync-container</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 3613.4ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://i.liadm.com/sync-container?duid=9ae72f4c5f1c--01jzm59c4q262x66xht8039jxd&appId=a-01b0&euns=0&s=&version=v3.12.0&cd=.shape.com&pv=9368ed0e-8afb-4520-a6cb-3b7e6bf272e5">
+            <span class="resource-icon other">O</span>
+            <strong>sync-container</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 3316.3ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://i.liadm.com/sync-container?duid=9ae72f4c5f1c--01jzm53aegntp5mk4w4110zcvs&appId=a-01b0&euns=0&s=&version=v3.12.0&cd=.shape.com&pv=e4ceed2d-030e-4614-84c1-3a81c8d8c4ee">
+            <span class="resource-icon other">O</span>
+            <strong>sync-container</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 3176.0ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://i.liadm.com/sync-container?duid=9ae72f4c5f1c--01jzm561q0zt8g4e683gjsyfh8&appId=a-01b0&euns=0&s=&version=v3.12.0&cd=.shape.com&pv=4d19a37c-1e71-4203-8b8e-f281f1043f15">
+            <span class="resource-icon other">O</span>
+            <strong>sync-container</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 3106.2ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://i.liadm.com/sync-container?duid=9ae72f4c5f1c--01jzm5bgtw7eny43mpbre0dc8m&appId=a-01b0&euns=0&s=&version=v3.12.0&cd=.shape.com&pv=53da7f5b-2ecd-40da-a3a4-1f645e929758">
+            <span class="resource-icon other">O</span>
+            <strong>sync-container</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 2887.5ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        </td></tr><tr>
+      <td>robotsTemplate</td>
+      <td>16</td>
+      <td>16.1 KB</td>
+      <td>203.93</td>
+      <td>482.50</td>
+      <td>100.0%</td>
+      <td>
+          <div class="resource-details" title="https://securepubads.g.doubleclick.net/tag/js/gpt.js">
+            <span class="resource-icon js">J</span>
+            <strong>js/gpt.js</strong><br>
+            <small>Reqs: 2 (30 total) | Avg Time: 336.1ms | Avg Size: 34750.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://www.shape.com/static/fonts/playfair-display-700.woff2">
+            <span class="resource-icon css">C</span>
+            <strong>playfair-dis...</strong><br>
+            <small>Reqs: 2 (77 total) | Avg Time: 64.2ms | Avg Size: 31352.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://www.shape.com/static/fonts/playfair-display.woff2">
+            <span class="resource-icon css">C</span>
+            <strong>playfair-dis...</strong><br>
+            <small>Reqs: 2 (77 total) | Avg Time: 62.2ms | Avg Size: 28944.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://www.shape.com/static/fonts/coresansc45-webfont.woff2">
+            <span class="resource-icon css">C</span>
+            <strong>coresansc45-...</strong><br>
+            <small>Reqs: 2 (77 total) | Avg Time: 71.1ms | Avg Size: 17552.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://www.shape.com/static/fonts/coresansc65-webfont.woff2">
+            <span class="resource-icon css">C</span>
+            <strong>coresansc65-...</strong><br>
+            <small>Reqs: 2 (77 total) | Avg Time: 60.5ms | Avg Size: 17216.0KB | Success: 100%</small>
+          </div>
+        </td><td>
+          <div class="resource-details" title="https://www.googletagmanager.com/gtag/js?id=G-E4CH1QDQV8&l=dataLayer&cx=c">
+            <span class="resource-icon css">C</span>
+            <strong>gtag/js</strong><br>
+            <small>Reqs: 2 (77 total) | Avg Time: 509.2ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://www.googletagmanager.com/gtm.js?id=GTM-P3X3VT7">
+            <span class="resource-icon js">J</span>
+            <strong>gtm.js</strong><br>
+            <small>Reqs: 2 (69 total) | Avg Time: 473.9ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://securepubads.g.doubleclick.net/tag/js/gpt.js">
+            <span class="resource-icon js">J</span>
+            <strong>js/gpt.js</strong><br>
+            <small>Reqs: 2 (30 total) | Avg Time: 336.1ms | Avg Size: 33.9KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://www.shape.com/static/fonts/coresansc45-webfont.woff2">
+            <span class="resource-icon css">C</span>
+            <strong>coresansc45-...</strong><br>
+            <small>Reqs: 2 (77 total) | Avg Time: 71.1ms | Avg Size: 17.1KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://www.shape.com/static/fonts/playfair-display-700.woff2">
+            <span class="resource-icon css">C</span>
+            <strong>playfair-dis...</strong><br>
+            <small>Reqs: 2 (77 total) | Avg Time: 64.2ms | Avg Size: 30.6KB | Success: 100%</small>
+          </div>
+        </td></tr><tr>
+      <td>structuredContentTemplate</td>
+      <td>1028</td>
+      <td>8.3 KB</td>
+      <td>672.98</td>
+      <td>1307.30</td>
+      <td>100.0%</td>
+      <td>
+          <div class="resource-details" title="https://www.shape.com/thmb/qKLRykWszxE7FXsVacIWdM8cynE=/750x0/filters:no_upscale():max_bytes(150000):strip_icc():format(webp)/10-Pushups-a-Day-2eb31215c4034357877879a13f3a49d7.jpg">
+            <span class="resource-icon css">C</span>
+            <strong>10-Pushups-a...</strong><br>
+            <small>Reqs: 2 (2 total) | Avg Time: 144.9ms | Avg Size: 92536.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://connect.facebook.net/en_US/fbevents.js">
+            <span class="resource-icon js">J</span>
+            <strong>fbevents.js</strong><br>
+            <small>Reqs: 17 (53 total) | Avg Time: 612.7ms | Avg Size: 76855.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://g.3gl.net/jp/7813/v4.0.6/InitialLoadScript.js">
+            <span class="resource-icon js">J</span>
+            <strong>InitialLoadS...</strong><br>
+            <small>Reqs: 20 (63 total) | Avg Time: 716.4ms | Avg Size: 73092.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://www.shape.com/thmb/G52f0e47fxaboDPuGbRU3fHRPIc=/750x0/filters:no_upscale():max_bytes(150000):strip_icc():format(webp)/exfolikate-review-photo-2000-23bdc1ce6a1f4c2a902b0a80c3752d62.jpg">
+            <span class="resource-icon css">C</span>
+            <strong>exfolikate-r...</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 119.0ms | Avg Size: 61720.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://www.shape.com/thmb/_LIyd_qXgo7xO5rb2cpeHxTR7B8=/750x0/filters:no_upscale():max_bytes(150000):strip_icc():format(webp)/How-to-Build-Your-Own-Workout-Routine-for-Weight-Loss-GettyImages-926978500--2000-ee899a511ee64b30bb7ea218c0e7a938.jpg">
+            <span class="resource-icon css">C</span>
+            <strong>How-to-Build...</strong><br>
+            <small>Reqs: 2 (2 total) | Avg Time: 147.2ms | Avg Size: 59376.0KB | Success: 100%</small>
+          </div>
+        </td><td>
+          <div class="resource-details" title="https://i.liadm.com/sync-container?duid=9ae72f4c5f1c--01jzm594jme35m54v46p5vsx9m&appId=a-01b0&euns=0&s=&version=v3.12.0&cd=.shape.com&pv=c00e85dc-f071-4ab7-997d-62768395b790">
+            <span class="resource-icon other">O</span>
+            <strong>sync-container</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 4413.4ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://i.liadm.com/sync-container?duid=9ae72f4c5f1c--01jzm56mxy3cbe7hke17xt6we5&appId=a-01b0&euns=0&s=&version=v3.12.0&cd=.shape.com&pv=1c2c699b-f039-417f-8b6b-bb9b694d1466">
+            <span class="resource-icon other">O</span>
+            <strong>sync-container</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 3550.5ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://i.liadm.com/sync-container?duid=9ae72f4c5f1c--01jzm5a19wfeh3ayb8ygrf3r3j&appId=a-01b0&euns=0&s=&version=v3.12.0&cd=.shape.com&pv=dce30c69-56fd-4e23-ba65-03e0fdccbf0a">
+            <span class="resource-icon other">O</span>
+            <strong>sync-container</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 3377.8ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://i.liadm.com/sync-container?duid=9ae72f4c5f1c--01jzm594n9v1ra4actng5r4e7p&appId=a-01b0&euns=0&s=&version=v3.12.0&cd=.shape.com&pv=5fe7b6f0-a847-421a-bb8d-86a4c17d3f91">
+            <span class="resource-icon other">O</span>
+            <strong>sync-container</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 3333.5ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://i.liadm.com/sync-container?duid=9ae72f4c5f1c--01jzm554wsznxh2bmyrky6q0zh&appId=a-01b0&euns=0&s=&version=v3.12.0&cd=.shape.com&pv=33310239-3e11-4950-8c66-6191431d425e">
+            <span class="resource-icon other">O</span>
+            <strong>sync-container</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 3307.7ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        </td></tr><tr>
+      <td>sweepstakesHubTemplate</td>
+      <td>37</td>
+      <td>8.7 KB</td>
+      <td>722.37</td>
+      <td>1369.10</td>
+      <td>100.0%</td>
+      <td>
+          <div class="resource-details" title="https://connect.facebook.net/en_US/fbevents.js">
+            <span class="resource-icon js">J</span>
+            <strong>fbevents.js</strong><br>
+            <small>Reqs: 1 (53 total) | Avg Time: 730.7ms | Avg Size: 76855.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://g.3gl.net/jp/7813/v4.0.6/InitialLoadScript.js">
+            <span class="resource-icon js">J</span>
+            <strong>InitialLoadS...</strong><br>
+            <small>Reqs: 1 (63 total) | Avg Time: 809.2ms | Avg Size: 73092.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://securepubads.g.doubleclick.net/tag/js/gpt.js">
+            <span class="resource-icon js">J</span>
+            <strong>js/gpt.js</strong><br>
+            <small>Reqs: 1 (30 total) | Avg Time: 668.5ms | Avg Size: 34787.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://www.shape.com/static/fonts/playfair-display-700.woff2">
+            <span class="resource-icon css">C</span>
+            <strong>playfair-dis...</strong><br>
+            <small>Reqs: 1 (77 total) | Avg Time: 66.5ms | Avg Size: 31352.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://www.shape.com/static/fonts/playfair-display.woff2">
+            <span class="resource-icon css">C</span>
+            <strong>playfair-dis...</strong><br>
+            <small>Reqs: 1 (77 total) | Avg Time: 72.8ms | Avg Size: 28944.0KB | Success: 100%</small>
+          </div>
+        </td><td>
+          <div class="resource-details" title="https://hosted.pushplanet.com/ddmsweepstakes/hub?brandId=shp&enteredSweepId=shp-25krelaxrefresh2025">
+            <span class="resource-icon other">O</span>
+            <strong>ddmsweepstak...</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 2005.1ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://btloader.com/trustedIframe.html?o=5657833865478144&tid=rxXDmGGFV9-VkELIRAu7-97e853d9d6&upapi=true">
+            <span class="resource-icon other">O</span>
+            <strong>trustedIfram...</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 1716.4ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://gum.criteo.com/syncframe?origin=publishertagids&topUrl=www.shape.com#{%22bundle%22:{%22origin%22:0},%22optout%22:{%22value%22:false,%22origin%22:0},%22tld%22:%22shape.com%22,%22topUrl%22:%22www.shape.com%22,%22version%22:161,%22origin%22:%22publishertagids%22,%22requestId%22:%220.7477046600435047%22}">
+            <span class="resource-icon other">O</span>
+            <strong>syncframe</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 1459.6ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://ep2.adtrafficquality.google/sodar/sodar2/237/runner.html">
+            <span class="resource-icon other">O</span>
+            <strong>runner.html</strong><br>
+            <small>Reqs: 1 (30 total) | Avg Time: 1369.1ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://idsync.rlcdn.com/459989.gif?partner_uid=e3d5b5d5-8d9f-459a-8885-83712dea48bf">
+            <span class="resource-icon img">I</span>
+            <strong>459989.gif</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 1093.4ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        </td></tr><tr>
+      <td>taxonomyScTemplate</td>
+      <td>148</td>
+      <td>8.2 KB</td>
+      <td>567.57</td>
+      <td>966.70</td>
+      <td>100.0%</td>
+      <td>
+          <div class="resource-details" title="https://connect.facebook.net/en_US/fbevents.js">
+            <span class="resource-icon js">J</span>
+            <strong>fbevents.js</strong><br>
+            <small>Reqs: 3 (53 total) | Avg Time: 593.7ms | Avg Size: 76855.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://g.3gl.net/jp/7813/v4.0.6/InitialLoadScript.js">
+            <span class="resource-icon js">J</span>
+            <strong>InitialLoadS...</strong><br>
+            <small>Reqs: 4 (63 total) | Avg Time: 647.8ms | Avg Size: 73092.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://securepubads.g.doubleclick.net/gampad/ads?pvsid=7336509726204490&correlator=4222172922978870&eid=95353385%2C83321073&output=ldjh&gdfp_req=1&vrg=202506260101&ptt=17&impl=fif&iu_parts=3865%2Cddm.shape.com%2Ctier1%2Ctaxonomysc%2CFitness&enc_prev_ius=0%2F1%2F2%2F3%2F4&prev_iu_szs=728x90%7C970x90%7C970x250&ifi=1&didk=2434992226&dids=leaderboard-flex-1&adfs=3098781848&sfv=1-0-45&eri=1&sc=1&cookie_enabled=1&abxe=1&dt=1751949426751&lmt=1751949426&adxs=269&adys=160&biw=1265&bih=720&scr_x=0&scr_y=0&btvi=0&ucis=1&oid=2&u_his=2&u_h=720&u_w=1280&u_ah=720&u_aw=1280&u_cd=24&u_sd=1&u_tz=-300&dmc=8&bc=31&nvt=1&uach=WyIiLCIiLCIiLCIiLCIiLG51bGwsMCxudWxsLCIiLG51bGwsMF0.&uas=3&url=https%3A%2F%2Fwww.shape.com%2Fcelebrities%2Fcelebrity-workouts%3FglobeNoTest&vis=1&psz=1265x-1&msz=1265x-1&fws=516&ohw=1265&topics=1&tps=1&htps=10&a3p=EjQKCnB1YmNpZC5vcmcSJDQ3ZDFkYTFhLWQ4MzEtNDkxNi05NTA1LWNhODllZmFkZjA3OVgBEsUBCgp1aWRhcGkuY29tErQBQWdBQUVxczF5VkpJZ2o5U0ovVERreGtWdmppc2d2ODI4ait1clo2V1dkSnY3NmgvVkYzVElLVDhJK2JmeTJpTVhzbVFoSmxNNjM0VDRsTTNTanljMjZCb0NJS2JQL2prcGVUREtjSzFtc0Y5L2l5cC9GQkZ1Y3M5dXdOeEhVUHJ2eUt1N1EyYXRVQ1ZVMXlVQitWTVNYaWZpc2ZBbFQwM094YVlaaFRWUlhnMXB4TTFPUT09WAESNwoNYmlkc3dpdGNoLm5ldBIkNDU2N2JkYzgtNzEwMS00ZjExLWJlNTgtNzY0YjE2MjllMWE5WAESNgoMcHVibWF0aWMuY29tEiQ2QzJCOEI3RS0wOTJELTQyRkItOEM0OC0wODAxOUM5ODY0NEJYARI2CgxhZHNlcnZlci5vcmcSJDc1MjRiNDU0LWFkOGEtNDcwMC1iYTQyLTg1NTFiMzM2NTk3ZlgBEj8KHGxpdmVpbnRlbnQuaW5kZXhleGNoYW5nZS5jb20SHVphVXhJWXNUa2dlMVlFZnFvUGd0SEFBQSY1NDQzWAESJwoScnViaWNvbnByb2plY3QuY29tEg9MUVlZWEdCNi00LTUwME9YARJlCgl5YWhvby5jb20SVjN4NjEtcnJhaE1FMF8wb2lvNC1aZlQ1ODEtQmJuNUJXc1gzYnozREZSY3o3YV9ESzZnNmR1b0EzcXpROXdJZlVvSzJTOFhSaUwtZUczd2drSGI0b3h3WAESHQoOZXNwLmNyaXRlby5jb20Y-frKwv4ySABSAghkEj4KBW9wZW54EixleUpwSWpvaWN6Qm9OWEZEZHpGVWExTm9kR2xWVmtVNFZERlZkejA5SW4wPRje_8rC_jJIABKHAQoObGl2ZWludGVudC5jb20SczE4LTVzeFZPU1BIWkZUVWpNc3d2SlF4cnhxVlpmcTJPOS8xR282Q2tTd0FsOVRjMjBrcjEya1ZOQVhDY0xQWFMwaW5JRUs3b2l1NmFVamNCN2RNeXhqcEtLMjhuODRVc1ZyZEJsOEUyaThMN09RenJ3PT1YARI1ChlsaXZlaW50ZW50LnRyaXBsZWxpZnQuY29tEhY0NDU4MjI4ODU2OTY0MDgxNDAyNDA5WAESMwoJb3BlbngubmV0EiQ5N2ViMzU1Mi1hN2FhLTQ4NGMtYTYxZi00NTNhZTk2ZTg0MDBYAQ..&nt=1&psd=WzMxLFtdLG51bGwsM10.&dlt=1751949425330&idt=685&ppid=838cd846-10e9-4164-ba26-de4d54a3743c&prev_scp=floor_id%3D0b13524086ed45b28a7f7765ad7502ce%26floor%3D20%26pc%3D1%26leaid%3D250694%26docId%3D5509560%26viewtype%3Dtaxonomy%26type%3Dtaxonomysc%26tax1%3Dshp_Fitness%26tax2%3Dshp_Workouts%26t%3D140%26au%3D250694%26tier%3DL%26jny%3D0%26leuid%3D153546959002053%26id%3D5509560%26tax3%3Dshp_CelebrityWorkouts%26adconsent%3Dy%26srid%3DWj4sd%26slot%3Dleaderboard-flex-1%26amznbid%3D1%26amznp%3D1%26vid%3D0&cust_params=ugc%3D0%26hgt%3D720%26wdth%3D1280%26abtest%3Dlcid1%26tax0%3DShape%26rid%3Dn6e7ae397e2364b03a1ce7092376f46e304%26sid%3Dn6e7ae397e2364b03a1ce7092376f46e304%26w%3DextraLarge%26ab%3D%26CFTL%3Dno_label%26pv%3D1%26muid%3D838cd846-10e9-4164-ba26-de4d54a3743c&adks=2280124597&frm=20&eoidce=1&pbbce=1&td=1&egid=7856&tan=8804f6ae-a0a2-4b02-8c4c-9800e3548e8c&tdf=2">
+            <span class="resource-icon other">O</span>
+            <strong>gampad/ads</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 770.4ms | Avg Size: 38158.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://securepubads.g.doubleclick.net/tag/js/gpt.js">
+            <span class="resource-icon js">J</span>
+            <strong>js/gpt.js</strong><br>
+            <small>Reqs: 1 (30 total) | Avg Time: 427.6ms | Avg Size: 34751.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://www.shape.com/static/fonts/playfair-display-700.woff2">
+            <span class="resource-icon css">C</span>
+            <strong>playfair-dis...</strong><br>
+            <small>Reqs: 4 (77 total) | Avg Time: 54.3ms | Avg Size: 31352.0KB | Success: 100%</small>
+          </div>
+        </td><td>
+          <div class="resource-details" title="https://i.liadm.com/sync-container?duid=9ae72f4c5f1c--01jzm52tmxx66eyz6s740tg98a&appId=a-01b0&euns=0&s=&version=v3.12.0&cd=.shape.com&pv=5996b605-75fa-43a5-af71-c36974405181">
+            <span class="resource-icon other">O</span>
+            <strong>sync-container</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 2312.7ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://id5-sync.com/i/957/8.gif?o=api&id5id=ID5*3q9_01f6iBlQaf7hh2DGBdaF3PoyQ5t7H20aecepgAkuZinnoBUzz8beO0oBUDkX&gdpr_consent=undefined&gdpr=false">
+            <span class="resource-icon img">I</span>
+            <strong>957/8.gif</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 1481.3ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://google-bidout-d.openx.net/w/1.0/pd?plm=5">
+            <span class="resource-icon other">O</span>
+            <strong>1.0/pd</strong><br>
+            <small>Reqs: 4 (67 total) | Avg Time: 1430.7ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://idsync.rlcdn.com/459989.gif?partner_uid=fa12e0ec-6f06-4c82-8041-aeb00f30d032">
+            <span class="resource-icon img">I</span>
+            <strong>459989.gif</strong><br>
+            <small>Reqs: 1 (1 total) | Avg Time: 1309.2ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        
+          <div class="resource-details" title="https://ep2.adtrafficquality.google/sodar/sodar2/237/runner.html">
+            <span class="resource-icon other">O</span>
+            <strong>runner.html</strong><br>
+            <small>Reqs: 1 (30 total) | Avg Time: 1165.5ms | Avg Size: 0.0KB | Success: 100%</small>
+          </div>
+        </td></tr></tbody></table>
+
+    <div class="metrics-section">
+      <div class="resource-type-legend">
+        <div class="resource-type-legend-item" style="margin-right: 1.5rem;">
+          <span class="resource-type js" style="margin-right: 0.5rem;">J</span>
+          <span>JS</span>
+        </div>
+        <div class="resource-type-legend-item" style="margin-right: 1.5rem;">
+          <span class="resource-type css" style="margin-right: 0.5rem;">C</span>
+          <span>CSS</span>
+        </div>
+        <div class="resource-type-legend-item" style="margin-right: 1.5rem;">
+          <span class="resource-type image" style="margin-right: 0.5rem;">I</span>
+          <span>Image</span>
+        </div>
+        <div class="resource-type-legend-item" style="margin-right: 1.5rem;">
+          <span class="resource-type font" style="margin-right: 0.5rem;">F</span>
+          <span>Font</span>
+        </div>
+        <div class="resource-type-legend-item" style="margin-right: 1.5rem;">
+          <span class="resource-type other" style="margin-right: 0.5rem;">O</span>
+          <span>Other</span>
+        </div>
+        <div class="resource-type-legend-item" style="margin-right: 1.5rem;">
+          <span>TTFB: Time to First Byte</span>
+        </div>
+        <div class="resource-type-legend-item">
+          <span>TTLB: Time to Last Byte</span>
+        </div>
+      </div>
+      
+      <div class="metrics-explanation">
+        <h4>Metrics Explanation</h4>
+        
+        <div class="metrics-explanation-grid">
+          <div class="metrics-explanation-item">
+            <h5>TTFB (Time To First Byte)</h5>
+            <p>The time from the start of the request until the first byte of the response is received.</p>
+          </div>
+          
+          <div class="metrics-explanation-item">
+            <h5>TTLB (Time To Last Byte)</h5>
+            <p>The total time from the start of the request until the complete response is received.</p>
+          </div>
+          
+          <div class="metrics-explanation-item">
+            <h5>p90 Time</h5>
+            <p>The 90th percentile response time - 90% of requests complete faster than this value.</p>
+          </div>
+          
+          <div class="metrics-explanation-item">
+            <h5>Success Rate</h5>
+            <p>Percentage of requests that returned a successful HTTP status code (200-399).</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  

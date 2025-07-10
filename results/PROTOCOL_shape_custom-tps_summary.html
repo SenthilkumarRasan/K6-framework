@@ -1,0 +1,2618 @@
+
+  <style>
+    /* Base Styles */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.6;
+      color: #374151;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+      background-color: #f9fafb;
+    }
+    
+    h1, h2, h3, h4 {
+      color: #111827;
+      margin-top: 1.5em;
+      margin-bottom: 0.75em;
+    }
+    
+    h1 {
+      font-size: 1.75rem;
+      border-bottom: 3px solid #4f46e5;
+      padding-bottom: 0.5rem;
+      display: inline-block;
+    }
+    
+    h3.section-header {
+      font-size: 1.25rem;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid;
+    }
+    
+    h3.section-header.overall-summary-header {
+      border-color: #4338ca;
+    }
+    
+    h3.section-header.html-performance-header {
+      border-color: #065f46;
+    }
+    
+    h3.section-header.nonhtml-performance-header {
+      border-color: #4338ca;
+    }
+    
+    h3.section-header.resource-type-header {
+      border-color: #991b1b;
+    }
+    
+    h3.section-header.network-analysis-header {
+      border-color: #6b21a8;
+    }
+
+    /* Modern Table Styling */
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      margin-bottom: 32px;
+      font-size: 14px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    
+    th {
+      color: #fff;
+      padding: 14px 16px;
+      text-align: left;
+      font-weight: 600;
+      letter-spacing: 0.025em;
+    }
+    
+    /* Table header gradient styles for different table types */
+    .overall-summary-table th { background: linear-gradient(to right, #3730a3, #4338ca); }
+    .html-performance-table th { background: linear-gradient(to right, #065f46, #047857); }
+    .nonhtml-performance-table th { background: linear-gradient(to right, #4338ca, #4f46e5); }
+    .resource-type-table th { background: linear-gradient(to right, #991b1b, #b91c1c); }
+    .network-analysis-table th { background: linear-gradient(to right, #6b21a8, #7e22ce); }
+    
+    /* Table header gradient styles for different table types */
+    .core-web-vitals-table th { background: linear-gradient(to right, #991b1b, #b91c1c); }
+    .mantle-metrics-table th { background: linear-gradient(to right, #b45309, #d97706); }
+    .pageload-table th { background: linear-gradient(to right, #065f46, #047857); }
+    .protocol-ttfb-table th { background: linear-gradient(to right, #4338ca, #4f46e5); }
+    .protocol-ttlb-table th { background: linear-gradient(to right, #6b21a8, #7e22ce); }
+    .resource-type-table th { background: linear-gradient(to right, #991b1b, #b91c1c); }
+    .top-resources-table th { background: linear-gradient(to right, #6b21a8, #7e22ce); }
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid #e5e7eb;
+      background-color: #fff;
+      transition: background-color 0.2s ease;
+    }
+    tr:nth-child(even) td { 
+      background-color: #f9fafb;
+    }
+    /* Enhanced row hover effect with data visualization */
+    tr {
+      position: relative;
+    }
+    tr:hover td { 
+      background-color: #eef2ff !important;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    /* Add data visualization with bars for numeric cells */
+    td:nth-child(n+2) {
+      position: relative;
+    }
+    
+    td:nth-child(n+2)::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      height: 3px;
+      width: 0;
+      background: linear-gradient(to right, #3b82f6, #10b981);
+      opacity: 0.5;
+      transition: width 0.3s ease;
+    }
+    
+    /* Show the bars on hover */
+    tr:hover td:nth-child(n+2)::before {
+      width: calc(100% * var(--data-percent, 0.5));
+    }
+    .metrics-section {
+      margin-bottom: 32px;
+    }
+
+    /* Enhanced Section Title Style */
+    .section-title, .metrics-header, .section-header {
+      color: #111827;
+      font-size: 22px;
+      font-weight: 700;
+      margin: 48px 0 16px 0;
+      position: relative;
+      display: inline-block;
+      padding-bottom: 8px;
+      background-color: transparent !important;
+      border: none !important;
+    }
+    .section-title::after, .metrics-header::after, .section-header::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 60px;
+      height: 4px;
+      background: linear-gradient(90deg, #6366f1, #8b5cf6);
+      border-radius: 4px;
+    }
+
+    /* Subtle Medium Table Header Colors */
+    .overall-head th, .overall-table th, .overall-summary-table th { 
+      background: linear-gradient(to right, #4338ca, #4f46e5) !important; /* subtle indigo */
+    }
+    .html-head th, .timing-breakdown th { 
+      background: linear-gradient(to right, #065f46, #047857) !important; /* subtle green */
+    }
+    .nonhtml-head th, .mantle-metrics-table th, .transaction-stats-table th { 
+      background: linear-gradient(to right, #b45309, #d97706) !important; /* subtle amber */
+    }
+    .resource-head th, .resource-type-table th, .core-web-vitals-table th { 
+      background: linear-gradient(to right, #991b1b, #b91c1c) !important; /* subtle red */
+    }
+    .network-head th, .top-resources-table th { 
+      background: linear-gradient(to right, #6b21a8, #7e22ce) !important; /* subtle purple */
+    }
+
+    /* Compact Top Legend Styles */
+    .color-legend {
+      display: flex;
+      flex-wrap: wrap;
+      margin: 0 0 24px 0;
+      gap: 10px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      background-color: #f9fafb;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    .color-legend-item { 
+      display: flex;
+      align-items: center;
+      font-size: 13px;
+      margin-right: 8px;
+      font-weight: 500;
+      color: #4b5563;
+    }
+    .swatch { 
+      width: 14px;
+      height: 14px;
+      margin-right: 6px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+    /* Match swatches to table header colors */
+    .color-legend-item:nth-child(1) .swatch { background: linear-gradient(to right, #4338ca, #4f46e5); }
+    .color-legend-item:nth-child(2) .swatch { background: linear-gradient(to right, #065f46, #047857); }
+    .color-legend-item:nth-child(3) .swatch { background: linear-gradient(to right, #b45309, #d97706); }
+    .color-legend-item:nth-child(4) .swatch { background: linear-gradient(to right, #991b1b, #b91c1c); }
+    .color-legend-item:nth-child(5) .swatch { background: linear-gradient(to right, #6b21a8, #7e22ce); }
+    
+    /* Compact Bottom Legend Styles */
+    .metrics-legend {
+      margin-top: 40px;
+      padding: 16px;
+      background-color: #f9fafb;
+      border-radius: 8px;
+      border-left: 3px solid #6366f1;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      font-size: 12px;
+    }
+    .metrics-legend h3 {
+      margin-top: 0;
+      margin-bottom: 12px;
+      color: #111827;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .metrics-legend dl {
+      display: grid;
+      grid-template-columns: 1fr 3fr;
+      row-gap: 10px;
+      column-gap: 16px;
+      margin: 0;
+    }
+    .metrics-legend dt {
+      font-weight: 600;
+      color: #374151;
+      font-size: 12px;
+    }
+    .metrics-legend dd {
+      margin-left: 0;
+      color: #4b5563;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    
+    /* Enhanced Resource Icons */
+    .resource-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      margin-right: 8px;
+      vertical-align: middle;
+      border-radius: 6px;
+      color: white;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .resource-icon:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+    }
+    .resource-icon.js { background: linear-gradient(135deg, #f7df1e, #eac100); color: #323330; }
+    .resource-icon.css { background: linear-gradient(135deg, #2965f1, #2050d3); }
+    .resource-icon.img { background: linear-gradient(135deg, #4ade80, #22c55e); }
+    .resource-icon.font { background: linear-gradient(135deg, #fb923c, #ea580c); }
+    .resource-icon.html { background: linear-gradient(135deg, #e34c26, #c53d1e); }
+    .resource-icon.other { background: linear-gradient(135deg, #94a3b8, #64748b); }
+    
+    /* Enhanced Alert Messages */
+    .alert {
+      padding: 16px 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .alert-warning {
+      background-color: #fffbeb;
+      border-left: 5px solid #f59e0b;
+      color: #92400e;
+    }
+    
+    /* Enhanced Badge Styles */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .badge-primary {
+      background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+      color: #4338ca;
+    }
+    .badge-success {
+      background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+      color: #15803d;
+    }
+
+    /* Resource Details Hover Card */
+    .resource-details {
+      padding: 10px;
+      margin-bottom: 8px;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+      transition: all 0.2s ease;
+    }
+    .resource-details:hover {
+      background-color: #f0f9ff;
+      border-color: #bfdbfe;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+      transform: translateY(-2px);
+    }
+    .resource-details strong {
+      color: #1e40af;
+    }
+    .resource-details small {
+      display: block;
+      margin-top: 4px;
+      color: #64748b;
+    }
+    
+    /* Legend Styles */
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-bottom: 25px;
+      padding: 15px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+    .legend-section {
+      margin-bottom: 2rem;
+      padding: 1.5rem;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .legend-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin-right: 1.5rem;
+    }
+
+    .legend-color {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      margin-right: 8px;
+    }
+    
+    .metrics-legend {
+      margin-top: 1.5rem;
+      border-top: 1px solid #e5e7eb;
+      padding-top: 1.5rem;
+    }
+    
+    /* Resource type legend */
+    .resource-type-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      padding: 0.75rem;
+      background-color: #f9fafb;
+      border-radius: 0.5rem;
+    }
+    
+    .resource-type-legend-item {
+      display: flex;
+      align-items: center;
+      font-size: 0.85rem;
+    }
+    
+    /* Header styles matching browser report */
+    .overall-summary-header {
+      background: linear-gradient(to right, #4f46e5, #6366f1);
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem 0.5rem 0 0;
+    }
+    
+    .html-performance-header {
+      background: linear-gradient(to right, #065f46, #047857);
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem 0.5rem 0 0;
+    }
+    
+    .nonhtml-performance-header {
+      background: linear-gradient(to right, #4338ca, #4f46e5);
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem 0.5rem 0 0;
+    }
+    
+    .resource-type-header {
+      background: linear-gradient(to right, #991b1b, #b91c1c);
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem 0.5rem 0 0;
+    }
+    
+    .network-analysis-header {
+      background: linear-gradient(to right, #6b21a8, #7e22ce);
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem 0.5rem 0 0;
+    }
+    
+    .top-resources-header {
+      background: linear-gradient(to right, #b45309, #d97706);
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem 0.5rem 0 0;
+    }
+    
+    .metrics-legend h4 {
+      margin-top: 0;
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
+    }
+    
+    .metrics-legend dl {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1rem;
+      margin: 0;
+    }
+    
+    .metrics-legend dt {
+      font-weight: 600;
+      color: #4b5563;
+      margin-bottom: 0.25rem;
+    }
+    
+    .metrics-legend dd {
+      margin-left: 0;
+      margin-bottom: 1rem;
+      color: #6b7280;
+      font-size: 0.9rem;
+    }
+    
+    /* Resource cards styling */
+    .resource-cards-cell {
+      padding: 0 !important;
+    }
+    
+    /* Resource type badges */
+    .resource-type-badge {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: white;
+    }
+    
+    .resource-type-badge.html {
+      background-color: #047857;
+    }
+    
+    .resource-type-badge.nonhtml {
+      background-color: #4f46e5;
+    }
+    
+    /* Tooltip styles */
+    [data-tooltip] {
+      position: relative;
+      cursor: pointer;
+    }
+    
+    [data-tooltip]:hover:after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background-color: #333;
+      color: white;
+      padding: 5px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+      font-size: 12px;
+      z-index: 10;
+      max-width: 300px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    /* Metrics explanation styles */
+    .metrics-explanation {
+      margin-top: 1.5rem;
+      padding: 1.5rem;
+      border-radius: 0.5rem;
+      background-color: #f5f7ff;
+      border-left: 4px solid #4338ca;
+    }
+    
+    .metrics-explanation h4 {
+      margin-top: 0;
+      margin-bottom: 1rem;
+      color: #1f2937;
+    }
+    
+    .metrics-explanation-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+    }
+    
+    .metrics-explanation-item h5 {
+      margin-top: 0;
+      margin-bottom: 0.5rem;
+      color: #4338ca;
+      font-weight: 600;
+    }
+    
+    .metrics-explanation-item p {
+      margin: 0;
+      color: #4b5563;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+    
+    /* Summary stats styles */
+    .summary-stats {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin: 1.5rem 0;
+    }
+    
+    .summary-stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    
+    .summary-stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #1f2937;
+      line-height: 1;
+    }
+    
+    .summary-stat-label {
+      font-size: 1rem;
+      color: #6b7280;
+      margin-top: 0.25rem;
+    }
+    
+    .resource-card {
+      display: flex;
+      padding: 0.75rem;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    
+    .resource-card:last-child {
+      border-bottom: none;
+    }
+    
+    .resource-type {
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      margin-right: 0.75rem;
+      flex-shrink: 0;
+    }
+    
+    .resource-type.js {
+      background-color: #f59e0b;
+    }
+    
+    .resource-type.css {
+      background-color: #3b82f6;
+    }
+    
+    .resource-type.image, .resource-type.img {
+      background-color: #10b981;
+    }
+    
+    .resource-type.font {
+      background-color: #8b5cf6;
+    }
+    
+    .resource-type.other {
+      background-color: #6b7280;
+    }
+    
+    .resource-info {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    .resource-url {
+      font-size: 0.85rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #4b5563;
+    }
+    
+    .resource-stats {
+      font-size: 0.8rem;
+      color: #6b7280;
+      margin-top: 0.25rem;
+    }
+    
+
+    /* Interactive tooltip styles */
+    [data-tooltip] {
+      position: relative;
+      cursor: help;
+    }
+    [data-tooltip]:before {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      margin-bottom: 8px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      background-color: #334155;
+      color: white;
+      text-align: center;
+      font-size: 13px;
+      font-weight: normal;
+      line-height: 1.4;
+      z-index: 100;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s ease;
+    }
+    [data-tooltip]:hover:before {
+      opacity: 1;
+      visibility: visible;
+    }
+  </style>
+  
+  <style>
+    /* Tables with colored headers */
+    .html-header { background-color: #e0f0ff; color: #1a56db; padding: 10px; border-radius: 4px; }
+    .nonhtml-header { background-color: #e0f7ea; color: #047857; padding: 10px; border-radius: 4px; }
+    .summary-header { background-color: #f3e8ff; color: #6b21a8; padding: 10px; border-radius: 4px; }
+    .resource-type-header { background-color: #fee2e2; color: #b91c1c; padding: 10px; border-radius: 4px; }
+    .network-analysis-header { background-color: #e0e7ff; color: #3730a3; padding: 10px; border-radius: 4px; }
+    .html-performance-table th { background-color: #e0f0ff; }
+    .nonhtml-performance-table th { background-color: #e0f7ea; }
+  </style>
+  
+<h1>K6 Performance Test Report</h1>
+<p><strong>Run Start Time:</strong> 7/9/2025, 9:06:29 PM</p>
+<p><strong>Run End Time:</strong> 7/9/2025, 9:07:57 PM</p>
+<p><strong>Base URL:</strong> https://www.shape.com</p>
+<p><strong>Test Type:</strong> PROTOCOL</p>
+<p><strong>AUT:</strong> shape</p>
+<p><strong>Scenario:</strong> custom-tps</p>
+
+  <style>
+    /* Base Styles */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.6;
+      color: #374151;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+      background-color: #f9fafb;
+    }
+    
+    h1, h2, h3, h4 {
+      color: #111827;
+      margin-top: 1.5em;
+      margin-bottom: 0.75em;
+    }
+    
+    h1 {
+      font-size: 1.75rem;
+      border-bottom: 3px solid #4f46e5;
+      padding-bottom: 0.5rem;
+      display: inline-block;
+    }
+    
+    h3.section-header {
+      font-size: 1.25rem;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid;
+    }
+    
+    h3.section-header.overall-summary-header {
+      border-color: #4338ca;
+    }
+    
+    h3.section-header.html-performance-header {
+      border-color: #065f46;
+    }
+    
+    h3.section-header.nonhtml-performance-header {
+      border-color: #4338ca;
+    }
+    
+    h3.section-header.resource-type-header {
+      border-color: #991b1b;
+    }
+    
+    h3.section-header.network-analysis-header {
+      border-color: #6b21a8;
+    }
+
+    /* Modern Table Styling */
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      margin-bottom: 32px;
+      font-size: 14px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    
+    th {
+      color: #fff;
+      padding: 14px 16px;
+      text-align: left;
+      font-weight: 600;
+      letter-spacing: 0.025em;
+    }
+    
+    /* Table header gradient styles for different table types */
+    .overall-summary-table th { background: linear-gradient(to right, #3730a3, #4338ca); }
+    .html-performance-table th { background: linear-gradient(to right, #065f46, #047857); }
+    .nonhtml-performance-table th { background: linear-gradient(to right, #4338ca, #4f46e5); }
+    .resource-type-table th { background: linear-gradient(to right, #991b1b, #b91c1c); }
+    .network-analysis-table th { background: linear-gradient(to right, #6b21a8, #7e22ce); }
+    
+    /* Table header gradient styles for different table types */
+    .core-web-vitals-table th { background: linear-gradient(to right, #991b1b, #b91c1c); }
+    .mantle-metrics-table th { background: linear-gradient(to right, #b45309, #d97706); }
+    .pageload-table th { background: linear-gradient(to right, #065f46, #047857); }
+    .protocol-ttfb-table th { background: linear-gradient(to right, #4338ca, #4f46e5); }
+    .protocol-ttlb-table th { background: linear-gradient(to right, #6b21a8, #7e22ce); }
+    .resource-type-table th { background: linear-gradient(to right, #991b1b, #b91c1c); }
+    .top-resources-table th { background: linear-gradient(to right, #6b21a8, #7e22ce); }
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid #e5e7eb;
+      background-color: #fff;
+      transition: background-color 0.2s ease;
+    }
+    tr:nth-child(even) td { 
+      background-color: #f9fafb;
+    }
+    /* Enhanced row hover effect with data visualization */
+    tr {
+      position: relative;
+    }
+    tr:hover td { 
+      background-color: #eef2ff !important;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    /* Add data visualization with bars for numeric cells */
+    td:nth-child(n+2) {
+      position: relative;
+    }
+    
+    td:nth-child(n+2)::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      height: 3px;
+      width: 0;
+      background: linear-gradient(to right, #3b82f6, #10b981);
+      opacity: 0.5;
+      transition: width 0.3s ease;
+    }
+    
+    /* Show the bars on hover */
+    tr:hover td:nth-child(n+2)::before {
+      width: calc(100% * var(--data-percent, 0.5));
+    }
+    .metrics-section {
+      margin-bottom: 32px;
+    }
+
+    /* Enhanced Section Title Style */
+    .section-title, .metrics-header, .section-header {
+      color: #111827;
+      font-size: 22px;
+      font-weight: 700;
+      margin: 48px 0 16px 0;
+      position: relative;
+      display: inline-block;
+      padding-bottom: 8px;
+      background-color: transparent !important;
+      border: none !important;
+    }
+    .section-title::after, .metrics-header::after, .section-header::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 60px;
+      height: 4px;
+      background: linear-gradient(90deg, #6366f1, #8b5cf6);
+      border-radius: 4px;
+    }
+
+    /* Subtle Medium Table Header Colors */
+    .overall-head th, .overall-table th, .overall-summary-table th { 
+      background: linear-gradient(to right, #4338ca, #4f46e5) !important; /* subtle indigo */
+    }
+    .html-head th, .timing-breakdown th { 
+      background: linear-gradient(to right, #065f46, #047857) !important; /* subtle green */
+    }
+    .nonhtml-head th, .mantle-metrics-table th, .transaction-stats-table th { 
+      background: linear-gradient(to right, #b45309, #d97706) !important; /* subtle amber */
+    }
+    .resource-head th, .resource-type-table th, .core-web-vitals-table th { 
+      background: linear-gradient(to right, #991b1b, #b91c1c) !important; /* subtle red */
+    }
+    .network-head th, .top-resources-table th { 
+      background: linear-gradient(to right, #6b21a8, #7e22ce) !important; /* subtle purple */
+    }
+
+    /* Compact Top Legend Styles */
+    .color-legend {
+      display: flex;
+      flex-wrap: wrap;
+      margin: 0 0 24px 0;
+      gap: 10px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      background-color: #f9fafb;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    .color-legend-item { 
+      display: flex;
+      align-items: center;
+      font-size: 13px;
+      margin-right: 8px;
+      font-weight: 500;
+      color: #4b5563;
+    }
+    .swatch { 
+      width: 14px;
+      height: 14px;
+      margin-right: 6px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+    /* Match swatches to table header colors */
+    .color-legend-item:nth-child(1) .swatch { background: linear-gradient(to right, #4338ca, #4f46e5); }
+    .color-legend-item:nth-child(2) .swatch { background: linear-gradient(to right, #065f46, #047857); }
+    .color-legend-item:nth-child(3) .swatch { background: linear-gradient(to right, #b45309, #d97706); }
+    .color-legend-item:nth-child(4) .swatch { background: linear-gradient(to right, #991b1b, #b91c1c); }
+    .color-legend-item:nth-child(5) .swatch { background: linear-gradient(to right, #6b21a8, #7e22ce); }
+    
+    /* Compact Bottom Legend Styles */
+    .metrics-legend {
+      margin-top: 40px;
+      padding: 16px;
+      background-color: #f9fafb;
+      border-radius: 8px;
+      border-left: 3px solid #6366f1;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      font-size: 12px;
+    }
+    .metrics-legend h3 {
+      margin-top: 0;
+      margin-bottom: 12px;
+      color: #111827;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .metrics-legend dl {
+      display: grid;
+      grid-template-columns: 1fr 3fr;
+      row-gap: 10px;
+      column-gap: 16px;
+      margin: 0;
+    }
+    .metrics-legend dt {
+      font-weight: 600;
+      color: #374151;
+      font-size: 12px;
+    }
+    .metrics-legend dd {
+      margin-left: 0;
+      color: #4b5563;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    
+    /* Enhanced Resource Icons */
+    .resource-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      margin-right: 8px;
+      vertical-align: middle;
+      border-radius: 6px;
+      color: white;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .resource-icon:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+    }
+    .resource-icon.js { background: linear-gradient(135deg, #f7df1e, #eac100); color: #323330; }
+    .resource-icon.css { background: linear-gradient(135deg, #2965f1, #2050d3); }
+    .resource-icon.img { background: linear-gradient(135deg, #4ade80, #22c55e); }
+    .resource-icon.font { background: linear-gradient(135deg, #fb923c, #ea580c); }
+    .resource-icon.html { background: linear-gradient(135deg, #e34c26, #c53d1e); }
+    .resource-icon.other { background: linear-gradient(135deg, #94a3b8, #64748b); }
+    
+    /* Enhanced Alert Messages */
+    .alert {
+      padding: 16px 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .alert-warning {
+      background-color: #fffbeb;
+      border-left: 5px solid #f59e0b;
+      color: #92400e;
+    }
+    
+    /* Enhanced Badge Styles */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .badge-primary {
+      background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+      color: #4338ca;
+    }
+    .badge-success {
+      background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+      color: #15803d;
+    }
+
+    /* Resource Details Hover Card */
+    .resource-details {
+      padding: 10px;
+      margin-bottom: 8px;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+      transition: all 0.2s ease;
+    }
+    .resource-details:hover {
+      background-color: #f0f9ff;
+      border-color: #bfdbfe;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+      transform: translateY(-2px);
+    }
+    .resource-details strong {
+      color: #1e40af;
+    }
+    .resource-details small {
+      display: block;
+      margin-top: 4px;
+      color: #64748b;
+    }
+    
+    /* Legend Styles */
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-bottom: 25px;
+      padding: 15px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+    .legend-section {
+      margin-bottom: 2rem;
+      padding: 1.5rem;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .legend-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin-right: 1.5rem;
+    }
+
+    .legend-color {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      margin-right: 8px;
+    }
+    
+    .metrics-legend {
+      margin-top: 1.5rem;
+      border-top: 1px solid #e5e7eb;
+      padding-top: 1.5rem;
+    }
+    
+    /* Resource type legend */
+    .resource-type-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      padding: 0.75rem;
+      background-color: #f9fafb;
+      border-radius: 0.5rem;
+    }
+    
+    .resource-type-legend-item {
+      display: flex;
+      align-items: center;
+      font-size: 0.85rem;
+    }
+    
+    /* Header styles matching browser report */
+    .overall-summary-header {
+      background: linear-gradient(to right, #4f46e5, #6366f1);
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem 0.5rem 0 0;
+    }
+    
+    .html-performance-header {
+      background: linear-gradient(to right, #065f46, #047857);
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem 0.5rem 0 0;
+    }
+    
+    .nonhtml-performance-header {
+      background: linear-gradient(to right, #4338ca, #4f46e5);
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem 0.5rem 0 0;
+    }
+    
+    .resource-type-header {
+      background: linear-gradient(to right, #991b1b, #b91c1c);
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem 0.5rem 0 0;
+    }
+    
+    .network-analysis-header {
+      background: linear-gradient(to right, #6b21a8, #7e22ce);
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem 0.5rem 0 0;
+    }
+    
+    .top-resources-header {
+      background: linear-gradient(to right, #b45309, #d97706);
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem 0.5rem 0 0;
+    }
+    
+    .metrics-legend h4 {
+      margin-top: 0;
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
+    }
+    
+    .metrics-legend dl {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1rem;
+      margin: 0;
+    }
+    
+    .metrics-legend dt {
+      font-weight: 600;
+      color: #4b5563;
+      margin-bottom: 0.25rem;
+    }
+    
+    .metrics-legend dd {
+      margin-left: 0;
+      margin-bottom: 1rem;
+      color: #6b7280;
+      font-size: 0.9rem;
+    }
+    
+    /* Resource cards styling */
+    .resource-cards-cell {
+      padding: 0 !important;
+    }
+    
+    /* Resource type badges */
+    .resource-type-badge {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: white;
+    }
+    
+    .resource-type-badge.html {
+      background-color: #047857;
+    }
+    
+    .resource-type-badge.nonhtml {
+      background-color: #4f46e5;
+    }
+    
+    /* Tooltip styles */
+    [data-tooltip] {
+      position: relative;
+      cursor: pointer;
+    }
+    
+    [data-tooltip]:hover:after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background-color: #333;
+      color: white;
+      padding: 5px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+      font-size: 12px;
+      z-index: 10;
+      max-width: 300px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    /* Metrics explanation styles */
+    .metrics-explanation {
+      margin-top: 1.5rem;
+      padding: 1.5rem;
+      border-radius: 0.5rem;
+      background-color: #f5f7ff;
+      border-left: 4px solid #4338ca;
+    }
+    
+    .metrics-explanation h4 {
+      margin-top: 0;
+      margin-bottom: 1rem;
+      color: #1f2937;
+    }
+    
+    .metrics-explanation-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+    }
+    
+    .metrics-explanation-item h5 {
+      margin-top: 0;
+      margin-bottom: 0.5rem;
+      color: #4338ca;
+      font-weight: 600;
+    }
+    
+    .metrics-explanation-item p {
+      margin: 0;
+      color: #4b5563;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+    
+    /* Summary stats styles */
+    .summary-stats {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin: 1.5rem 0;
+    }
+    
+    .summary-stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    
+    .summary-stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #1f2937;
+      line-height: 1;
+    }
+    
+    .summary-stat-label {
+      font-size: 1rem;
+      color: #6b7280;
+      margin-top: 0.25rem;
+    }
+    
+    .resource-card {
+      display: flex;
+      padding: 0.75rem;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    
+    .resource-card:last-child {
+      border-bottom: none;
+    }
+    
+    .resource-type {
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      margin-right: 0.75rem;
+      flex-shrink: 0;
+    }
+    
+    .resource-type.js {
+      background-color: #f59e0b;
+    }
+    
+    .resource-type.css {
+      background-color: #3b82f6;
+    }
+    
+    .resource-type.image, .resource-type.img {
+      background-color: #10b981;
+    }
+    
+    .resource-type.font {
+      background-color: #8b5cf6;
+    }
+    
+    .resource-type.other {
+      background-color: #6b7280;
+    }
+    
+    .resource-info {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    .resource-url {
+      font-size: 0.85rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #4b5563;
+    }
+    
+    .resource-stats {
+      font-size: 0.8rem;
+      color: #6b7280;
+      margin-top: 0.25rem;
+    }
+    
+
+    /* Interactive tooltip styles */
+    [data-tooltip] {
+      position: relative;
+      cursor: help;
+    }
+    [data-tooltip]:before {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      margin-bottom: 8px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      background-color: #334155;
+      color: white;
+      text-align: center;
+      font-size: 13px;
+      font-weight: normal;
+      line-height: 1.4;
+      z-index: 100;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s ease;
+    }
+    [data-tooltip]:hover:before {
+      opacity: 1;
+      visibility: visible;
+    }
+  </style>
+  
+
+    <div class="metrics-section">
+      <h3 class="section-header overall-summary-header">Overall Performance Summary</h3>
+      
+      <div class="summary-stats">
+        <div class="summary-stat-item">
+          <div class="summary-stat-value">13</div>
+          <div class="summary-stat-label">Total Transactions</div>
+        </div>
+        <div class="summary-stat-item">
+          <div class="summary-stat-value">669</div>
+          <div class="summary-stat-label">Total Resource Requests</div>
+        </div>
+      </div>
+      
+      <table class="metrics-table overall-summary-table">
+        <thead>
+          <tr>
+            <th rowspan="2">Resource Type</th>
+            <th rowspan="2">Count</th>
+            <th colspan="3">TTFB (ms)</th>
+            <th colspan="3">TTLB (ms)</th>
+            <th rowspan="2">Success Rate</th>
+          </tr>
+          <tr>
+            <th>Avg</th>
+            <th>Median</th>
+            <th>p90</th>
+            <th>Avg</th>
+            <th>Median</th>
+            <th>p90</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="html-resources-row">
+            <td><span class="resource-type-badge html">HTML Resources</span></td>
+            <td>33</td>
+            <td>204.61</td>
+            <td>192.52</td>
+            <td>232.52</td>
+            <td>268.21</td>
+            <td>249.36</td>
+            <td>321.47</td>
+            <td>100.00%</td>
+          </tr>
+          <tr class="nonhtml-resources-row">
+            <td><span class="resource-type-badge nonhtml">Non-HTML Resources</span></td>
+            <td>636</td>
+            <td>105.13</td>
+            <td>93.77</td>
+            <td>148.76</td>
+            <td>112.37</td>
+            <td>99.86</td>
+            <td>154.04</td>
+            <td>99.06%</td>
+          </tr>
+          <tr class="total-row">
+            <td><strong>All Resources</strong></td>
+            <td><strong>669</strong></td>
+            <td><strong>110.04</strong></td>
+            <td><strong>94.43</strong></td>
+            <td><strong>159.47</strong></td>
+            <td><strong>120.06</strong></td>
+            <td><strong>101.24</strong></td>
+            <td><strong>175.70</strong></td>
+            <td><strong>99.10%</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  
+
+      <div class="metrics-section">
+        <h3 class="section-header html-header">HTML Resources by Transaction</h3>
+        <table class="metrics-table html-performance-table">
+          <thead>
+            <tr>
+              <th rowspan="2">Transaction</th>
+              <th rowspan="2">Requests</th>
+              <th rowspan="2">Success Rate</th>
+              <th colspan="3" class="ttfb-header">TTFB (ms)</th>
+              <th colspan="3" class="ttlb-header">TTLB (ms)</th>
+            </tr>
+            <tr>
+              <th>Avg</th>
+              <th>Median</th>
+              <th>p90</th>
+              <th>Avg</th>
+              <th>Median</th>
+              <th>p90</th>
+            </tr>
+          </thead>
+          <tbody>
+            
+                <tr>
+                  <td>exclusiveTemplate</td>
+                  <td>2</td>
+                  <td>100.00%</td>
+                  <td>198.21</td>
+                  <td>177.36</td>
+                  <td>177.36</td>
+                  <td>256.77</td>
+                  <td>229.35</td>
+                  <td>229.35</td>
+                </tr>
+              
+                <tr>
+                  <td>homeTemplate</td>
+                  <td>1</td>
+                  <td>100.00%</td>
+                  <td>174.27</td>
+                  <td>174.27</td>
+                  <td>174.27</td>
+                  <td>237.74</td>
+                  <td>237.74</td>
+                  <td>237.74</td>
+                </tr>
+              
+                <tr>
+                  <td>listScCommerceTemplate</td>
+                  <td>9</td>
+                  <td>100.00%</td>
+                  <td>242.88</td>
+                  <td>231.11</td>
+                  <td>256.25</td>
+                  <td>339.55</td>
+                  <td>320.03</td>
+                  <td>356.79</td>
+                </tr>
+              
+                <tr>
+                  <td>listScTemplate</td>
+                  <td>8</td>
+                  <td>100.00%</td>
+                  <td>197.32</td>
+                  <td>192.52</td>
+                  <td>217.13</td>
+                  <td>250.04</td>
+                  <td>248.47</td>
+                  <td>267.95</td>
+                </tr>
+              
+                <tr>
+                  <td>robotsTemplate</td>
+                  <td>1</td>
+                  <td>100.00%</td>
+                  <td>121.84</td>
+                  <td>121.84</td>
+                  <td>121.84</td>
+                  <td>121.98</td>
+                  <td>121.98</td>
+                  <td>121.98</td>
+                </tr>
+              
+                <tr>
+                  <td>structuredContentTemplate</td>
+                  <td>9</td>
+                  <td>100.00%</td>
+                  <td>175.00</td>
+                  <td>176.21</td>
+                  <td>190.14</td>
+                  <td>225.25</td>
+                  <td>223.24</td>
+                  <td>247.73</td>
+                </tr>
+              
+                <tr>
+                  <td>taxonomyScTemplate</td>
+                  <td>3</td>
+                  <td>100.00%</td>
+                  <td>240.07</td>
+                  <td>208.67</td>
+                  <td>208.67</td>
+                  <td>298.06</td>
+                  <td>272.92</td>
+                  <td>272.92</td>
+                </tr>
+              
+          </tbody>
+        </table>
+      </div>
+    
+
+      <div class="metrics-section">
+        <h3 class="section-header nonhtml-header">Non-HTML Resources by Transaction</h3>
+        <table class="metrics-table nonhtml-performance-table">
+          <thead>
+            <tr>
+              <th rowspan="2">Transaction</th>
+              <th rowspan="2">Requests</th>
+              <th rowspan="2">Success Rate</th>
+              <th colspan="3" class="ttfb-header">TTFB (ms)</th>
+              <th colspan="3" class="ttlb-header">TTLB (ms)</th>
+            </tr>
+            <tr>
+              <th>Avg</th>
+              <th>Median</th>
+              <th>p90</th>
+              <th>Avg</th>
+              <th>Median</th>
+              <th>p90</th>
+            </tr>
+          </thead>
+          <tbody>
+            
+                <tr>
+                  <td>exclusiveTemplate</td>
+                  <td>48</td>
+                  <td>100.00%</td>
+                  <td>104.36</td>
+                  <td>91.72</td>
+                  <td>108.37</td>
+                  <td>114.94</td>
+                  <td>104.11</td>
+                  <td>120.63</td>
+                </tr>
+              
+                <tr>
+                  <td>homeTemplate</td>
+                  <td>27</td>
+                  <td>100.00%</td>
+                  <td>105.00</td>
+                  <td>96.22</td>
+                  <td>117.85</td>
+                  <td>108.29</td>
+                  <td>98.59</td>
+                  <td>123.05</td>
+                </tr>
+              
+                <tr>
+                  <td>listScCommerceTemplate</td>
+                  <td>212</td>
+                  <td>100.00%</td>
+                  <td>101.17</td>
+                  <td>94.06</td>
+                  <td>108.71</td>
+                  <td>109.50</td>
+                  <td>101.67</td>
+                  <td>118.82</td>
+                </tr>
+              
+                <tr>
+                  <td>listScTemplate</td>
+                  <td>158</td>
+                  <td>99.37%</td>
+                  <td>119.05</td>
+                  <td>98.33</td>
+                  <td>168.70</td>
+                  <td>127.62</td>
+                  <td>109.72</td>
+                  <td>182.86</td>
+                </tr>
+              
+                <tr>
+                  <td>structuredContentTemplate</td>
+                  <td>127</td>
+                  <td>96.06%</td>
+                  <td>101.43</td>
+                  <td>91.10</td>
+                  <td>115.75</td>
+                  <td>106.57</td>
+                  <td>94.03</td>
+                  <td>118.06</td>
+                </tr>
+              
+                <tr>
+                  <td>taxonomyScTemplate</td>
+                  <td>64</td>
+                  <td>100.00%</td>
+                  <td>91.88</td>
+                  <td>89.00</td>
+                  <td>105.24</td>
+                  <td>95.48</td>
+                  <td>91.34</td>
+                  <td>108.12</td>
+                </tr>
+              
+          </tbody>
+        </table>
+      </div>
+    
+
+    <div class="metrics-section">
+      <h3 class="section-header resource-type-header">Resource Types by Transaction</h3>
+      <div class="resource-type-legend">
+        <div class="resource-type-legend-item" style="margin-right: 1.5rem;">
+          <span class="resource-type js" style="margin-right: 0.5rem;">J</span>
+          <span>JS</span>
+        </div>
+        <div class="resource-type-legend-item" style="margin-right: 1.5rem;">
+          <span class="resource-type css" style="margin-right: 0.5rem;">C</span>
+          <span>CSS</span>
+        </div>
+        <div class="resource-type-legend-item" style="margin-right: 1.5rem;">
+          <span class="resource-type image" style="margin-right: 0.5rem;">I</span>
+          <span>Image</span>
+        </div>
+      </div>
+      <table class="metrics-table resource-type-table">
+        <thead>
+          <tr>
+            <th rowspan="2">Transaction</th>
+            <th colspan="5">JS</th><th colspan="5">CSS</th><th colspan="5">Image</th>
+          </tr>
+          <tr>
+            
+              <th>Reqs</th>
+              <th>Avg TTFB</th>
+              <th>Avg TTLB</th>
+              <th>p90</th>
+              <th>Success</th>
+            
+              <th>Reqs</th>
+              <th>Avg TTFB</th>
+              <th>Avg TTLB</th>
+              <th>p90</th>
+              <th>Success</th>
+            
+              <th>Reqs</th>
+              <th>Avg TTFB</th>
+              <th>Avg TTLB</th>
+              <th>p90</th>
+              <th>Success</th>
+            
+          </tr>
+        </thead>
+        <tbody>
+          
+              <tr>
+                <td>exclusiveTemplate_nonhtml</td>
+                
+                    <td>3</td>
+                    <td>174.22</td>
+                    <td>179.14</td>
+                    <td>114.53</td>
+                    <td>100.00%</td>
+                  
+                    <td>2</td>
+                    <td>238.47</td>
+                    <td>254.48</td>
+                    <td>166.43</td>
+                    <td>100.00%</td>
+                  
+                    <td>43</td>
+                    <td>93.24</td>
+                    <td>103.97</td>
+                    <td>117.61</td>
+                    <td>100.00%</td>
+                  
+              </tr>
+            
+              <tr>
+                <td>homeTemplate_nonhtml</td>
+                
+                    <td>1</td>
+                    <td>101.41</td>
+                    <td>104.98</td>
+                    <td>104.98</td>
+                    <td>100.00%</td>
+                  
+                    <td>1</td>
+                    <td>102.16</td>
+                    <td>127.64</td>
+                    <td>127.64</td>
+                    <td>100.00%</td>
+                  
+                    <td>25</td>
+                    <td>105.25</td>
+                    <td>107.65</td>
+                    <td>119.21</td>
+                    <td>100.00%</td>
+                  
+              </tr>
+            
+              <tr>
+                <td>listScCommerceTemplate_nonhtml</td>
+                
+                    <td>11</td>
+                    <td>135.12</td>
+                    <td>141.90</td>
+                    <td>141.99</td>
+                    <td>100.00%</td>
+                  
+                    <td>9</td>
+                    <td>172.93</td>
+                    <td>208.78</td>
+                    <td>256.74</td>
+                    <td>100.00%</td>
+                  
+                    <td>192</td>
+                    <td>95.86</td>
+                    <td>102.99</td>
+                    <td>115.24</td>
+                    <td>100.00%</td>
+                  
+              </tr>
+            
+              <tr>
+                <td>listScTemplate_nonhtml</td>
+                
+                    <td>4</td>
+                    <td>115.68</td>
+                    <td>122.58</td>
+                    <td>125.67</td>
+                    <td>100.00%</td>
+                  
+                    <td>6</td>
+                    <td>125.05</td>
+                    <td>159.25</td>
+                    <td>186.18</td>
+                    <td>100.00%</td>
+                  
+                    <td>124</td>
+                    <td>111.14</td>
+                    <td>119.79</td>
+                    <td>182.83</td>
+                    <td>100.00%</td>
+                  
+              </tr>
+            
+              <tr>
+                <td>structuredContentTemplate_nonhtml</td>
+                
+                    <td>7</td>
+                    <td>94.43</td>
+                    <td>102.59</td>
+                    <td>103.00</td>
+                    <td>100.00%</td>
+                  
+                    <td>9</td>
+                    <td>189.21</td>
+                    <td>218.25</td>
+                    <td>468.75</td>
+                    <td>100.00%</td>
+                  
+                    <td>106</td>
+                    <td>91.68</td>
+                    <td>94.12</td>
+                    <td>104.36</td>
+                    <td>100.00%</td>
+                  
+              </tr>
+            
+              <tr>
+                <td>taxonomyScTemplate_nonhtml</td>
+                
+                    <td>3</td>
+                    <td>107.64</td>
+                    <td>111.91</td>
+                    <td>92.72</td>
+                    <td>100.00%</td>
+                  
+                    <td>3</td>
+                    <td>108.67</td>
+                    <td>143.95</td>
+                    <td>132.20</td>
+                    <td>100.00%</td>
+                  
+                    <td>55</td>
+                    <td>90.08</td>
+                    <td>92.02</td>
+                    <td>106.50</td>
+                    <td>100.00%</td>
+                  
+              </tr>
+            
+        </tbody>
+      </table>
+    </div>
+  
+
+    <div class="metrics-section">
+      <h3 class="section-header network-analysis-header">Network Resource Analysis</h3>
+      <table class="metrics-table network-analysis-table">
+        <thead>
+          <tr>
+            <th>Transaction</th>
+            <th>Total Requests</th>
+            <th>Avg Size (KB)</th>
+            <th>Avg Time (ms)</th>
+            <th>p90 Time (ms)</th>
+            <th>Success Rate</th>
+            <th>Top 5 Resources (By Avg Size)</th>
+            <th>Top 5 Resources (By Avg Time)</th>
+          </tr>
+        </thead>
+        <tbody>
+          
+              <tr>
+                <td>exclusiveTemplate_nonhtml</td>
+                <td>48</td>
+                <td>114.00</td>
+                <td>114.94</td>
+                <td>122.10</td>
+                <td>100.00%</td>
+                <td class="resource-cards-cell">
+                  <div class="resource-card" title="https://www.shape.com/static/4.14.0/cache/eNqlVs2eoyAMf6Hl50Psdc97jxCVbYQuxLbz9hNQW20dqjMHJQn5B8gXVJGBra56cExY6RirJMFf1euE7aFFdSbQ2HkyGLaUegzWWHCVdQZvd408BdY9BL4_e4eOYwVBBAKPHZxRTdzDtjcDYVwCAlhSF2vQZ7uZKunXEKejaQUmbu7B5O_lRA-NqzUtytihbTv-3YFr8Y-NjA7DprBgqyVfAwkKTAbD0pl79V7NOrjYVua8qwa2ZPlDiWhJF8CND714CCHoTiVmSRdwPcaY8qIGlzyxZvdtdjxY3uuD3AdtBqKoA6LL8DW7z0T02gJleM6RO7sVkW1cGZNyi_K5ag_B7MrUhvBma5JyKOovzGbY5jJfpV_jPUvExqGQftt65bBk3TEkd_IQlKw7xRWzD248G4idGpy9YIhTgDalBYPSwci301BaGK-RkNMeJ8iLpODYI-jXtSOHQfMQ0CjtnbQcHjv0-C8AR62ULq1tCnpzX06az115Q20a75t54ncsNCOmfrdmS2XA4Sb-ipp8FH88sd9fuEeGFVMwVX9IkqZdxTtdctasfkAVBu58UOw9sT2XTsUcbD2kclgxyjL2O264qZvJdRymO1001VL6HSOP0tu09M7EzuUXnaAOEk0dhr6OS_pICuNN0xBl3w_qWEF23FP-lbI3v19miKrJ69MstC7FXqUAvEqOnOTJen7OZUt_3z2exmX_XeXd9yG1MRPH_KCByA-8SIJJ8sMznOW-_z94xp_6YtUyV68b6cNTx2xsK4eSnZ9TfhWv8dFy6kMilSexxhXzrpfNekoKl6VwSZ6UX04cNLYlK5lwMnEZS3gkdxT_7PEG0dSgT4u4P0-V8gh1LuSA2gatttkCXssraHTdnXqjnX-f9UoLBA.min.css">
+                    <div class="resource-type css">C</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/static/4.14.0/cache/eNqlVs2eoyAMf6Hl50Psdc97jxCVbYQuxLbz9hNQW20dqjMHJQn5B8gXVJGBra56cExY6RirJMFf1euE7aFFdSbQ2HkyGLaUegzWWHCVdQZvd408BdY9BL4_e4eOYwVBBAKPHZxRTdzDtjcDYVwCAlhSF2vQZ7uZKunXEKejaQUmbu7B5O_lRA-NqzUtytihbTv-3YFr8Y-NjA7DprBgqyVfAwkKTAbD0pl79V7NOrjYVua8qwa2ZPlDiWhJF8CND714CCHoTiVmSRdwPcaY8qIGlzyxZvdtdjxY3uuD3AdtBqKoA6LL8DW7z0T02gJleM6RO7sVkW1cGZNyi_K5ag_B7MrUhvBma5JyKOovzGbY5jJfpV_jPUvExqGQftt65bBk3TEkd_IQlKw7xRWzD248G4idGpy9YIhTgDalBYPSwci301BaGK-RkNMeJ8iLpODYI-jXtSOHQfMQ0CjtnbQcHjv0-C8AR62ULq1tCnpzX06az115Q20a75t54ncsNCOmfrdmS2XA4Sb-ipp8FH88sd9fuEeGFVMwVX9IkqZdxTtdctasfkAVBu58UOw9sT2XTsUcbD2kclgxyjL2O264qZvJdRymO1001VL6HSOP0tu09M7EzuUXnaAOEk0dhr6OS_pICuNN0xBl3w_qWEF23FP-lbI3v19miKrJ69MstC7FXqUAvEqOnOTJen7OZUt_3z2exmX_XeXd9yG1MRPH_KCByA-8SIJJ8sMznOW-_z94xp_6YtUyV68b6cNTx2xsK4eSnZ9TfhWv8dFy6kMilSexxhXzrpfNekoKl6VwSZ6UX04cNLYlK5lwMnEZS3gkdxT_7PEG0dSgT4u4P0-V8gh1LuSA2gatttkCXssraHTdnXqjnX-f9UoLBA.min.css">www.shape.com...min.css</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Size: 240.57 KB</div>
+                        <div>Success: 100% | TTFB: 138.81 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/static/4.14.0/cache/eNqlVs3WoyAMfaHh-BCznfXsI0TNFKEHYtvv7SegVq0Otd8slCTcG34SAlVkYNJVD44tVjrGKlnwR7XvoB5aVFcLGjtvDYYjUI-BDIGryBl8PBG5C8gtBt9fvUPHsYIgBqHHDq6oJm3x7c1gMa4JAciqGxn02W-WSvga4rQ0rcDEwzmY_O1WtCDuZFqUtkNqO_7ZgWvxF0VGh-HQWPDVWl-DFRaYTIb1Zp7F7d06uFErfd5VA5Ml_lJiWssFcuNDLzuEEHSnkrKWC7weY0x5UYNLO7FVz012XFie6yKeozaDtVEHRJfpW_Wci-g1gc30nCNP9Sgix7wyJ-WWzeuqPQRzKlMbiw-qrRyHIn7lNtMOh_lX-jXes0RsbArpd4wrhyVjx5A8xY-oltwlbpRzdOPZQOzU4OiGIU4BOrQWHEoFs76dmtLAeI8WOc1xouwshY39hL0fO3IYNA8BjdLeScnhsUKP_wJxRKV0aakp4Oa6nJCvVfkANrXPybzoJwaaGVO926rf5_fIsFEKruovybV0xuJTLq15hn8AhYE7HxR7b5mupVUxB6qHlNUbRRFjf-KimoqS3KphupoFqdbW7zhZTtChp3cuTg6_OtB1kGjqMPR1XMufZCI-tB2izHuRPjtXHfc2_0q1OD9DZoqqrdeX2UguxV6lAOwtn6zkxXt-lWVPv9-9gcZh_9zl-fYlZ2MW_nfwTanZvAqkfk2VpqFWdlNpuKaAlibppOM25tkonsjQeZYNoqlBX1YZ-tpVCjrqnG0BNQWtjtUCX8uNK9dU5EV6g86_v8m8bTk.min.css">
+                    <div class="resource-type css">C</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/static/4.14.0/cache/eNqlVs3WoyAMfaHh-BCznfXsI0TNFKEHYtvv7SegVq0Otd8slCTcG34SAlVkYNJVD44tVjrGKlnwR7XvoB5aVFcLGjtvDYYjUI-BDIGryBl8PBG5C8gtBt9fvUPHsYIgBqHHDq6oJm3x7c1gMa4JAciqGxn02W-WSvga4rQ0rcDEwzmY_O1WtCDuZFqUtkNqO_7ZgWvxF0VGh-HQWPDVWl-DFRaYTIb1Zp7F7d06uFErfd5VA5Ml_lJiWssFcuNDLzuEEHSnkrKWC7weY0x5UYNLO7FVz012XFie6yKeozaDtVEHRJfpW_Wci-g1gc30nCNP9Sgix7wyJ-WWzeuqPQRzKlMbiw-qrRyHIn7lNtMOh_lX-jXes0RsbArpd4wrhyVjx5A8xY-oltwlbpRzdOPZQOzU4OiGIU4BOrQWHEoFs76dmtLAeI8WOc1xouwshY39hL0fO3IYNA8BjdLeScnhsUKP_wJxRKV0aakp4Oa6nJCvVfkANrXPybzoJwaaGVO926rf5_fIsFEKruovybV0xuJTLq15hn8AhYE7HxR7b5mupVUxB6qHlNUbRRFjf-KimoqS3KphupoFqdbW7zhZTtChp3cuTg6_OtB1kGjqMPR1XMufZCI-tB2izHuRPjtXHfc2_0q1OD9DZoqqrdeX2UguxV6lAOwtn6zkxXt-lWVPv9-9gcZh_9zl-fYlZ2MW_nfwTanZvAqkfk2VpqFWdlNpuKaAlibppOM25tkonsjQeZYNoqlBX1YZ-tpVCjrqnG0BNQWtjtUCX8uNK9dU5EV6g86_v8m8bTk.min.css">www.shape.com...min.css</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Size: 219.58 KB</div>
+                        <div>Success: 100% | TTFB: 338.14 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/thmb/ZFCArX2KwvF0oB7c0KlDd0WFKh8=/1500x0/filters:no_upscale():max_bytes(200000):strip_icc()/anna-1-2a2ff12499d04dea8fc4a7966bc30554.jpg">
+                    <div class="resource-type img">I</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/thmb/ZFCArX2KwvF0oB7c0KlDd0WFKh8=/1500x0/filters:no_upscale():max_bytes(200000):strip_icc()/anna-1-2a2ff12499d04dea8fc4a7966bc30554.jpg">www.shape.com...554.jpg</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Size: 194.30 KB</div>
+                        <div>Success: 100% | TTFB: 89.96 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/thmb/NjA6FBJPw3w7QYQ707LhIDg79oo=/1500x0/filters:no_upscale():max_bytes(200000):strip_icc()/anna-6-d4ba3b3ee4a7439c992a9329cc96e089.jpg">
+                    <div class="resource-type img">I</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/thmb/NjA6FBJPw3w7QYQ707LhIDg79oo=/1500x0/filters:no_upscale():max_bytes(200000):strip_icc()/anna-6-d4ba3b3ee4a7439c992a9329cc96e089.jpg">www.shape.com...089.jpg</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Size: 191.41 KB</div>
+                        <div>Success: 100% | TTFB: 84.55 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/thmb/zMPXE9Kkk14mgqLE7Fp8Xf9IRBI=/1500x0/filters:no_upscale():max_bytes(200000):strip_icc()/anna-7-dfa495906fdf4e55832d44120cd32515.jpg">
+                    <div class="resource-type img">I</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/thmb/zMPXE9Kkk14mgqLE7Fp8Xf9IRBI=/1500x0/filters:no_upscale():max_bytes(200000):strip_icc()/anna-7-dfa495906fdf4e55832d44120cd32515.jpg">www.shape.com...515.jpg</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Size: 185.77 KB</div>
+                        <div>Success: 100% | TTFB: 103.85 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td class="resource-cards-cell">
+                  <div class="resource-card" title="https://www.shape.com/static/4.14.0/cache/eNqlVs3WoyAMfaHh-BCznfXsI0TNFKEHYtvv7SegVq0Otd8slCTcG34SAlVkYNJVD44tVjrGKlnwR7XvoB5aVFcLGjtvDYYjUI-BDIGryBl8PBG5C8gtBt9fvUPHsYIgBqHHDq6oJm3x7c1gMa4JAciqGxn02W-WSvga4rQ0rcDEwzmY_O1WtCDuZFqUtkNqO_7ZgWvxF0VGh-HQWPDVWl-DFRaYTIb1Zp7F7d06uFErfd5VA5Ml_lJiWssFcuNDLzuEEHSnkrKWC7weY0x5UYNLO7FVz012XFie6yKeozaDtVEHRJfpW_Wci-g1gc30nCNP9Sgix7wyJ-WWzeuqPQRzKlMbiw-qrRyHIn7lNtMOh_lX-jXes0RsbArpd4wrhyVjx5A8xY-oltwlbpRzdOPZQOzU4OiGIU4BOrQWHEoFs76dmtLAeI8WOc1xouwshY39hL0fO3IYNA8BjdLeScnhsUKP_wJxRKV0aakp4Oa6nJCvVfkANrXPybzoJwaaGVO926rf5_fIsFEKruovybV0xuJTLq15hn8AhYE7HxR7b5mupVUxB6qHlNUbRRFjf-KimoqS3KphupoFqdbW7zhZTtChp3cuTg6_OtB1kGjqMPR1XMufZCI-tB2izHuRPjtXHfc2_0q1OD9DZoqqrdeX2UguxV6lAOwtn6zkxXt-lWVPv9-9gcZh_9zl-fYlZ2MW_nfwTanZvAqkfk2VpqFWdlNpuKaAlibppOM25tkonsjQeZYNoqlBX1YZ-tpVCjrqnG0BNQWtjtUCX8uNK9dU5EV6g86_v8m8bTk.min.css">
+                    <div class="resource-type css">C</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/static/4.14.0/cache/eNqlVs3WoyAMfaHh-BCznfXsI0TNFKEHYtvv7SegVq0Otd8slCTcG34SAlVkYNJVD44tVjrGKlnwR7XvoB5aVFcLGjtvDYYjUI-BDIGryBl8PBG5C8gtBt9fvUPHsYIgBqHHDq6oJm3x7c1gMa4JAciqGxn02W-WSvga4rQ0rcDEwzmY_O1WtCDuZFqUtkNqO_7ZgWvxF0VGh-HQWPDVWl-DFRaYTIb1Zp7F7d06uFErfd5VA5Ml_lJiWssFcuNDLzuEEHSnkrKWC7weY0x5UYNLO7FVz012XFie6yKeozaDtVEHRJfpW_Wci-g1gc30nCNP9Sgix7wyJ-WWzeuqPQRzKlMbiw-qrRyHIn7lNtMOh_lX-jXes0RsbArpd4wrhyVjx5A8xY-oltwlbpRzdOPZQOzU4OiGIU4BOrQWHEoFs76dmtLAeI8WOc1xouwshY39hL0fO3IYNA8BjdLeScnhsUKP_wJxRKV0aakp4Oa6nJCvVfkANrXPybzoJwaaGVO926rf5_fIsFEKruovybV0xuJTLq15hn8AhYE7HxR7b5mupVUxB6qHlNUbRRFjf-KimoqS3KphupoFqdbW7zhZTtChp3cuTg6_OtB1kGjqMPR1XMufZCI-tB2izHuRPjtXHfc2_0q1OD9DZoqqrdeX2UguxV6lAOwtn6zkxXt-lWVPv9-9gcZh_9zl-fYlZ2MW_nfwTanZvAqkfk2VpqFWdlNpuKaAlibppOM25tkonsjQeZYNoqlBX1YZ-tpVCjrqnG0BNQWtjtUCX8uNK9dU5EV6g86_v8m8bTk.min.css">www.shape.com...min.css</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Time: 342.54 ms</div>
+                        <div>Success: 100% | TTFB: 338.14 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/static/4.14.0/cache/eNqlVFFy4yAMvdCynp6hv72EDDJWK0MGQWz39CsTt3GTLJuZ_UISvCeeJOgkQybbTdEVRulsnE4xYMjS5bQYGAZigowmg_eYbqNM4cMknBNlTN17xU-YLLbO_eq-kkLIjMecuOh-AKbPC0Y2zrvgfxMYhwMUzubExVO48u1VUAzD52rANVI58hRHpWJY0d24DdxMzqOuI5If8-sIweMbScagJXwUbHB5jj2wosBV8LbcHmfqqyJ4eVmNI-DoG4wBzuR1L4auZO1eXo2GjnYDPMQ0SScIyY5mc452AzehCHg0PYStCD_dZgs2NftSW_ucskuhqrCr-Rx0KMxiE2Ko8J_uo0FKkRlmWO_2Dvw9CG5nB8aFesZ_Dd5BdevWOAtj1tnf234faaBp0hZsl_I0PDHNEq0yGhkhVdTRb0k_k8No3ufT9mz0C9mNvw0xy-_eC-bGjSSnYnNJ6IyNQV9Q3rVom_QvetseWB-XV0ixCPI304ECkgaUdV-_eXCxXITOeLVM5W4pDLpxrjW5WE8U8yvvgOh6sB93gZZ8tHVQE1pK1jx2_wBjAktl.min.js">
+                    <div class="resource-type js">J</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/static/4.14.0/cache/eNqlVFFy4yAMvdCynp6hv72EDDJWK0MGQWz39CsTt3GTLJuZ_UISvCeeJOgkQybbTdEVRulsnE4xYMjS5bQYGAZigowmg_eYbqNM4cMknBNlTN17xU-YLLbO_eq-kkLIjMecuOh-AKbPC0Y2zrvgfxMYhwMUzubExVO48u1VUAzD52rANVI58hRHpWJY0d24DdxMzqOuI5If8-sIweMbScagJXwUbHB5jj2wosBV8LbcHmfqqyJ4eVmNI-DoG4wBzuR1L4auZO1eXo2GjnYDPMQ0SScIyY5mc452AzehCHg0PYStCD_dZgs2NftSW_ucskuhqrCr-Rx0KMxiE2Ko8J_uo0FKkRlmWO_2Dvw9CG5nB8aFesZ_Dd5BdevWOAtj1tnf234faaBp0hZsl_I0PDHNEq0yGhkhVdTRb0k_k8No3ufT9mz0C9mNvw0xy-_eC-bGjSSnYnNJ6IyNQV9Q3rVom_QvetseWB-XV0ixCPI304ECkgaUdV-_eXCxXITOeLVM5W4pDLpxrjW5WE8U8yvvgOh6sB93gZZ8tHVQE1pK1jx2_wBjAktl.min.js">www.shape.com....min.js</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Time: 329.68 ms</div>
+                        <div>Success: 100% | TTFB: 329.22 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/static/4.14.0/cache/eNqlVs2eoyAMf6Hl50Psdc97jxCVbYQuxLbz9hNQW20dqjMHJQn5B8gXVJGBra56cExY6RirJMFf1euE7aFFdSbQ2HkyGLaUegzWWHCVdQZvd408BdY9BL4_e4eOYwVBBAKPHZxRTdzDtjcDYVwCAlhSF2vQZ7uZKunXEKejaQUmbu7B5O_lRA-NqzUtytihbTv-3YFr8Y-NjA7DprBgqyVfAwkKTAbD0pl79V7NOrjYVua8qwa2ZPlDiWhJF8CND714CCHoTiVmSRdwPcaY8qIGlzyxZvdtdjxY3uuD3AdtBqKoA6LL8DW7z0T02gJleM6RO7sVkW1cGZNyi_K5ag_B7MrUhvBma5JyKOovzGbY5jJfpV_jPUvExqGQftt65bBk3TEkd_IQlKw7xRWzD248G4idGpy9YIhTgDalBYPSwci301BaGK-RkNMeJ8iLpODYI-jXtSOHQfMQ0CjtnbQcHjv0-C8AR62ULq1tCnpzX06az115Q20a75t54ncsNCOmfrdmS2XA4Sb-ipp8FH88sd9fuEeGFVMwVX9IkqZdxTtdctasfkAVBu58UOw9sT2XTsUcbD2kclgxyjL2O264qZvJdRymO1001VL6HSOP0tu09M7EzuUXnaAOEk0dhr6OS_pICuNN0xBl3w_qWEF23FP-lbI3v19miKrJ69MstC7FXqUAvEqOnOTJen7OZUt_3z2exmX_XeXd9yG1MRPH_KCByA-8SIJJ8sMznOW-_z94xp_6YtUyV68b6cNTx2xsK4eSnZ9TfhWv8dFy6kMilSexxhXzrpfNekoKl6VwSZ6UX04cNLYlK5lwMnEZS3gkdxT_7PEG0dSgT4u4P0-V8gh1LuSA2gatttkCXssraHTdnXqjnX-f9UoLBA.min.css">
+                    <div class="resource-type css">C</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/static/4.14.0/cache/eNqlVs2eoyAMf6Hl50Psdc97jxCVbYQuxLbz9hNQW20dqjMHJQn5B8gXVJGBra56cExY6RirJMFf1euE7aFFdSbQ2HkyGLaUegzWWHCVdQZvd408BdY9BL4_e4eOYwVBBAKPHZxRTdzDtjcDYVwCAlhSF2vQZ7uZKunXEKejaQUmbu7B5O_lRA-NqzUtytihbTv-3YFr8Y-NjA7DprBgqyVfAwkKTAbD0pl79V7NOrjYVua8qwa2ZPlDiWhJF8CND714CCHoTiVmSRdwPcaY8qIGlzyxZvdtdjxY3uuD3AdtBqKoA6LL8DW7z0T02gJleM6RO7sVkW1cGZNyi_K5ag_B7MrUhvBma5JyKOovzGbY5jJfpV_jPUvExqGQftt65bBk3TEkd_IQlKw7xRWzD248G4idGpy9YIhTgDalBYPSwci301BaGK-RkNMeJ8iLpODYI-jXtSOHQfMQ0CjtnbQcHjv0-C8AR62ULq1tCnpzX06az115Q20a75t54ncsNCOmfrdmS2XA4Sb-ipp8FH88sd9fuEeGFVMwVX9IkqZdxTtdctasfkAVBu58UOw9sT2XTsUcbD2kclgxyjL2O264qZvJdRymO1001VL6HSOP0tu09M7EzuUXnaAOEk0dhr6OS_pICuNN0xBl3w_qWEF23FP-lbI3v19miKrJ69MstC7FXqUAvEqOnOTJen7OZUt_3z2exmX_XeXd9yG1MRPH_KCByA-8SIJJ8sMznOW-_z94xp_6YtUyV68b6cNTx2xsK4eSnZ9TfhWv8dFy6kMilSexxhXzrpfNekoKl6VwSZ6UX04cNLYlK5lwMnEZS3gkdxT_7PEG0dSgT4u4P0-V8gh1LuSA2gatttkCXssraHTdnXqjnX-f9UoLBA.min.css">www.shape.com...min.css</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Time: 166.43 ms</div>
+                        <div>Success: 100% | TTFB: 138.81 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/thmb/RCe3xt3arhrjcoUJbFPcwxrgLv8=/1500x0/filters:no_upscale():max_bytes(200000):strip_icc()/shp-asics-gel-nimbus-27-dcarr-0418-d411ea46b2a74693b2ae837f0e226424.jpeg">
+                    <div class="resource-type img">I</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/thmb/RCe3xt3arhrjcoUJbFPcwxrgLv8=/1500x0/filters:no_upscale():max_bytes(200000):strip_icc()/shp-asics-gel-nimbus-27-dcarr-0418-d411ea46b2a74693b2ae837f0e226424.jpeg">www.shape.com...24.jpeg</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Time: 128.31 ms</div>
+                        <div>Success: 100% | TTFB: 115.45 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/thmb/i5LdWq0fggxWyi0sDUXIFF1I4vk=/1500x0/filters:no_upscale():max_bytes(200000):strip_icc()/shp-lululemon-chargefeel-3-dcarr-0298-7ca9a1eec34d4e698e559c96a40db592.jpeg">
+                    <div class="resource-type img">I</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/thmb/i5LdWq0fggxWyi0sDUXIFF1I4vk=/1500x0/filters:no_upscale():max_bytes(200000):strip_icc()/shp-lululemon-chargefeel-3-dcarr-0298-7ca9a1eec34d4e698e559c96a40db592.jpeg">www.shape.com...92.jpeg</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Time: 122.10 ms</div>
+                        <div>Success: 100% | TTFB: 103.67 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            
+              <tr>
+                <td>homeTemplate_nonhtml</td>
+                <td>27</td>
+                <td>23.66</td>
+                <td>108.29</td>
+                <td>127.64</td>
+                <td>100.00%</td>
+                <td class="resource-cards-cell">
+                  <div class="resource-card" title="https://www.shape.com/static/4.14.0/cache/eNqVVV12piAM3dBwWMS8dhMRonIGiSX4tbP7CWj9OTqUPihJuJeEJIDmBMkZPUFIHrVh1tmCv_R9wk0woJo9GBzJW4xPoAmjsw6CdsHi544oU-DCYaBppoAhsYYoBqFvozIUkkzokSYsvxqJR5hRbdoRENnFI58JEZxXL2eRSjBFquE74C0fRoHlxxhs-W5pOBAfzg4o44huGNPvEcKAb45lexgfjZW1Bk8deGGBLWQ4V6AVd182wMsNMkdBL8l5l_4qMZ3lCrmnOEmGEKIZVVbOcoU3IXNupg5CzsRVbQt23ViJ9RDbqP3iPZuIGAr9qrYtwWQc-EIvPbKrTxV55tU5ubd82VdHEG1Tp_YeP10nJwiq-NOyhfbo5n_t1xMlqdg6VNrvGVcvS8GuJdnFH1G9C3_4orTRLSULPKoluBdG3gr0aK0sKNeep2Ebao7xgz2mHONGuVkqif0J--7769rMdb9dmjc0o8n5YZ1oVtSrWQ7pWX4Ks5lzd2dKR9bbcMco1SOkJWINzSkupoD2V6W8Yuu_QlxROUuD61syxPKedBC_xm92IM3J6ZC-d6DTKBeUmkloh9jA20aVXAZctAZ2L52_Ot2lBpacFgHIeSm7vGi1e4nfF4jbm1vEGjjIxGsFr2JLkUQve1AjRrpq_wD3sXfI.min.css">
+                    <div class="resource-type css">C</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/static/4.14.0/cache/eNqVVV12piAM3dBwWMS8dhMRonIGiSX4tbP7CWj9OTqUPihJuJeEJIDmBMkZPUFIHrVh1tmCv_R9wk0woJo9GBzJW4xPoAmjsw6CdsHi544oU-DCYaBppoAhsYYoBqFvozIUkkzokSYsvxqJR5hRbdoRENnFI58JEZxXL2eRSjBFquE74C0fRoHlxxhs-W5pOBAfzg4o44huGNPvEcKAb45lexgfjZW1Bk8deGGBLWQ4V6AVd182wMsNMkdBL8l5l_4qMZ3lCrmnOEmGEKIZVVbOcoU3IXNupg5CzsRVbQt23ViJ9RDbqP3iPZuIGAr9qrYtwWQc-EIvPbKrTxV55tU5ubd82VdHEG1Tp_YeP10nJwiq-NOyhfbo5n_t1xMlqdg6VNrvGVcvS8GuJdnFH1G9C3_4orTRLSULPKoluBdG3gr0aK0sKNeep2Ebao7xgz2mHONGuVkqif0J--7769rMdb9dmjc0o8n5YZ1oVtSrWQ7pWX4Ks5lzd2dKR9bbcMco1SOkJWINzSkupoD2V6W8Yuu_QlxROUuD61syxPKedBC_xm92IM3J6ZC-d6DTKBeUmkloh9jA20aVXAZctAZ2L52_Ot2lBpacFgHIeSm7vGi1e4nfF4jbm1vEGjjIxGsFr2JLkUQve1AjRrpq_wD3sXfI.min.css">www.shape.com...min.css</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Size: 213.29 KB</div>
+                        <div>Success: 100% | TTFB: 102.16 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/thmb/d52b3eXhLLA1k6EVAgNII1nB444=/364x242/filters:no_upscale():max_bytes(150000):strip_icc()/CopyofUntitledDesign1-7f85703f9cff4d68bcd35197befa6150.png">
+                    <div class="resource-type img">I</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/thmb/d52b3eXhLLA1k6EVAgNII1nB444=/364x242/filters:no_upscale():max_bytes(150000):strip_icc()/CopyofUntitledDesign1-7f85703f9cff4d68bcd35197befa6150.png">www.shape.com...150.png</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Size: 100.53 KB</div>
+                        <div>Success: 100% | TTFB: 143.38 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/thmb/fpqiS4C3b9nE4yNVaWb1AHwMGr8=/771x514/filters:no_upscale():max_bytes(150000):strip_icc()/shp-sneaker-awards-primary-dcarr-3x1-0127-2d4dae9892ed459a8af43ab738bcfec8.jpg">
+                    <div class="resource-type img">I</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/thmb/fpqiS4C3b9nE4yNVaWb1AHwMGr8=/771x514/filters:no_upscale():max_bytes(150000):strip_icc()/shp-sneaker-awards-primary-dcarr-3x1-0127-2d4dae9892ed459a8af43ab738bcfec8.jpg">www.shape.com...ec8.jpg</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Size: 66.94 KB</div>
+                        <div>Success: 100% | TTFB: 110.23 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/thmb/CdyJtYhS6Icrcu7UwaowZKE-Rsg=/771x514/filters:no_upscale():max_bytes(150000):strip_icc()/shp-collagen-powder-test-procaps-marine-peptides-jthompson-6806-1-5bf24f1c9633434299cb60715d2c4d4f.jpeg">
+                    <div class="resource-type img">I</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/thmb/CdyJtYhS6Icrcu7UwaowZKE-Rsg=/771x514/filters:no_upscale():max_bytes(150000):strip_icc()/shp-collagen-powder-test-procaps-marine-peptides-jthompson-6806-1-5bf24f1c9633434299cb60715d2c4d4f.jpeg">www.shape.com...4f.jpeg</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Size: 66.16 KB</div>
+                        <div>Success: 100% | TTFB: 90.87 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/thmb/SlPwlLDujV5_m7PkjFsHUIb_yCc=/800x533/filters:no_upscale():max_bytes(150000):strip_icc()/shp-hair-and-anti-aging-derm-approved-tout-10d4e440612244b28f63a96cb8e5509f.jpg">
+                    <div class="resource-type img">I</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/thmb/SlPwlLDujV5_m7PkjFsHUIb_yCc=/800x533/filters:no_upscale():max_bytes(150000):strip_icc()/shp-hair-and-anti-aging-derm-approved-tout-10d4e440612244b28f63a96cb8e5509f.jpg">www.shape.com...09f.jpg</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Size: 33.53 KB</div>
+                        <div>Success: 100% | TTFB: 92.89 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td class="resource-cards-cell">
+                  <div class="resource-card" title="https://www.shape.com/thmb/TnZMBRKxx5A2LuNQVsY5HuS-TUc=/248x165/filters:no_upscale():max_bytes(150000):strip_icc()/shp-sunscreen-prime-day-deals-tout-d51bbb9f93a9493aa56ee9f41d8d6d27.jpg">
+                    <div class="resource-type img">I</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/thmb/TnZMBRKxx5A2LuNQVsY5HuS-TUc=/248x165/filters:no_upscale():max_bytes(150000):strip_icc()/shp-sunscreen-prime-day-deals-tout-d51bbb9f93a9493aa56ee9f41d8d6d27.jpg">www.shape.com...d27.jpg</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Time: 196.83 ms</div>
+                        <div>Success: 100% | TTFB: 194.83 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/thmb/d52b3eXhLLA1k6EVAgNII1nB444=/364x242/filters:no_upscale():max_bytes(150000):strip_icc()/CopyofUntitledDesign1-7f85703f9cff4d68bcd35197befa6150.png">
+                    <div class="resource-type img">I</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/thmb/d52b3eXhLLA1k6EVAgNII1nB444=/364x242/filters:no_upscale():max_bytes(150000):strip_icc()/CopyofUntitledDesign1-7f85703f9cff4d68bcd35197befa6150.png">www.shape.com...150.png</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Time: 154.67 ms</div>
+                        <div>Success: 100% | TTFB: 143.38 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/static/4.14.0/cache/eNqVVV12piAM3dBwWMS8dhMRonIGiSX4tbP7CWj9OTqUPihJuJeEJIDmBMkZPUFIHrVh1tmCv_R9wk0woJo9GBzJW4xPoAmjsw6CdsHi544oU-DCYaBppoAhsYYoBqFvozIUkkzokSYsvxqJR5hRbdoRENnFI58JEZxXL2eRSjBFquE74C0fRoHlxxhs-W5pOBAfzg4o44huGNPvEcKAb45lexgfjZW1Bk8deGGBLWQ4V6AVd182wMsNMkdBL8l5l_4qMZ3lCrmnOEmGEKIZVVbOcoU3IXNupg5CzsRVbQt23ViJ9RDbqP3iPZuIGAr9qrYtwWQc-EIvPbKrTxV55tU5ubd82VdHEG1Tp_YeP10nJwiq-NOyhfbo5n_t1xMlqdg6VNrvGVcvS8GuJdnFH1G9C3_4orTRLSULPKoluBdG3gr0aK0sKNeep2Ebao7xgz2mHONGuVkqif0J--7769rMdb9dmjc0o8n5YZ1oVtSrWQ7pWX4Ks5lzd2dKR9bbcMco1SOkJWINzSkupoD2V6W8Yuu_QlxROUuD61syxPKedBC_xm92IM3J6ZC-d6DTKBeUmkloh9jA20aVXAZctAZ2L52_Ot2lBpacFgHIeSm7vGi1e4nfF4jbm1vEGjjIxGsFr2JLkUQve1AjRrpq_wD3sXfI.min.css">
+                    <div class="resource-type css">C</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/static/4.14.0/cache/eNqVVV12piAM3dBwWMS8dhMRonIGiSX4tbP7CWj9OTqUPihJuJeEJIDmBMkZPUFIHrVh1tmCv_R9wk0woJo9GBzJW4xPoAmjsw6CdsHi544oU-DCYaBppoAhsYYoBqFvozIUkkzokSYsvxqJR5hRbdoRENnFI58JEZxXL2eRSjBFquE74C0fRoHlxxhs-W5pOBAfzg4o44huGNPvEcKAb45lexgfjZW1Bk8deGGBLWQ4V6AVd182wMsNMkdBL8l5l_4qMZ3lCrmnOEmGEKIZVVbOcoU3IXNupg5CzsRVbQt23ViJ9RDbqP3iPZuIGAr9qrYtwWQc-EIvPbKrTxV55tU5ubd82VdHEG1Tp_YeP10nJwiq-NOyhfbo5n_t1xMlqdg6VNrvGVcvS8GuJdnFH1G9C3_4orTRLSULPKoluBdG3gr0aK0sKNeep2Ebao7xgz2mHONGuVkqif0J--7769rMdb9dmjc0o8n5YZ1oVtSrWQ7pWX4Ks5lzd2dKR9bbcMco1SOkJWINzSkupoD2V6W8Yuu_QlxROUuD61syxPKedBC_xm92IM3J6ZC-d6DTKBeUmkloh9jA20aVXAZctAZ2L52_Ot2lBpacFgHIeSm7vGi1e4nfF4jbm1vEGjjIxGsFr2JLkUQve1AjRrpq_wD3sXfI.min.css">www.shape.com...min.css</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Time: 127.64 ms</div>
+                        <div>Success: 100% | TTFB: 102.16 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/thmb/j_fOkvFid9IsYSZajepXAtg6jgE=/144x95/filters:no_upscale():max_bytes(150000):strip_icc()/shp-primary-fitness-awards-nov-24-3x1-crop-jkim-02481-cdc89b13d647413c935a739f7d5c5b92.jpg">
+                    <div class="resource-type img">I</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/thmb/j_fOkvFid9IsYSZajepXAtg6jgE=/144x95/filters:no_upscale():max_bytes(150000):strip_icc()/shp-primary-fitness-awards-nov-24-3x1-crop-jkim-02481-cdc89b13d647413c935a739f7d5c5b92.jpg">www.shape.com...b92.jpg</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Time: 123.05 ms</div>
+                        <div>Success: 100% | TTFB: 120.70 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/thmb/I7995OGnUu6ItIrVzBnmj7WifY8=/248x165/filters:no_upscale():max_bytes(150000):strip_icc()/shp-attractive-young-woman-styling-her-hair-in-her-bathroom-tout-bb4abdd8dc8c4a58935e16cfed49e88b.jpg">
+                    <div class="resource-type img">I</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/thmb/I7995OGnUu6ItIrVzBnmj7WifY8=/248x165/filters:no_upscale():max_bytes(150000):strip_icc()/shp-attractive-young-woman-styling-her-hair-in-her-bathroom-tout-bb4abdd8dc8c4a58935e16cfed49e88b.jpg">www.shape.com...88b.jpg</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Time: 119.21 ms</div>
+                        <div>Success: 100% | TTFB: 117.85 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            
+              <tr>
+                <td>listScCommerceTemplate_nonhtml</td>
+                <td>212</td>
+                <td>78.69</td>
+                <td>109.50</td>
+                <td>119.01</td>
+                <td>100.00%</td>
+                <td class="resource-cards-cell">
+                  <div class="resource-card" title="https://www.shape.com/static/4.14.0/cache/eNqtWNuaoyAMfqHl60Ps7b7DfhFTZQfB4dCZvv0GRMVKqc7MRUsS8oecQPRiHTjBLwMoJ_HCrb0ECf667CfEAB2yUQLHXssWTUlpQCNaAeoiVIufi0acAqFWgR5GrVA5ewFDAoLbHkZkiaspppFxrRxNPPJnoFJYx-zkX6LXqHTrJdrcjAEh2U20qCMiUjX9BmxKKmfQ2qJnbfztcrlqfIi2Qxp7FF3vfvegOvxDvqJCUxRWbHVSNyAJBW0EQ17Go3p7swpuoqM5rS7eCSncnZEopyvgqzYDZQjB8J4FJqcruAGtDR3ZgAqZ2LLHnJ0Ci76u5DHo1UtpuUFUEb5lj5mwmguQER57ZGFLFSnj6pjQWzLG1Wgw7aFOvUr8FA1tEajqZ2anzVNa5ln7XbV2VLFpqLRfWa9elqg7lWQhT0GlUG92wxyDt9q1YHvmlbihsalARWnFIJ2dUndpqC2MH1aiCz4myE5SSewZ9H7t-TANdX88rkutAnftaXTmkxntVevHnD6WXac56Qn-dmdb8jh8LUFmqCSsBRMcz-Bb9rgv9GMDmDfq7pWswK0znjtvsF0eXfFxPP1XgJNWqFQnrqWOGJDqndRGQ6O5s63RJ8pX0ZE_jMMYojrne-8GGf9eptoP0aPwbN4JXoH_-WGMO3jL_f0Qrmf21p3zmYOU1MdZxyTJmftGGlkjNadTJtRlpCfHu9cOT7oz3Spmg6_ykRYMiRgNTXNnkGs6vHeSL1n5a32T--tHNJKs3DCnf8J0eE4L1c3jT5gs7qRySxFLN1xOtwzvnFZrX5YmThoryU72BM2CEXZ2LGvV7cw3W3a1tg3z6dWVAx32FuVCHCzbVK9YmY42G5r7E_E3A3p1ihZyfYX3LL_EfdOF3MLzRAKPkVOzLNQRVFr-itg2wN8yxx-nDjz2rfbUoJaBomwIN99J98Lqy95pI8_Dc1pLJ8Z5rCCWWy5-jrQIhHturEEFMzvCknfTDngQnsUL2jkKlyDtgbTPlUrvZFv21VHTCsulttTBD-zXFx7QwYap5f0ewp1CT3StOWb1E6rgXa8Ne90C4JwRdLiGrOcMEw5rb5vbBaa779E150ZNb2u2B5O-lpAmy6VfMZJdYUuWXpk4uHx2gW0MdQI3fmhsTlc_nISvFCx8Pokur2wNZN_9HGO6Y0-So5gH5f2pjjzGQ48TYTgrs7WdTS-704N2oV5ox7__lgiHDQ.min.css">
+                    <div class="resource-type css">C</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/static/4.14.0/cache/eNqtWNuaoyAMfqHl60Ps7b7DfhFTZQfB4dCZvv0GRMVKqc7MRUsS8oecQPRiHTjBLwMoJ_HCrb0ECf667CfEAB2yUQLHXssWTUlpQCNaAeoiVIufi0acAqFWgR5GrVA5ewFDAoLbHkZkiaspppFxrRxNPPJnoFJYx-zkX6LXqHTrJdrcjAEh2U20qCMiUjX9BmxKKmfQ2qJnbfztcrlqfIi2Qxp7FF3vfvegOvxDvqJCUxRWbHVSNyAJBW0EQ17Go3p7swpuoqM5rS7eCSncnZEopyvgqzYDZQjB8J4FJqcruAGtDR3ZgAqZ2LLHnJ0Ci76u5DHo1UtpuUFUEb5lj5mwmguQER57ZGFLFSnj6pjQWzLG1Wgw7aFOvUr8FA1tEajqZ2anzVNa5ln7XbV2VLFpqLRfWa9elqg7lWQhT0GlUG92wxyDt9q1YHvmlbihsalARWnFIJ2dUndpqC2MH1aiCz4myE5SSewZ9H7t-TANdX88rkutAnftaXTmkxntVevHnD6WXac56Qn-dmdb8jh8LUFmqCSsBRMcz-Bb9rgv9GMDmDfq7pWswK0znjtvsF0eXfFxPP1XgJNWqFQnrqWOGJDqndRGQ6O5s63RJ8pX0ZE_jMMYojrne-8GGf9eptoP0aPwbN4JXoH_-WGMO3jL_f0Qrmf21p3zmYOU1MdZxyTJmftGGlkjNadTJtRlpCfHu9cOT7oz3Spmg6_ykRYMiRgNTXNnkGs6vHeSL1n5a32T--tHNJKs3DCnf8J0eE4L1c3jT5gs7qRySxFLN1xOtwzvnFZrX5YmThoryU72BM2CEXZ2LGvV7cw3W3a1tg3z6dWVAx32FuVCHCzbVK9YmY42G5r7E_E3A3p1ihZyfYX3LL_EfdOF3MLzRAKPkVOzLNQRVFr-itg2wN8yxx-nDjz2rfbUoJaBomwIN99J98Lqy95pI8_Dc1pLJ8Z5rCCWWy5-jrQIhHturEEFMzvCknfTDngQnsUL2jkKlyDtgbTPlUrvZFv21VHTCsulttTBD-zXFx7QwYap5f0ewp1CT3StOWb1E6rgXa8Ne90C4JwRdLiGrOcMEw5rb5vbBaa779E150ZNb2u2B5O-lpAmy6VfMZJdYUuWXpk4uHx2gW0MdQI3fmhsTlc_nISvFCx8Pokur2wNZN_9HGO6Y0-So5gH5f2pjjzGQ48TYTgrs7WdTS-704N2oV5ox7__lgiHDQ.min.css">www.shape.com...min.css</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Size: 325.91 KB</div>
+                        <div>Success: 100% | TTFB: 116.59 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/static/4.14.0/cache/eNqtWN2WpCgMfqHl-BB7u9d7OwchpUwj2PxUd739BMQSSxqxey6qSEK-EJKA0c466gTrJqqchI5Z2wUJ_NMdJ8REByCzpAxGLTmYktIERnBBVScUh8-nRpyiQm0CPc1agXK2owYFCLcjnYEkrqaYRsK0cjjxyl-BSmEdsYt_id52pbmXYHMzhgpJ7oKDjohI1fR7alNQGaHcFj3j8XeI5abxIfgAOI4ghtH9O1I1wH_oKygwRWHF1iB1TyWiKI9gmqexVe9oVtG7GHBOq847IYV7EBTldAV802bCCAE1bCSByekKbgJrQ0X2VIVI7Nk2Z5eNRV83sg1681JaZgBUhO_ZNhNWM0FlhMcaebKljJRxdUyoLRn31WtqeFOl3iR8ih6PCK3qZ2aXw1Na5qvyu2ntMGPLUCm_sl49LVF3ScmTvASVQr3ZHdMG59pxakfilbiDsSlBRWnFIN6dUg9pqC0MH1aCCz4myEFSCewV9HHt9TINeX-9rkulQh_a4-jMJzHaK-7nnG6LrtMM9QR7e5A92Q7fUpAZKglrmwmOZ_A92-4L_shEzRtW90ZW4NYZz5w3wJ-Prvg4Xv4rwEUrZGoQt1JFTID5TmqzwdE8yN7oF8o3MaA_hNE57Oqa74xKiTWRRT9Jrjy700h6qRme2LDHGW_hd68dXHNndJOMf6eZ91MMUGgVDoIz8G8_zfFC2XO_PoQbib0PF0O4dBVrEM4cSEEKK88Gp5kzwDRe3gfJt6z8sr7P_fUzGIlW7pDTf8N0eE4LNazj3zBZPEnlHCKLHS7DLsM7p9VWCKWJi8ZKsos1gbPUCLs6lh2v_cwPj9lm7WybsUMmLyYWoUCwAjLhvo6SHzq4WPp_155ft7RYWdp9NwI2mB31TuMbEB54rWfg51v__RHU8ZpfiXNI9oZ1lDS8JzCKT1YL8kk0npHlcMRjMOBtDObxhfhaUd7oe1aIyP0wt7mFr4NAWfQaT9WTakGl5W8AvKfsLXP8daqhP1oh6S1qz55dDlxYJrXFUL6w3194Akd3TMVU_wi1v0Q80bW8reoXVPEojdpg26SlE7UukDpnBF6HmMIdQ4SDqSGpaYWuYaWdS0t_2-rlulp6I7MjNemLCGqSXPodI1mbWrJ0ZqJx-axJ7Q3WDjN-6m1OVz-OhC8RJHwiiS5vbA1k3_26x9RHL5JWzIvy8UICFveDt5gwjJTZCh7vUL48TJ_UiXb8-wMxC3zp.min.css">
+                    <div class="resource-type css">C</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/static/4.14.0/cache/eNqtWN2WpCgMfqHl-BB7u9d7OwchpUwj2PxUd739BMQSSxqxey6qSEK-EJKA0c466gTrJqqchI5Z2wUJ_NMdJ8REByCzpAxGLTmYktIERnBBVScUh8-nRpyiQm0CPc1agXK2owYFCLcjnYEkrqaYRsK0cjjxyl-BSmEdsYt_id52pbmXYHMzhgpJ7oKDjohI1fR7alNQGaHcFj3j8XeI5abxIfgAOI4ghtH9O1I1wH_oKygwRWHF1iB1TyWiKI9gmqexVe9oVtG7GHBOq847IYV7EBTldAV802bCCAE1bCSByekKbgJrQ0X2VIVI7Nk2Z5eNRV83sg1681JaZgBUhO_ZNhNWM0FlhMcaebKljJRxdUyoLRn31WtqeFOl3iR8ih6PCK3qZ2aXw1Na5qvyu2ntMGPLUCm_sl49LVF3ScmTvASVQr3ZHdMG59pxakfilbiDsSlBRWnFIN6dUg9pqC0MH1aCCz4myEFSCewV9HHt9TINeX-9rkulQh_a4-jMJzHaK-7nnG6LrtMM9QR7e5A92Q7fUpAZKglrmwmOZ_A92-4L_shEzRtW90ZW4NYZz5w3wJ-Prvg4Xv4rwEUrZGoQt1JFTID5TmqzwdE8yN7oF8o3MaA_hNE57Oqa74xKiTWRRT9Jrjy700h6qRme2LDHGW_hd68dXHNndJOMf6eZ91MMUGgVDoIz8G8_zfFC2XO_PoQbib0PF0O4dBVrEM4cSEEKK88Gp5kzwDRe3gfJt6z8sr7P_fUzGIlW7pDTf8N0eE4LNazj3zBZPEnlHCKLHS7DLsM7p9VWCKWJi8ZKsos1gbPUCLs6lh2v_cwPj9lm7WybsUMmLyYWoUCwAjLhvo6SHzq4WPp_155ft7RYWdp9NwI2mB31TuMbEB54rWfg51v__RHU8ZpfiXNI9oZ1lDS8JzCKT1YL8kk0npHlcMRjMOBtDObxhfhaUd7oe1aIyP0wt7mFr4NAWfQaT9WTakGl5W8AvKfsLXP8daqhP1oh6S1qz55dDlxYJrXFUL6w3194Akd3TMVU_wi1v0Q80bW8reoXVPEojdpg26SlE7UukDpnBF6HmMIdQ4SDqSGpaYWuYaWdS0t_2-rlulp6I7MjNemLCGqSXPodI1mbWrJ0ZqJx-axJ7Q3WDjN-6m1OVz-OhC8RJHwiiS5vbA1k3_26x9RHL5JWzIvy8UICFveDt5gwjJTZCh7vUL48TJ_UiXb8-wMxC3zp.min.css">www.shape.com...min.css</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Size: 324.45 KB</div>
+                        <div>Success: 100% | TTFB: 131.21 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/static/4.14.0/cache/eNqtV1t24yAM3dBwvIj5nT30YFBsJhhcHmmz-xEYxzimBHf6kSAJXSGQEHJnHXWCdRNVTkLHrO2CBH51xwkx0QHILCmDUUsOpqQ0gRFcUNUJxeHzoRGnqFCbQE-zVqCc7ahBAcLtSGcgiaspppEwrRxOPPNnoFJYR-ziX6K3XWnuJdjcjKFCkpvgoCMiUjX9ntp0qIxQboue8fg7nOWm8SH4ADiOIIbR_R6pGuAP-goKTFFYsTVI3VOJKMojmOZhbNU7mlX0Jgac06rzTkjh7gRFOV0BX7SZ8ISAGjaSwOR0BTeBtSEje6rCSezZNmeXjUVfN7INevFSWmYAVITv2TYTVjNBZYTHHHmwpYiUcXVMyC0Z99VranhTpl4kfIoerwit6mdml8tTWuar9Lto7TBiy1BJv7JePSxRdwnJgzwFlUJd7Y5pg3PtOLUj8UrcwNgUoKK0YhBrp9RDGmoLw4eV4IKPCXKQVA72DPq49lpMQ9yfy3UpVehdexyd-SRGe8X9nNNtp-s0Qz3BrneyJ9vhWwgyQyVhbTPB8Qy-Z9t9wR-ZqLlidm9kBW6d8cx5A_zxdMXnePmvABetEKlBXEoZMQHGO6nNBkdzJ3ujXyhfxID-EEbnsKtzvjMqJeZEdvpJcubtTiPppWZ4Y8MeZ6zC7147OOfO6CYZ_15G3k_xgEKrcBC8Av_10xwLyp57-xBuJPY2nDzCpatYD-GVA-mQwsqzwWnmDDCNxfsg-ZaVN-v73F8_g5Fo5QY5_ROmwzst1LCOP2GyeJPKMUQWO1yGXYZ3TqstEUoTJ42VZCdzAmepEXZ1LLte-5n_vGabtR8w9qqCre0vo_hgWJAPojH0S8zjKgMWGTD3L8QNPqzbuQDwnrJrdsLPUw3v5wpJXfaefZU8XFgmtcX4P7HfX3gCR3dMxVR_x9oFSwQTXcuDVf2EKvVu1AafVS2dqHUJ1Dkj8LrgK7RjiHAwNQQ1rdA1rLRzael_Wr1cV0sdO37smvTFjJokl37HSNbGlCy9MtG4fNbE9AZzhxk_9Tanqx_P4UuVhE_o6PLG1kD23a97TH3WImnFPCkfqyiwuB8sB8IwUmYreCxGfCm2D-qFdvz7B5bgwps.min.css">
+                    <div class="resource-type css">C</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/static/4.14.0/cache/eNqtV1t24yAM3dBwvIj5nT30YFBsJhhcHmmz-xEYxzimBHf6kSAJXSGQEHJnHXWCdRNVTkLHrO2CBH51xwkx0QHILCmDUUsOpqQ0gRFcUNUJxeHzoRGnqFCbQE-zVqCc7ahBAcLtSGcgiaspppEwrRxOPPNnoFJYR-ziX6K3XWnuJdjcjKFCkpvgoCMiUjX9ntp0qIxQboue8fg7nOWm8SH4ADiOIIbR_R6pGuAP-goKTFFYsTVI3VOJKMojmOZhbNU7mlX0Jgac06rzTkjh7gRFOV0BX7SZ8ISAGjaSwOR0BTeBtSEje6rCSezZNmeXjUVfN7INevFSWmYAVITv2TYTVjNBZYTHHHmwpYiUcXVMyC0Z99VranhTpl4kfIoerwit6mdml8tTWuar9Lto7TBiy1BJv7JePSxRdwnJgzwFlUJd7Y5pg3PtOLUj8UrcwNgUoKK0YhBrp9RDGmoLw4eV4IKPCXKQVA72DPq49lpMQ9yfy3UpVehdexyd-SRGe8X9nNNtp-s0Qz3BrneyJ9vhWwgyQyVhbTPB8Qy-Z9t9wR-ZqLlidm9kBW6d8cx5A_zxdMXnePmvABetEKlBXEoZMQHGO6nNBkdzJ3ujXyhfxID-EEbnsKtzvjMqJeZEdvpJcubtTiPppWZ4Y8MeZ6zC7147OOfO6CYZ_15G3k_xgEKrcBC8Av_10xwLyp57-xBuJPY2nDzCpatYD-GVA-mQwsqzwWnmDDCNxfsg-ZaVN-v73F8_g5Fo5QY5_ROmwzst1LCOP2GyeJPKMUQWO1yGXYZ3TqstEUoTJ42VZCdzAmepEXZ1LLte-5n_vGabtR8w9qqCre0vo_hgWJAPojH0S8zjKgMWGTD3L8QNPqzbuQDwnrJrdsLPUw3v5wpJXfaefZU8XFgmtcX4P7HfX3gCR3dMxVR_x9oFSwQTXcuDVf2EKvVu1AafVS2dqHUJ1Dkj8LrgK7RjiHAwNQQ1rdA1rLRzael_Wr1cV0sdO37smvTFjJokl37HSNbGlCy9MtG4fNbE9AZzhxk_9Tanqx_P4UuVhE_o6PLG1kD23a97TH3WImnFPCkfqyiwuB8sB8IwUmYreCxGfCm2D-qFdvz7B5bgwps.min.css">www.shape.com...min.css</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Size: 313.79 KB</div>
+                        <div>Success: 100% | TTFB: 89.96 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/static/4.14.0/cache/eNqtV92WpCgMfqHh-BB7u-8wJ0JK2UJw-KnuevuNiCVW0RT29IWShHwhJDFg5zx4ybsJtFfYcee6RYK_utcJOcGAbFbAcTRKoC0pTWilkKA7qQV-PjTiFEi9C8w0G43auw4sCQjuRpiRJa6mmEbGjfY08cyfgSrpPHOrf4ned2VEUOhyMxakYjcp0EREpGr6PbgUVM5AuKJnIj4vsdw1PqQYkMYR5TD6f0bQA_5LvqJGWxRWbA3K9KAIBSKCIU9jq96rWQ03OdCc0V3wUkl_ZyTK6Qr4YuxEEUKwfGQLk9MV3ITOLRXZg14icWTbnF03Fn3dyTboJSjluEXUEX5k20w4wyWoCI818mBLGSnj6piltlTcV2_AiqZKvSj8lD19IlDVz8yuH09pma_K72KMp4ytQ6X8ynr1tETdNSUP8hRUSX11B6YNLowX4EYWtLyhdSlBRWnFIPVOZYY01BbGD6fQLz4myIukEtgz6Ne1t2a65P25XZdKBe4m0OjtJ7MmaBHmnG6Lrjec9CS_3tmRbIfvKcgMlYS1zSyOZ_Aj2-4LPWwCe6Xq3skK3HkbuA8WxePoisfx-q4AV60lU4O8lCpiQsp3UpstjfbOjka_UL7IgfxhHOZlV-d8H_2k4uttqMMUPVrO5hfBO_B_YZrjF3zkfn9IPzJ3G875nI7xxL51oFeGX1c_ZkvT3Fvkhrrli-RbVn670Of-hhmtIis3zOmfML0cjFIP2_gTJoulW84hsXSl5HSsB--N3guhNHHSWEl2siZoFqx0m2N7N3maOXMn3SosRXOpu93aDxh71zK2-yYH6tAO1YNoTP2a87jKAEqhvX8hPhfrC_zJ4kvcX4Yht_B1EIBHr6lYHlQLKi1_QRQ98Gvm-PNUwzm7QdJt_Mi-q3khHVfGUSif2O8vPKGHA1Mx1d-p5eIa8UTX8rapn1CF4Edj6fg1ysvabQK8t5K-ckrhgWHS49SQ1LRC17DSwaX1ntTq5bZautnTT7FNf9akyXLpd4xk152SpXcmGpfPLju9pdrhNky9y-nqT_byR8uWX-3o8s7WQO5P2PaY7mOrpBXzpPzakJDH_VAXk5azMlvBUw8V6xnxoN5ox9f_lEDRYA.min.css">
+                    <div class="resource-type css">C</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/static/4.14.0/cache/eNqtV92WpCgMfqHh-BB7u-8wJ0JK2UJw-KnuevuNiCVW0RT29IWShHwhJDFg5zx4ybsJtFfYcee6RYK_utcJOcGAbFbAcTRKoC0pTWilkKA7qQV-PjTiFEi9C8w0G43auw4sCQjuRpiRJa6mmEbGjfY08cyfgSrpPHOrf4ned2VEUOhyMxakYjcp0EREpGr6PbgUVM5AuKJnIj4vsdw1PqQYkMYR5TD6f0bQA_5LvqJGWxRWbA3K9KAIBSKCIU9jq96rWQ03OdCc0V3wUkl_ZyTK6Qr4YuxEEUKwfGQLk9MV3ITOLRXZg14icWTbnF03Fn3dyTboJSjluEXUEX5k20w4wyWoCI818mBLGSnj6piltlTcV2_AiqZKvSj8lD19IlDVz8yuH09pma_K72KMp4ytQ6X8ynr1tETdNSUP8hRUSX11B6YNLowX4EYWtLyhdSlBRWnFIPVOZYY01BbGD6fQLz4myIukEtgz6Ne1t2a65P25XZdKBe4m0OjtJ7MmaBHmnG6Lrjec9CS_3tmRbIfvKcgMlYS1zSyOZ_Aj2-4LPWwCe6Xq3skK3HkbuA8WxePoisfx-q4AV60lU4O8lCpiQsp3UpstjfbOjka_UL7IgfxhHOZlV-d8H_2k4uttqMMUPVrO5hfBO_B_YZrjF3zkfn9IPzJ3G875nI7xxL51oFeGX1c_ZkvT3Fvkhrrli-RbVn670Of-hhmtIis3zOmfML0cjFIP2_gTJoulW84hsXSl5HSsB--N3guhNHHSWEl2siZoFqx0m2N7N3maOXMn3SosRXOpu93aDxh71zK2-yYH6tAO1YNoTP2a87jKAEqhvX8hPhfrC_zJ4kvcX4Yht_B1EIBHr6lYHlQLKi1_QRQ98Gvm-PNUwzm7QdJt_Mi-q3khHVfGUSif2O8vPKGHA1Mx1d-p5eIa8UTX8rapn1CF4Edj6fg1ysvabQK8t5K-ckrhgWHS49SQ1LRC17DSwaX1ntTq5bZautnTT7FNf9akyXLpd4xk152SpXcmGpfPLju9pdrhNky9y-nqT_byR8uWX-3o8s7WQO5P2PaY7mOrpBXzpPzakJDH_VAXk5azMlvBUw8V6xnxoN5ox9f_lEDRYA.min.css">www.shape.com...min.css</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Size: 309.96 KB</div>
+                        <div>Success: 100% | TTFB: 107.97 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/static/4.14.0/cache/eNqtV1t24yAM3dBwvIj5nT3MkbFiM8Xg8Eib3Y_AJMYJJbjth40kdIWQxKuzDpzg3QzKSey4tV2Q4K_uuUPMMCJbJHCctBzQlJRmNGIQoDqhBvy4a8QuEGoT6HnRCpWzHRgSENxOsCBLXE0xtYxr5ajjkT8ClcI6Zlf_Er3NSg9eos3NGBCSXcSAOiIiVdPvwaagcgaDLXo2xO8plpvGuxhGpHZCMU7u9wRqxD_kKyo0RWHF1ih1D5JQMEQw5Gls1Xs2q-AiRurTqvNOSOGujEQ5XQGftJkpQgiGTywwOV3BzWhtqMgeVIjEnm1zdp1Y9HUj26AnL6XlBlFF-J5tM2E1FyAjPNbInS1lpIyrY0JtyTivXoMZmir1JPFD9LREoKqfmV0XT2mYz8rvpLWjjK1NpfzKevW0RN01JXfyEFQK9WZ3TBt80G4AOzGvxAWNTQkqSisGae-UekxNbWB8txJd8DFBniSVwB5BP49920xD3h-361KpwFV7ap35YEZ7Nfglp9ui6zQnPcHfrmxPtsO3FGSGSsLaZILjGXzPtvtCH5vBvFF1b2QFbp3x3HmDw_3oisfx-q8AV62QqVGcShUxI-U7qS2GWnNle6OfKJ_ESP4wDkuY1THfOUhJNZFFP0mOnN2pZb3UnFZsmONCu_DZa4fH3JncLOPvZeb9HAMUrgpPglfgf35e4oay5_6-CzcxexkPhnC9VdyC8MqBFKQw8mKomzuDXNPm_ST5kpW_1ve5v35BI8nKBXP6J0yHc1qo8db-hMniSirnkFi64XK6ZXjntNoKodRx0FhJdrAmqBeMsDfHsuW17_nmMtus7afZ4uMJYRXElbB5uJN_079Xm2LJLTjnzsD5my7kFj6_0gMP9RgOhTvVgkrDnxCHHngexceuhlP8Bkl3_T37qoQHYbnUlkL5wH594Bkd7JiKqf5K1YJrxBNdy9tN_YAqeDdpQ4e7lk7U7irgnBG0aCmFO4YJh3NDUtMIXcNIO5fWW1irl7fR0ruBntwmvdtJk-XSrxjJLlMlS69MNA6fXaV6Q7XDjZ97m9PVJ3x4L7PwkI8ub2wNZM_-Nsd021slrZgH5ecNCXmcD51PwnBWZit4Ts-udcu_Uy-04-8_nDn2Dg.min.css">
+                    <div class="resource-type css">C</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/static/4.14.0/cache/eNqtV1t24yAM3dBwvIj5nT3MkbFiM8Xg8Eib3Y_AJMYJJbjth40kdIWQxKuzDpzg3QzKSey4tV2Q4K_uuUPMMCJbJHCctBzQlJRmNGIQoDqhBvy4a8QuEGoT6HnRCpWzHRgSENxOsCBLXE0xtYxr5ajjkT8ClcI6Zlf_Er3NSg9eos3NGBCSXcSAOiIiVdPvwaagcgaDLXo2xO8plpvGuxhGpHZCMU7u9wRqxD_kKyo0RWHF1ih1D5JQMEQw5Gls1Xs2q-AiRurTqvNOSOGujEQ5XQGftJkpQgiGTywwOV3BzWhtqMgeVIjEnm1zdp1Y9HUj26AnL6XlBlFF-J5tM2E1FyAjPNbInS1lpIyrY0JtyTivXoMZmir1JPFD9LREoKqfmV0XT2mYz8rvpLWjjK1NpfzKevW0RN01JXfyEFQK9WZ3TBt80G4AOzGvxAWNTQkqSisGae-UekxNbWB8txJd8DFBniSVwB5BP49920xD3h-361KpwFV7ap35YEZ7Nfglp9ui6zQnPcHfrmxPtsO3FGSGSsLaZILjGXzPtvtCH5vBvFF1b2QFbp3x3HmDw_3oisfx-q8AV62QqVGcShUxI-U7qS2GWnNle6OfKJ_ESP4wDkuY1THfOUhJNZFFP0mOnN2pZb3UnFZsmONCu_DZa4fH3JncLOPvZeb9HAMUrgpPglfgf35e4oay5_6-CzcxexkPhnC9VdyC8MqBFKQw8mKomzuDXNPm_ST5kpW_1ve5v35BI8nKBXP6J0yHc1qo8db-hMniSirnkFi64XK6ZXjntNoKodRx0FhJdrAmqBeMsDfHsuW17_nmMtus7afZ4uMJYRXElbB5uJN_079Xm2LJLTjnzsD5my7kFj6_0gMP9RgOhTvVgkrDnxCHHngexceuhlP8Bkl3_T37qoQHYbnUlkL5wH594Bkd7JiKqf5K1YJrxBNdy9tN_YAqeDdpQ4e7lk7U7irgnBG0aCmFO4YJh3NDUtMIXcNIO5fWW1irl7fR0ruBntwmvdtJk-XSrxjJLlMlS69MNA6fXaV6Q7XDjZ97m9PVJ3x4L7PwkI8ub2wNZM_-Nsd021slrZgH5ecNCXmcD51PwnBWZit4Ts-udcu_Uy-04-8_nDn2Dg.min.css">www.shape.com...min.css</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Size: 303.80 KB</div>
+                        <div>Success: 100% | TTFB: 83.75 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td class="resource-cards-cell">
+                  <div class="resource-card" title="https://www.shape.com/static/4.14.0/cache/eNqtV12SpCAMvtBSHmJe9w5bEaJSjeDw0zN9-w2IrbYMo1Pz0E0S8oVAQoKN8-Alb0bQXmHDnWuiBP80xwk5Qo9sUsBxMEqgLSmNaKWQoBupBX4-NdIUSL0KzDgZjdq7BiwJCO4GmJBlrqaYR8aN9jTxyl-BKuk8c7N_mV53ZURQ6LZmLEjF7lKgSYhE1fRbcPlQOQPhip6J9Duc5arxIUWPNA4o-8G_DaB7_Eu-okZbFFZs9cq0oAgFIoFhG8azekezGu6ypzmjm-Clkv7BSLSlK-DO2JFOCMHygUVmS1dwIzoXM7IFHU9iz55zdt5Y8nUlz0G7oJTjFlEn-J49Z8IZLkEleMqRJ1uKSBlXx8TcUmlfrQErTmVqp_BTtnRFoKq_MTtfntIyX6VfZ4yniM1DJf3KevWwJN05JE_yElRJfXM75hxcGC_ADSxoeUfrcoCK0opBqp3K9HmoLYwfTqGPPmbIQVI52Cvo49pLMY1xfy3XpVSBhwk0evvJrAlahGlLVxZy3gbug0XxLNipCc3_FeCsFf3rZVc6hxFpl1ltsjTaB9sb_UK5kz35wzhMMejXfB_8qNLfNVjuH5llsU1dNABKUQSaNQez5EqnXJZvleF0P6JTE9W892B8NfpZPwZ8sjTNvUVuqGocJD-y8s-Fdrv7MKFVZOWOW_o3TMcGIXW_jL9hspjMR3PRDrH0tOLU3oL3Rqcs-HLiorGS7MR7ZMmQDlG0wG-b_HqdOlFMFkh-cuzZ7zYkpOPKOMr6F_bnC4_oYcdUTLUP6hM4X4pM167Won5BFYIfjGXeGOVlrWSC91ZSCKk47RgmPY4ngppXaE6stHNpbgZnvVxWy88Xevnb_PlAmmwr_YmRNQ-Llr4zcXL5TetvLeUOt2Fs3ZaufknEZzuL3xPJ5ZWtgdx7WPboSOX2YLPkLOZF-dg7kKf9ULWSlrMyW8Fzev3NlelJfaOd_v4Df5GcsQ.min.css">
+                    <div class="resource-type css">C</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/static/4.14.0/cache/eNqtV12SpCAMvtBSHmJe9w5bEaJSjeDw0zN9-w2IrbYMo1Pz0E0S8oVAQoKN8-Alb0bQXmHDnWuiBP80xwk5Qo9sUsBxMEqgLSmNaKWQoBupBX4-NdIUSL0KzDgZjdq7BiwJCO4GmJBlrqaYR8aN9jTxyl-BKuk8c7N_mV53ZURQ6LZmLEjF7lKgSYhE1fRbcPlQOQPhip6J9Duc5arxIUWPNA4o-8G_DaB7_Eu-okZbFFZs9cq0oAgFIoFhG8azekezGu6ypzmjm-Clkv7BSLSlK-DO2JFOCMHygUVmS1dwIzoXM7IFHU9iz55zdt5Y8nUlz0G7oJTjFlEn-J49Z8IZLkEleMqRJ1uKSBlXx8TcUmlfrQErTmVqp_BTtnRFoKq_MTtfntIyX6VfZ4yniM1DJf3KevWwJN05JE_yElRJfXM75hxcGC_ADSxoeUfrcoCK0opBqp3K9HmoLYwfTqGPPmbIQVI52Cvo49pLMY1xfy3XpVSBhwk0evvJrAlahGlLVxZy3gbug0XxLNipCc3_FeCsFf3rZVc6hxFpl1ltsjTaB9sb_UK5kz35wzhMMejXfB_8qNLfNVjuH5llsU1dNABKUQSaNQez5EqnXJZvleF0P6JTE9W892B8NfpZPwZ8sjTNvUVuqGocJD-y8s-Fdrv7MKFVZOWOW_o3TMcGIXW_jL9hspjMR3PRDrH0tOLU3oL3Rqcs-HLiorGS7MR7ZMmQDlG0wG-b_HqdOlFMFkh-cuzZ7zYkpOPKOMr6F_bnC4_oYcdUTLUP6hM4X4pM167Won5BFYIfjGXeGOVlrWSC91ZSCKk47RgmPY4ngppXaE6stHNpbgZnvVxWy88Xevnb_PlAmmwr_YmRNQ-Llr4zcXL5TetvLeUOt2Fs3ZaufknEZzuL3xPJ5ZWtgdx7WPboSOX2YLPkLOZF-dg7kKf9ULWSlrMyW8Fzev3NlelJfaOd_v4Df5GcsQ.min.css">www.shape.com...min.css</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Time: 754.41 ms</div>
+                        <div>Success: 100% | TTFB: 726.42 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/static/4.14.0/cache/eNqlVFFy6yAMvFAZT8_Q33cJGWSsRoYUyU2c0xecuHXjlHr6vkALu2KRoBEFJdsM0Y2M0tg4HGPAoNJoOhvoOmICRaPgPaYbOsAlhs1i81pdfmr-lOsTZQoHk_CUSK-5Mn_AZLG2729JLaAUGVksfQJfehCUcS2H55wvANPleoaZvAH_W8A47GBkNUcePYWNwcxhuEwGXCWVI0-xz1IME7q7sMI7kfOYxx7J9_rSQ_D4j0Qx5JI8AitanmMLnFngZnIZ7rcztbMjeH6ejCPg6CuKAd7J57UYmlFzWXUyGVrPK-QupkEaQUi2NyVYzyu8AUXAo2khlEv4HlZLUNzchrm0-5xdL2o29jXdR-1GZrEJMcz07-GjRkqRGU4w1V5RC4Jlb8d4ppbxt8Zbua6dGk_CqLn3b2XfIhU2DbkE5VCeuke-ypMuDys4dGb5Rna0PaS8ni12iK4Fe9gAOzQ0RlY6LmOFAaP2MZmF8HqP7Egm0ea7MtJDmu9jHf_01iRjh6kllVrZ5W1cNK3haA_milQOJWjnNkxoKVnzOPwAD56GPQ.min.js">
+                    <div class="resource-type js">J</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/static/4.14.0/cache/eNqlVFFy6yAMvFAZT8_Q33cJGWSsRoYUyU2c0xecuHXjlHr6vkALu2KRoBEFJdsM0Y2M0tg4HGPAoNJoOhvoOmICRaPgPaYbOsAlhs1i81pdfmr-lOsTZQoHk_CUSK-5Mn_AZLG2729JLaAUGVksfQJfehCUcS2H55wvANPleoaZvAH_W8A47GBkNUcePYWNwcxhuEwGXCWVI0-xz1IME7q7sMI7kfOYxx7J9_rSQ_D4j0Qx5JI8AitanmMLnFngZnIZ7rcztbMjeH6ejCPg6CuKAd7J57UYmlFzWXUyGVrPK-QupkEaQUi2NyVYzyu8AUXAo2khlEv4HlZLUNzchrm0-5xdL2o29jXdR-1GZrEJMcz07-GjRkqRGU4w1V5RC4Jlb8d4ppbxt8Zbua6dGk_CqLn3b2XfIhU2DbkE5VCeuke-ypMuDys4dGb5Rna0PaS8ni12iK4Fe9gAOzQ0RlY6LmOFAaP2MZmF8HqP7Egm0ea7MtJDmu9jHf_01iRjh6kllVrZ5W1cNK3haA_milQOJWjnNkxoKVnzOPwAD56GPQ.min.js">www.shape.com....min.js</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Time: 486.60 ms</div>
+                        <div>Success: 100% | TTFB: 480.15 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/static/4.14.0/cache/eNqtWN2WpCgMfqHl-BB7u9d7OwchpUwj2PxUd739BMQSSxqxey6qSEK-EJKA0c466gTrJqqchI5Z2wUJ_NMdJ8REByCzpAxGLTmYktIERnBBVScUh8-nRpyiQm0CPc1agXK2owYFCLcjnYEkrqaYRsK0cjjxyl-BSmEdsYt_id52pbmXYHMzhgpJ7oKDjohI1fR7alNQGaHcFj3j8XeI5abxIfgAOI4ghtH9O1I1wH_oKygwRWHF1iB1TyWiKI9gmqexVe9oVtG7GHBOq847IYV7EBTldAV802bCCAE1bCSByekKbgJrQ0X2VIVI7Nk2Z5eNRV83sg1681JaZgBUhO_ZNhNWM0FlhMcaebKljJRxdUyoLRn31WtqeFOl3iR8ih6PCK3qZ2aXw1Na5qvyu2ntMGPLUCm_sl49LVF3ScmTvASVQr3ZHdMG59pxakfilbiDsSlBRWnFIN6dUg9pqC0MH1aCCz4myEFSCewV9HHt9TINeX-9rkulQh_a4-jMJzHaK-7nnG6LrtMM9QR7e5A92Q7fUpAZKglrmwmOZ_A92-4L_shEzRtW90ZW4NYZz5w3wJ-Prvg4Xv4rwEUrZGoQt1JFTID5TmqzwdE8yN7oF8o3MaA_hNE57Oqa74xKiTWRRT9Jrjy700h6qRme2LDHGW_hd68dXHNndJOMf6eZ91MMUGgVDoIz8G8_zfFC2XO_PoQbib0PF0O4dBVrEM4cSEEKK88Gp5kzwDRe3gfJt6z8sr7P_fUzGIlW7pDTf8N0eE4LNazj3zBZPEnlHCKLHS7DLsM7p9VWCKWJi8ZKsos1gbPUCLs6lh2v_cwPj9lm7WybsUMmLyYWoUCwAjLhvo6SHzq4WPp_155ft7RYWdp9NwI2mB31TuMbEB54rWfg51v__RHU8ZpfiXNI9oZ1lDS8JzCKT1YL8kk0npHlcMRjMOBtDObxhfhaUd7oe1aIyP0wt7mFr4NAWfQaT9WTakGl5W8AvKfsLXP8daqhP1oh6S1qz55dDlxYJrXFUL6w3194Akd3TMVU_wi1v0Q80bW8reoXVPEojdpg26SlE7UukDpnBF6HmMIdQ4SDqSGpaYWuYaWdS0t_2-rlulp6I7MjNemLCGqSXPodI1mbWrJ0ZqJx-axJ7Q3WDjN-6m1OVz-OhC8RJHwiiS5vbA1k3_26x9RHL5JWzIvy8UICFveDt5gwjJTZCh7vUL48TJ_UiXb8-wMxC3zp.min.css">
+                    <div class="resource-type css">C</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/static/4.14.0/cache/eNqtWN2WpCgMfqHl-BB7u9d7OwchpUwj2PxUd739BMQSSxqxey6qSEK-EJKA0c466gTrJqqchI5Z2wUJ_NMdJ8REByCzpAxGLTmYktIERnBBVScUh8-nRpyiQm0CPc1agXK2owYFCLcjnYEkrqaYRsK0cjjxyl-BSmEdsYt_id52pbmXYHMzhgpJ7oKDjohI1fR7alNQGaHcFj3j8XeI5abxIfgAOI4ghtH9O1I1wH_oKygwRWHF1iB1TyWiKI9gmqexVe9oVtG7GHBOq847IYV7EBTldAV802bCCAE1bCSByekKbgJrQ0X2VIVI7Nk2Z5eNRV83sg1681JaZgBUhO_ZNhNWM0FlhMcaebKljJRxdUyoLRn31WtqeFOl3iR8ih6PCK3qZ2aXw1Na5qvyu2ntMGPLUCm_sl49LVF3ScmTvASVQr3ZHdMG59pxakfilbiDsSlBRWnFIN6dUg9pqC0MH1aCCz4myEFSCewV9HHt9TINeX-9rkulQh_a4-jMJzHaK-7nnG6LrtMM9QR7e5A92Q7fUpAZKglrmwmOZ_A92-4L_shEzRtW90ZW4NYZz5w3wJ-Prvg4Xv4rwEUrZGoQt1JFTID5TmqzwdE8yN7oF8o3MaA_hNE57Oqa74xKiTWRRT9Jrjy700h6qRme2LDHGW_hd68dXHNndJOMf6eZ91MMUGgVDoIz8G8_zfFC2XO_PoQbib0PF0O4dBVrEM4cSEEKK88Gp5kzwDRe3gfJt6z8sr7P_fUzGIlW7pDTf8N0eE4LNazj3zBZPEnlHCKLHS7DLsM7p9VWCKWJi8ZKsos1gbPUCLs6lh2v_cwPj9lm7WybsUMmLyYWoUCwAjLhvo6SHzq4WPp_155ft7RYWdp9NwI2mB31TuMbEB54rWfg51v__RHU8ZpfiXNI9oZ1lDS8JzCKT1YL8kk0npHlcMRjMOBtDObxhfhaUd7oe1aIyP0wt7mFr4NAWfQaT9WTakGl5W8AvKfsLXP8daqhP1oh6S1qz55dDlxYJrXFUL6w3194Akd3TMVU_wi1v0Q80bW8reoXVPEojdpg26SlE7UukDpnBF6HmMIdQ4SDqSGpaYWuYaWdS0t_2-rlulp6I7MjNemLCGqSXPodI1mbWrJ0ZqJx-axJ7Q3WDjN-6m1OVz-OhC8RJHwiiS5vbA1k3_26x9RHL5JWzIvy8UICFveDt5gwjJTZCh7vUL48TJ_UiXb8-wMxC3zp.min.css">www.shape.com...min.css</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Time: 256.74 ms</div>
+                        <div>Success: 100% | TTFB: 131.21 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://assets-jpcust.jwpsrv.com/thumbnails/Wgn4w70d-720.jpg">
+                    <div class="resource-type img">I</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://assets-jpcust.jwpsrv.com/thumbnails/Wgn4w70d-720.jpg">assets-jpcust.jwpsrv...</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Time: 255.46 ms</div>
+                        <div>Success: 100% | TTFB: 177.39 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/thmb/Q36So3op3WoJFkMaPW1EKCpT4Rg=/fit-in/1500x2667/filters:no_upscale():max_bytes(150000):strip_icc()/shp-secret-clinical-strength-invisible-solid-antiperspirant-deodorant-kristen-geil-8-1006809f206c429a8a3e469bd7b58ae3.jpeg">
+                    <div class="resource-type img">I</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/thmb/Q36So3op3WoJFkMaPW1EKCpT4Rg=/fit-in/1500x2667/filters:no_upscale():max_bytes(150000):strip_icc()/shp-secret-clinical-strength-invisible-solid-antiperspirant-deodorant-kristen-geil-8-1006809f206c429a8a3e469bd7b58ae3.jpeg">www.shape.com...e3.jpeg</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Time: 163.50 ms</div>
+                        <div>Success: 100% | TTFB: 151.25 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            
+              <tr>
+                <td>listScTemplate_nonhtml</td>
+                <td>158</td>
+                <td>78.37</td>
+                <td>127.62</td>
+                <td>186.18</td>
+                <td>99.37%</td>
+                <td class="resource-cards-cell">
+                  <div class="resource-card" title="https://www.shape.com/thmb/XmkP9r66P5O76g7dDXrAMhInWyw=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/best-turkey-chili_0-a7127056d32842c683137f5e7b82c71e.png">
+                    <div class="resource-type img">I</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/thmb/XmkP9r66P5O76g7dDXrAMhInWyw=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/best-turkey-chili_0-a7127056d32842c683137f5e7b82c71e.png">www.shape.com...71e.png</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Size: 821.14 KB</div>
+                        <div>Success: 100% | TTFB: 94.48 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/thmb/yJmUm6pXdu6RnFtVQGHdLgjp5PI=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/slow-cooked-pepper-chili_0-dd6f04912ebb4ad194300ff5eab75ece.png">
+                    <div class="resource-type img">I</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/thmb/yJmUm6pXdu6RnFtVQGHdLgjp5PI=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/slow-cooked-pepper-chili_0-dd6f04912ebb4ad194300ff5eab75ece.png">www.shape.com...ece.png</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Size: 799.91 KB</div>
+                        <div>Success: 100% | TTFB: 104.85 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/thmb/GIpaDN12CptbenoDagCEN59SO58=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/Screen-Shot-2015-11-12-at-2.21.59-PM.pngScreen-Shot-2015-11-12-at-2.21.59-PM_0-84221829ac92459b8bccf947d41ae1ef.png">
+                    <div class="resource-type img">I</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/thmb/GIpaDN12CptbenoDagCEN59SO58=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/Screen-Shot-2015-11-12-at-2.21.59-PM.pngScreen-Shot-2015-11-12-at-2.21.59-PM_0-84221829ac92459b8bccf947d41ae1ef.png">www.shape.com...1ef.png</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Size: 776.31 KB</div>
+                        <div>Success: 100% | TTFB: 104.73 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/thmb/w7k94wRRtguBfiD6saDrQbEcktI=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/tequilla-lime-chili_0-da55989e391d43a2b9b41f7ed149770a.png">
+                    <div class="resource-type img">I</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/thmb/w7k94wRRtguBfiD6saDrQbEcktI=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/tequilla-lime-chili_0-da55989e391d43a2b9b41f7ed149770a.png">www.shape.com...70a.png</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Size: 658.06 KB</div>
+                        <div>Success: 100% | TTFB: 84.36 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/thmb/RP9N1x5upT1a0LOPzvMAcgOwNT4=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/pulled-pork-chili_0-e53996f9fca64bb48f2d8d9add413e33.png">
+                    <div class="resource-type img">I</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/thmb/RP9N1x5upT1a0LOPzvMAcgOwNT4=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/pulled-pork-chili_0-e53996f9fca64bb48f2d8d9add413e33.png">www.shape.com...e33.png</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Size: 646.24 KB</div>
+                        <div>Success: 100% | TTFB: 97.70 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td class="resource-cards-cell">
+                  <div class="resource-card" title="https://www.shape.com/static/4.14.0/cache/eNqdVtGWoyAM_aHl-BHzuj8RIWrOIHQJdqZ_vwFp1dahOi-ShHuTQALScIRIuhnBRYuNZm6SBf80rxM0Qo_qYkHj4K3BsAcaMZAhcA05g98PRJ4CcgvFm8kiN9qPF-_QRW4CkFVXMugzPEs1fAtcMtYKDC-xFoiYm_XUPdEF8UWmRxkHpH6IHwO4Hv8SR3QYdo0VX731LVhhgclkWO_RUdyrWwdX6mXOu2aKZCnelJjWcoXc-TDKDiEEPaikrOUKb0TmVO4WXNqJrXos2XlhOddFPEbtJmtZB0SX6Vv1mAv2msBmeu6Rh7pXkX1enZN6y-Z1tR6COdSpncVvai1Kv9bwK7eZthvmp_brvI9SsXmotN8-rl6WjJ1L8hBPUS25T94ox-jGRwM8qMnRFQOXAu1aKw7lYrK-L0MtMH6xxZhyLJQXS2Vjz7BfY0MQe7lMi7zbfQXGA1yknd4Dy6i0d3KPxWe9khHHMOk4BTQPcv4VzN8KcUalhfTU7eU2omxHgV2CjOGmtk5_AHfUSz5KwyV1x4HdvK-23LlbtXYUY_iWmrG2niXik_r7wCNG2CgVV-1NDkrKih9yrdB3-AkoTHHwQUXvbaRLbVUxBmqntOkbRVHE8cBfttyo0rShPBcEqdbW3zhZjv-up3cuDoZf3UZtkGrqMI0tr-Uzx8_Kc0Lx_DAq8rkjOMTR5s-JJnwO_qvA5cVVVJV8nHPQIcyGdP-virexH-iD-6o6RNOCXrt6nqo-O9MbT6XHZ17aotZI_G-6dx8L5POmZstRzluwk4nrDJ7F2h6jzm0ZUFPQal-t8LW8K3IdF-kNOn_-A6qPtdM.min.css">
+                    <div class="resource-type css">C</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/static/4.14.0/cache/eNqdVtGWoyAM_aHl-BHzuj8RIWrOIHQJdqZ_vwFp1dahOi-ShHuTQALScIRIuhnBRYuNZm6SBf80rxM0Qo_qYkHj4K3BsAcaMZAhcA05g98PRJ4CcgvFm8kiN9qPF-_QRW4CkFVXMugzPEs1fAtcMtYKDC-xFoiYm_XUPdEF8UWmRxkHpH6IHwO4Hv8SR3QYdo0VX731LVhhgclkWO_RUdyrWwdX6mXOu2aKZCnelJjWcoXc-TDKDiEEPaikrOUKb0TmVO4WXNqJrXos2XlhOddFPEbtJmtZB0SX6Vv1mAv2msBmeu6Rh7pXkX1enZN6y-Z1tR6COdSpncVvai1Kv9bwK7eZthvmp_brvI9SsXmotN8-rl6WjJ1L8hBPUS25T94ox-jGRwM8qMnRFQOXAu1aKw7lYrK-L0MtMH6xxZhyLJQXS2Vjz7BfY0MQe7lMi7zbfQXGA1yknd4Dy6i0d3KPxWe9khHHMOk4BTQPcv4VzN8KcUalhfTU7eU2omxHgV2CjOGmtk5_AHfUSz5KwyV1x4HdvK-23LlbtXYUY_iWmrG2niXik_r7wCNG2CgVV-1NDkrKih9yrdB3-AkoTHHwQUXvbaRLbVUxBmqntOkbRVHE8cBfttyo0rShPBcEqdbW3zhZjv-up3cuDoZf3UZtkGrqMI0tr-Uzx8_Kc0Lx_DAq8rkjOMTR5s-JJnwO_qvA5cVVVJV8nHPQIcyGdP-virexH-iD-6o6RNOCXrt6nqo-O9MbT6XHZ17aotZI_G-6dx8L5POmZstRzluwk4nrDJ7F2h6jzm0ZUFPQal-t8LW8K3IdF-kNOn_-A6qPtdM.min.css">www.shape.com...min.css</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Time: 276.88 ms</div>
+                        <div>Success: 100% | TTFB: 256.85 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://assets-jpcust.jwpsrv.com/thumbnails/apfkgdx5-720.jpg">
+                    <div class="resource-type img">I</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://assets-jpcust.jwpsrv.com/thumbnails/apfkgdx5-720.jpg">assets-jpcust.jwpsrv...</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Time: 250.25 ms</div>
+                        <div>Success: 100% | TTFB: 168.48 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://assets-jpcust.jwpsrv.com/thumbnails/0zf256j8-720.jpg">
+                    <div class="resource-type img">I</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://assets-jpcust.jwpsrv.com/thumbnails/0zf256j8-720.jpg">assets-jpcust.jwpsrv...</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Time: 238.82 ms</div>
+                        <div>Success: 100% | TTFB: 223.45 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://assets-jpcust.jwpsrv.com/thumbnails/2lxd94xg-720.jpg">
+                    <div class="resource-type img">I</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://assets-jpcust.jwpsrv.com/thumbnails/2lxd94xg-720.jpg">assets-jpcust.jwpsrv...</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Time: 236.34 ms</div>
+                        <div>Success: 100% | TTFB: 226.07 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://assets-jpcust.jwpsrv.com/thumbnails/eb09es27-720.jpg">
+                    <div class="resource-type img">I</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://assets-jpcust.jwpsrv.com/thumbnails/eb09es27-720.jpg">assets-jpcust.jwpsrv...</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Time: 220.15 ms</div>
+                        <div>Success: 100% | TTFB: 200.87 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            
+              <tr>
+                <td>structuredContentTemplate_nonhtml</td>
+                <td>127</td>
+                <td>34.67</td>
+                <td>106.57</td>
+                <td>120.67</td>
+                <td>96.06%</td>
+                <td class="resource-cards-cell">
+                  <div class="resource-card" title="https://www.shape.com/static/4.14.0/cache/eNqdV9uaoyAMfqHl8yH2dl8iQlSmCA5gO337DYdWnTIU56KShD8Hkhhp5zx4ybsZtFfYcee6IME_3euGnGFEtijgOBkl0JZAM1opJOhOaoFfT0TcAqk3FSNWha7jZl6MRu1dZ0EqdpUCTYRHqobvweWIOQPhNl8bhMTdfusR6Ia4STEirRPKcfJ_J9Aj_pPOo0ZbFFZsjcr0oEgLRFSGfY5aca9mNVzlSHtGd6uXSvo7I9GerigPxs6UIQTLJxaYPV3Rm9G5UO4edMjEkW0LNh0sxrqRbarDqpTjFlFH9SPbZsIZLkFF9dgjT7ZUkbJeXSf0lorn6g1Y0dSpg8Iv2Sukfq3hd2ajWtHNT-03GOOpYmmptF8ZVy9LxKaSPMlTqkrqizswberCeAFuYquWV7QuF6gorRikwaTMmJeaY7w5hT7EmFVeJJXEntF-9Q2W5HmYZrrYfRnmJliond4D88q40TTH_He-1o5xErOPG43-Ox2htwZEd2TPeE4jPhnNNj5u7f6fnitJdN6u3K8WxdNr_HqlZ0UxoULuRzmUDjUjVTDDFkurvbOj0R_AgxwpHsZhCQ3d1vXecMJJfrmzI9muvr0aO0Ml4ZkKFtIbUnYqMPoxyt6FCrqRDe_FI5b89Tyyv9ef0cOBqZjq7zS5Qou6J13L3gN-Agqrn4ylshjl5VI7lfdW9mvI6oFh0uPccO3JHroGT4eQ0nhqjfLhLX9QaWbZfFskJNtLf2Nk180lS-9MNLrftW9vqXe4Xefe7elz82jys4qPc2oDQhKEj-fu6Af5OZMclDKr3xnLkjMjIa-sV4Zf0qux0K3tczW-pagPcwOi6IHvT_Z9q_oXItzXWfgjESPY2JqS-1wfrZTHYZK06rwFa9q4JnAia_VBHnvMIpeWszJb0ed0R6QecH6j3qDj4z9QKWmU.min.css">
+                    <div class="resource-type css">C</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/static/4.14.0/cache/eNqdV9uaoyAMfqHl8yH2dl8iQlSmCA5gO337DYdWnTIU56KShD8Hkhhp5zx4ybsZtFfYcee6IME_3euGnGFEtijgOBkl0JZAM1opJOhOaoFfT0TcAqk3FSNWha7jZl6MRu1dZ0EqdpUCTYRHqobvweWIOQPhNl8bhMTdfusR6Ia4STEirRPKcfJ_J9Aj_pPOo0ZbFFZsjcr0oEgLRFSGfY5aca9mNVzlSHtGd6uXSvo7I9GerigPxs6UIQTLJxaYPV3Rm9G5UO4edMjEkW0LNh0sxrqRbarDqpTjFlFH9SPbZsIZLkFF9dgjT7ZUkbJeXSf0lorn6g1Y0dSpg8Iv2Sukfq3hd2ajWtHNT-03GOOpYmmptF8ZVy9LxKaSPMlTqkrqizswberCeAFuYquWV7QuF6gorRikwaTMmJeaY7w5hT7EmFVeJJXEntF-9Q2W5HmYZrrYfRnmJliond4D88q40TTH_He-1o5xErOPG43-Ox2htwZEd2TPeE4jPhnNNj5u7f6fnitJdN6u3K8WxdNr_HqlZ0UxoULuRzmUDjUjVTDDFkurvbOj0R_AgxwpHsZhCQ3d1vXecMJJfrmzI9muvr0aO0Ml4ZkKFtIbUnYqMPoxyt6FCrqRDe_FI5b89Tyyv9ef0cOBqZjq7zS5Qou6J13L3gN-Agqrn4ylshjl5VI7lfdW9mvI6oFh0uPccO3JHroGT4eQ0nhqjfLhLX9QaWbZfFskJNtLf2Nk180lS-9MNLrftW9vqXe4Xefe7elz82jys4qPc2oDQhKEj-fu6Af5OZMclDKr3xnLkjMjIa-sV4Zf0qux0K3tczW-pagPcwOi6IHvT_Z9q_oXItzXWfgjESPY2JqS-1wfrZTHYZK06rwFa9q4JnAia_VBHnvMIpeWszJb0ed0R6QecH6j3qDj4z9QKWmU.min.css">www.shape.com...min.css</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Size: 239.77 KB</div>
+                        <div>Success: 100% | TTFB: 95.68 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/static/4.14.0/cache/eNqdVt2aoyAMfaHl8yH2dl8iQlSmCA5gO337DYh_U4biXLQm4ZwkkBhpnAcveTOC9gob7lwTLPineV2QI_TIJgUcB6ME2hxoRCuFBN1ILfBrQ8QlkHqnGDErdA0342Q0au8aC1KxuxRoIjxKJXwLLmXMGQi3x9ohZG6OS2uiO-IhRY_0HFD2g_87gO7xn3QeNdqsseCrV6YFRSwQkQzHM6rFvbrVcJc9rRndzF4q6Z-MTEe5QO6MHemEECwfWFCOcoE3onOh3C3ocBJntS7ZZWMx112so3azUo5bRB3pZ7XOhTNcgor02CObmqtInlfmhN5ScV-tASuqOrVT-CVbhdSvJfzBbaRlw_zUfp0xniq2PArtl8eVyxKxS0k28RJVSX1zJ6WOLowX4AY2a3lH61KBstaCQxpMyvTpUQqMD6fQhxwT5cVSONgr7NfYYMmehmmSs92XYG6AidrpPTA9GTea5pj_rpfaMU5i9vGg0f-kLbTWgGjO6pXIy4hfnCYfH4_6-FvkwiE6b2fuZ4tiixq_Xst_gbigwtn3ssttakSqYIJNlp72yc5OfwB3sqd8GIcpNHRd13vDCSf57cnOYj19fzUOjnLGKxXMHG84skuJ0Y_R6d2ooLtY8V6suaSv51n9PX9EDyel4Kp90uQKLeo2uXR6K_wCFGY_GEtlMcrLqbQr761s53CqJ4VJj2PFtSdFaCoinVJaxlNtlmu09EGlmWXTbZGQ7Gj9jZNDN-c8vXNRGf7Qvq2l3uF2Hlt3lK_No8GPKv5do3FQysz-sOlkufL-pidrleG3pY8numJ9zsbXVGB11yGKFvjtkMz3peJ9P1yuWbj1xwx2tURyn_Na9zS7Fkst5y1Y08J9AS9iqT7IY0NY5NJyllcLfE4XOroFOb9Lb9Dx7z-EZkkm.min.css">
+                    <div class="resource-type css">C</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/static/4.14.0/cache/eNqdVt2aoyAMfaHl8yH2dl8iQlSmCA5gO337DYh_U4biXLQm4ZwkkBhpnAcveTOC9gob7lwTLPineV2QI_TIJgUcB6ME2hxoRCuFBN1ILfBrQ8QlkHqnGDErdA0342Q0au8aC1KxuxRoIjxKJXwLLmXMGQi3x9ohZG6OS2uiO-IhRY_0HFD2g_87gO7xn3QeNdqsseCrV6YFRSwQkQzHM6rFvbrVcJc9rRndzF4q6Z-MTEe5QO6MHemEECwfWFCOcoE3onOh3C3ocBJntS7ZZWMx112so3azUo5bRB3pZ7XOhTNcgor02CObmqtInlfmhN5ScV-tASuqOrVT-CVbhdSvJfzBbaRlw_zUfp0xniq2PArtl8eVyxKxS0k28RJVSX1zJ6WOLowX4AY2a3lH61KBstaCQxpMyvTpUQqMD6fQhxwT5cVSONgr7NfYYMmehmmSs92XYG6AidrpPTA9GTea5pj_rpfaMU5i9vGg0f-kLbTWgGjO6pXIy4hfnCYfH4_6-FvkwiE6b2fuZ4tiixq_Xst_gbigwtn3ssttakSqYIJNlp72yc5OfwB3sqd8GIcpNHRd13vDCSf57cnOYj19fzUOjnLGKxXMHG84skuJ0Y_R6d2ooLtY8V6suaSv51n9PX9EDyel4Kp90uQKLeo2uXR6K_wCFGY_GEtlMcrLqbQr761s53CqJ4VJj2PFtSdFaCoinVJaxlNtlmu09EGlmWXTbZGQ7Gj9jZNDN-c8vXNRGf7Qvq2l3uF2Hlt3lK_No8GPKv5do3FQysz-sOlkufL-pidrleG3pY8numJ9zsbXVGB11yGKFvjtkMz3peJ9P1yuWbj1xwx2tURyn_Na9zS7Fkst5y1Y08J9AS9iqT7IY0NY5NJyllcLfE4XOroFOb9Lb9Dx7z-EZkkm.min.css">www.shape.com...min.css</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Size: 237.39 KB</div>
+                        <div>Success: 100% | TTFB: 133.04 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/static/4.14.0/cache/eNqdVlGaoyAMvtDyeYh93UtEiJodhC5gO739BqRVpwzFeagm4f8TSNJI5wMEkt0MJmjspPddtOCv7nWBZhhRXDRInKxW6EqgGR0pAtORUfj5RKQlILNRrFo0-k7a-WINmuA7B6TFlRTaBE9SDd-DzzuWApTfYm0QNnf7pcdGN8SN1Ij8npDGKfyewIz4h3xAg65orPgate1BMwtUIsM-R624V7cGrjTymjXdEkhTuAs27eUKebBu5gwhODmJqOzlCm9G72O5ezAxE0e1bbPrwdJeN7GNOixae-kQTaIf1TYX3koCneipR55qqSJlXp0Te0unc_UWnGrq1EHjJ_UauV9r-J3bRCuG-a79BmsDV2x9VdqvjKuXJWHXkjzFU1RN5sMflDa6skGBn8Ri6IrO5wIVrRWHPJi0HfOrFhhvXmOIe8yUF0slsWfYr7HBsT0P0ywXuy_D_AQXbqf3wPwW0hqeY-GrXmvHNInF3xuP_jsfoXcWVHdUz0ReR_zqNPv4e2uP_4xcSaIPbpFhcaieUdPXa31WiCsq5n6koXSoGbmCGXZx_HZ3cXT6DXigkfcjJFxiQ7d1fbCScSQ_7uIottO3v8bOUcl4poKF9MaUndoY_wRn74MLuokN_4vHXvLX86j-nD9jgINScdXfeXLFFvVPuZa9B_wEFJYwWcdlsTrQpXaqEBz1S8zqQREUcG649uQIXUOkw5bW8dS6y0e0_EHlmeXybZGRYm_9iZNdN5c8vXPRGH7Xvr3j3pFumXu_l8_NoynMOj3O0QaE1RA_nrujH-wNWXy0-oCoepB7V1-Xqnf2eEEW8eaeSrGpNZL_tzxql-fPamnlvAUbXriu4FWs5RhlKqpDSU6KslrhS76UcdJ92KQ36PT4DzMqMYc.min.css">
+                    <div class="resource-type css">C</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/static/4.14.0/cache/eNqdVlGaoyAMvtDyeYh93UtEiJodhC5gO739BqRVpwzFeagm4f8TSNJI5wMEkt0MJmjspPddtOCv7nWBZhhRXDRInKxW6EqgGR0pAtORUfj5RKQlILNRrFo0-k7a-WINmuA7B6TFlRTaBE9SDd-DzzuWApTfYm0QNnf7pcdGN8SN1Ij8npDGKfyewIz4h3xAg65orPgate1BMwtUIsM-R624V7cGrjTymjXdEkhTuAs27eUKebBu5gwhODmJqOzlCm9G72O5ezAxE0e1bbPrwdJeN7GNOixae-kQTaIf1TYX3koCneipR55qqSJlXp0Te0unc_UWnGrq1EHjJ_UauV9r-J3bRCuG-a79BmsDV2x9VdqvjKuXJWHXkjzFU1RN5sMflDa6skGBn8Ri6IrO5wIVrRWHPJi0HfOrFhhvXmOIe8yUF0slsWfYr7HBsT0P0ywXuy_D_AQXbqf3wPwW0hqeY-GrXmvHNInF3xuP_jsfoXcWVHdUz0ReR_zqNPv4e2uP_4xcSaIPbpFhcaieUdPXa31WiCsq5n6koXSoGbmCGXZx_HZ3cXT6DXigkfcjJFxiQ7d1fbCScSQ_7uIottO3v8bOUcl4poKF9MaUndoY_wRn74MLuokN_4vHXvLX86j-nD9jgINScdXfeXLFFvVPuZa9B_wEFJYwWcdlsTrQpXaqEBz1S8zqQREUcG649uQIXUOkw5bW8dS6y0e0_EHlmeXybZGRYm_9iZNdN5c8vXPRGH7Xvr3j3pFumXu_l8_NoynMOj3O0QaE1RA_nrujH-wNWXy0-oCoepB7V1-Xqnf2eEEW8eaeSrGpNZL_tzxql-fPamnlvAUbXriu4FWs5RhlKqpDSU6KslrhS76UcdJ92KQ36PT4DzMqMYc.min.css">www.shape.com...min.css</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Size: 229.88 KB</div>
+                        <div>Success: 100% | TTFB: 84.68 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/static/4.14.0/cache/eNqdVlGaoyAMvtDyeYh53UtEiMoUoQvYTm-_AanilKE4D5Uk_H-AJA10zoOXvJtBe4Udd64LFvzTvU7IGUZkVwUcJ6ME2hJoRiuFBN1JLfBrQ8QpkHqnGLEodB0389Vo1N51FqRiNynQRHiUavgeXNoxZyDcvtYOIXOXTz03uiPuUoxI44RynPzHBHrEv9J51GiLxoqvUZkeFLFARDLkMWrFvbrVcJMjzRndLV4q6R-MTLlcIQ_GzhQhBMsnFpRcrvBmdC6kuwcdInFU2za7HizudRfbqMOilOMWUUf6UW1z4QyXoCI91simljJS5tU5obZUPFdvwIqmSh0UfsleIdVrDZ-5jbTiMj-V32CMp4ytQ6X8yrh6WiJ2TckmnqIqqS_uoLTRhfEC3MQWLW9oXUpQ0VpxSI1JmTENtYXx7hT6sMdEebFUAnuG_bo2WLKnZprkYvUlmJvgSuX0HphGxo2mPua_67VyjJ2Yfd6p9T_oCL01ILqjembltcWvTpOPz3v7-tvKlSA6bxfuF4tiWzXeXuu3QlxRIfajHEqHmpEymGBXS6N9sKPTH8CDHGk_jMM1FHRb1XvDCSf55cGOYjt9_2tkjkrGMxkshDeE7NTG6McoehdK6C42_C-ee0m351H9PX9GDwel4qp_UOcKJeo2uRa9J_wEFBY_GUtpMcrLa-1U3lvZLyGqB4VJj3PDsyddcdRFbHq_EZLl1t84yeqr5Omdi8bls4LqLWWT22XuXS6f6xCTn1X8nKPh3KPIjhz1cy4GhNUQbsTM1cHekIhn_Q6Iogeeu_o-VX2Ih1cvC8_xmM1drZHcv-WZ_tRUVksr5y1Y08RtBa9iLcbIY11Y5NJyVlYrfE4vLQq687v0Bh0__wG7QyCD.min.css">
+                    <div class="resource-type css">C</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/static/4.14.0/cache/eNqdVlGaoyAMvtDyeYh53UtEiMoUoQvYTm-_AanilKE4D5Uk_H-AJA10zoOXvJtBe4Udd64LFvzTvU7IGUZkVwUcJ6ME2hJoRiuFBN1JLfBrQ8QpkHqnGLEodB0389Vo1N51FqRiNynQRHiUavgeXNoxZyDcvtYOIXOXTz03uiPuUoxI44RynPzHBHrEv9J51GiLxoqvUZkeFLFARDLkMWrFvbrVcJMjzRndLV4q6R-MTLlcIQ_GzhQhBMsnFpRcrvBmdC6kuwcdInFU2za7HizudRfbqMOilOMWUUf6UW1z4QyXoCI91simljJS5tU5obZUPFdvwIqmSh0UfsleIdVrDZ-5jbTiMj-V32CMp4ytQ6X8yrh6WiJ2TckmnqIqqS_uoLTRhfEC3MQWLW9oXUpQ0VpxSI1JmTENtYXx7hT6sMdEebFUAnuG_bo2WLKnZprkYvUlmJvgSuX0HphGxo2mPua_67VyjJ2Yfd6p9T_oCL01ILqjembltcWvTpOPz3v7-tvKlSA6bxfuF4tiWzXeXuu3QlxRIfajHEqHmpEymGBXS6N9sKPTH8CDHGk_jMM1FHRb1XvDCSf55cGOYjt9_2tkjkrGMxkshDeE7NTG6McoehdK6C42_C-ee0m351H9PX9GDwel4qp_UOcKJeo2uRa9J_wEFBY_GUtpMcrLa-1U3lvZLyGqB4VJj3PDsyddcdRFbHq_EZLl1t84yeqr5Omdi8bls4LqLWWT22XuXS6f6xCTn1X8nKPh3KPIjhz1cy4GhNUQbsTM1cHekIhn_Q6Iogeeu_o-VX2Ih1cvC8_xmM1drZHcv-WZ_tRUVksr5y1Y08RtBa9iLcbIY11Y5NJyVlYrfE4vLQq687v0Bh0__wG7QyCD.min.css">www.shape.com...min.css</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Size: 227.11 KB</div>
+                        <div>Success: 100% | TTFB: 80.30 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/static/4.14.0/cache/eNqdVluWpCAM3dBwXET_ziYCRKULwQGs6tr9BMRXl01h_0gS7k0giUDjAwQlmgFM0NgI75towT_N64QaoEM2ahDYWy3RnYEGdEoqMI0yEr9WRJoCZTaKlZNG3wg7jNagCb5xoDS7K4k2wZNUwnPwecWCgfRbrA1C5mY_tSx0QzyU7JDGHlXXh48eTId_lQ9o0J0aC746bTloYoFMZNjnqBb36tbAXXU0Z00zBaVVeDIy7eUCubVuoAwhONGzqOzlAm9A72O5OZiYiaNat9h5Y2mtm1hHbSetvXCIJtGPap0Lb4UCneipR1b1rCLnvDIn9pZO--IWnKzq1Fbjl-IaqV9L-J3bRDsN81P7tdYGqtg8FNrvHFcuS8LOJVnFS1StzM0flDq6tEGC79lk1B2dzwU6tRYc0sGkbZeHUmB8eI0hrjFTXiyFxF5hv8YGR_Z8mGb5tPsyzPcwUju9B-aRCWvoHAvf9VI7ppOYfT7o6H_SFrizIJujeiXyfMTPTrOPz0d9_DVyIYk-uEmEyaFco6bba_4WiDMq5r5T7dmmBqQKZtjoaHRPdnT6A7hVHa2HCRhjQ1c0wJK2fE0c1d_zBwxwUAqu-JN-0VgLv8qlQi_wC1CYQm8dC9bqoMbSrkJwik8xdweFqYBDxf2eIzQVkQ5Lmv_D2lUu0fLNQT-ny88iQrK99TdOtmPu1NM7F5Xhd6cud9Q7wk0D93v52o_Xh0GnzzUaDhzlbstJv3LM5JFxbcXNby_YiswvrlpEyUHcdsv4PlV80MbXI4vP2hR9U0sk_29a6u0Jcnuy2VLLeQs2NHGfwbNYqguK1AgOhXKCnasFvqAXC13zPmzSG3T6_AfH2tk2.min.css">
+                    <div class="resource-type css">C</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/static/4.14.0/cache/eNqdVluWpCAM3dBwXET_ziYCRKULwQGs6tr9BMRXl01h_0gS7k0giUDjAwQlmgFM0NgI75towT_N64QaoEM2ahDYWy3RnYEGdEoqMI0yEr9WRJoCZTaKlZNG3wg7jNagCb5xoDS7K4k2wZNUwnPwecWCgfRbrA1C5mY_tSx0QzyU7JDGHlXXh48eTId_lQ9o0J0aC746bTloYoFMZNjnqBb36tbAXXU0Z00zBaVVeDIy7eUCubVuoAwhONGzqOzlAm9A72O5OZiYiaNat9h5Y2mtm1hHbSetvXCIJtGPap0Lb4UCneipR1b1rCLnvDIn9pZO--IWnKzq1Fbjl-IaqV9L-J3bRDsN81P7tdYGqtg8FNrvHFcuS8LOJVnFS1StzM0flDq6tEGC79lk1B2dzwU6tRYc0sGkbZeHUmB8eI0hrjFTXiyFxF5hv8YGR_Z8mGb5tPsyzPcwUju9B-aRCWvoHAvf9VI7ppOYfT7o6H_SFrizIJujeiXyfMTPTrOPz0d9_DVyIYk-uEmEyaFco6bba_4WiDMq5r5T7dmmBqQKZtjoaHRPdnT6A7hVHa2HCRhjQ1c0wJK2fE0c1d_zBwxwUAqu-JN-0VgLv8qlQi_wC1CYQm8dC9bqoMbSrkJwik8xdweFqYBDxf2eIzQVkQ5Lmv_D2lUu0fLNQT-ny88iQrK99TdOtmPu1NM7F5Xhd6cud9Q7wk0D93v52o_Xh0GnzzUaDhzlbstJv3LM5JFxbcXNby_YiswvrlpEyUHcdsv4PlV80MbXI4vP2hR9U0sk_29a6u0Jcnuy2VLLeQs2NHGfwbNYqguK1AgOhXKCnasFvqAXC13zPmzSG3T6_AfH2tk2.min.css">www.shape.com...min.css</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Size: 225.34 KB</div>
+                        <div>Success: 100% | TTFB: 517.04 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td class="resource-cards-cell">
+                  <div class="resource-card" title="https://www.shape.com/static/4.14.0/cache/eNqdVluWpCAM3dBwXET_ziYCRKULwQGs6tr9BMRXl01h_0gS7k0giUDjAwQlmgFM0NgI75towT_N64QaoEM2ahDYWy3RnYEGdEoqMI0yEr9WRJoCZTaKlZNG3wg7jNagCb5xoDS7K4k2wZNUwnPwecWCgfRbrA1C5mY_tSx0QzyU7JDGHlXXh48eTId_lQ9o0J0aC746bTloYoFMZNjnqBb36tbAXXU0Z00zBaVVeDIy7eUCubVuoAwhONGzqOzlAm9A72O5OZiYiaNat9h5Y2mtm1hHbSetvXCIJtGPap0Lb4UCneipR1b1rCLnvDIn9pZO--IWnKzq1Fbjl-IaqV9L-J3bRDsN81P7tdYGqtg8FNrvHFcuS8LOJVnFS1StzM0flDq6tEGC79lk1B2dzwU6tRYc0sGkbZeHUmB8eI0hrjFTXiyFxF5hv8YGR_Z8mGb5tPsyzPcwUju9B-aRCWvoHAvf9VI7ppOYfT7o6H_SFrizIJujeiXyfMTPTrOPz0d9_DVyIYk-uEmEyaFco6bba_4WiDMq5r5T7dmmBqQKZtjoaHRPdnT6A7hVHa2HCRhjQ1c0wJK2fE0c1d_zBwxwUAqu-JN-0VgLv8qlQi_wC1CYQm8dC9bqoMbSrkJwik8xdweFqYBDxf2eIzQVkQ5Lmv_D2lUu0fLNQT-ny88iQrK99TdOtmPu1NM7F5Xhd6cud9Q7wk0D93v52o_Xh0GnzzUaDhzlbstJv3LM5JFxbcXNby_YiswvrlpEyUHcdsv4PlV80MbXI4vP2hR9U0sk_29a6u0Jcnuy2VLLeQs2NHGfwbNYqguK1AgOhXKCnasFvqAXC13zPmzSG3T6_AfH2tk2.min.css">
+                    <div class="resource-type css">C</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/static/4.14.0/cache/eNqdVluWpCAM3dBwXET_ziYCRKULwQGs6tr9BMRXl01h_0gS7k0giUDjAwQlmgFM0NgI75towT_N64QaoEM2ahDYWy3RnYEGdEoqMI0yEr9WRJoCZTaKlZNG3wg7jNagCb5xoDS7K4k2wZNUwnPwecWCgfRbrA1C5mY_tSx0QzyU7JDGHlXXh48eTId_lQ9o0J0aC746bTloYoFMZNjnqBb36tbAXXU0Z00zBaVVeDIy7eUCubVuoAwhONGzqOzlAm9A72O5OZiYiaNat9h5Y2mtm1hHbSetvXCIJtGPap0Lb4UCneipR1b1rCLnvDIn9pZO--IWnKzq1Fbjl-IaqV9L-J3bRDsN81P7tdYGqtg8FNrvHFcuS8LOJVnFS1StzM0flDq6tEGC79lk1B2dzwU6tRYc0sGkbZeHUmB8eI0hrjFTXiyFxF5hv8YGR_Z8mGb5tPsyzPcwUju9B-aRCWvoHAvf9VI7ppOYfT7o6H_SFrizIJujeiXyfMTPTrOPz0d9_DVyIYk-uEmEyaFco6bba_4WiDMq5r5T7dmmBqQKZtjoaHRPdnT6A7hVHa2HCRhjQ1c0wJK2fE0c1d_zBwxwUAqu-JN-0VgLv8qlQi_wC1CYQm8dC9bqoMbSrkJwik8xdweFqYBDxf2eIzQVkQ5Lmv_D2lUu0fLNQT-ny88iQrK99TdOtmPu1NM7F5Xhd6cud9Q7wk0D93v52o_Xh0GnzzUaDhzlbstJv3LM5JFxbcXNby_YiswvrlpEyUHcdsv4PlV80MbXI4vP2hR9U0sk_29a6u0Jcnuy2VLLeQs2NHGfwbNYqguK1AgOhXKCnasFvqAXC13zPmzSG3T6_AfH2tk2.min.css">www.shape.com...min.css</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Time: 593.74 ms</div>
+                        <div>Success: 100% | TTFB: 517.04 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/static/4.14.0/cache/eNqdVlGaoyAMvtDyeYh53UtEiJotQpdgZ3r7jYhVpy6l8yJJ-P8kkhhpOEIk3YzgosVGMzezBX81zxs0Qo_qakHj4K3BcAYaMZAhcA05g18PRNoCchvFm8kiN9qPV-_QRW4CkFU3MugTPEklfAucM9YKDG-xNoiYm_3WmuiG-CTTo6wDUj_EjwFcj7-JIzoMp8aCr976FqywwCQy7M-oFvfs1sGNetnzrpkiWYp3Jaa9XCB3PoxyQghBD2pW9nKBNyLzXO4W3HwSR7Uu2eXFUq6bWEftJmtZB0SX6Ee1zgV7TWATPfXIQz2ryDmvzJl7y6b3aj0EU9WpncUvai1Kv5bwO7eJdhrmf-3XeR-lYstSaL9zXLksCbuU5CG-RbXkLnxQ6ujGRwM8qMnRDQPnAp1aCw5lMFnf56UUGD_ZYpxzzJQnS-Fg32E_x4Yg9jxMs3zafRnGA1ylnV4D86q0dzLH4ne91I5pEqs_nzL679Ixq_BOtGWsL44WtvirOIXVT56VR_Xn_BEjHJSCq_YufTofCD_k0puv8DegMMXBBxW9t5GupbeKMVA7zV_EQVEUcaz4yeUITUWkQ0pLM9Zmme4JidJTV5FVHrPSySHfIQSp9tafONlmwqmnVy4qw-9GVBukx3SYxpb3coHMMUw6TgHN4zsZ4mjT4z3acuTp-c5XmVfVWq8vvF3yznyMKKMrB-qol_BKw3V-84rqrIE7RNOCvuyq832reEOcr2NqviemXDe1ROK_09oTLJDLXS2WWs5LsJON2wJexFLtUKdmCagpaHWuFvhargDy3-S4SS_Q6fEPIFaVoA.min.css">
+                    <div class="resource-type css">C</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/static/4.14.0/cache/eNqdVlGaoyAMvtDyeYh53UtEiJotQpdgZ3r7jYhVpy6l8yJJ-P8kkhhpOEIk3YzgosVGMzezBX81zxs0Qo_qakHj4K3BcAYaMZAhcA05g18PRNoCchvFm8kiN9qPV-_QRW4CkFU3MugTPEklfAucM9YKDG-xNoiYm_3WmuiG-CTTo6wDUj_EjwFcj7-JIzoMp8aCr976FqywwCQy7M-oFvfs1sGNetnzrpkiWYp3Jaa9XCB3PoxyQghBD2pW9nKBNyLzXO4W3HwSR7Uu2eXFUq6bWEftJmtZB0SX6Ee1zgV7TWATPfXIQz2ryDmvzJl7y6b3aj0EU9WpncUvai1Kv5bwO7eJdhrmf-3XeR-lYstSaL9zXLksCbuU5CG-RbXkLnxQ6ujGRwM8qMnRDQPnAp1aCw5lMFnf56UUGD_ZYpxzzJQnS-Fg32E_x4Yg9jxMs3zafRnGA1ylnV4D86q0dzLH4ne91I5pEqs_nzL679Ixq_BOtGWsL44WtvirOIXVT56VR_Xn_BEjHJSCq_YufTofCD_k0puv8DegMMXBBxW9t5GupbeKMVA7zV_EQVEUcaz4yeUITUWkQ0pLM9Zmme4JidJTV5FVHrPSySHfIQSp9tafONlmwqmnVy4qw-9GVBukx3SYxpb3coHMMUw6TgHN4zsZ4mjT4z3acuTp-c5XmVfVWq8vvF3yznyMKKMrB-qol_BKw3V-84rqrIE7RNOCvuyq832reEOcr2NqviemXDe1ROK_09oTLJDLXS2WWs5LsJON2wJexFLtUKdmCagpaHWuFvhargDy3-S4SS_Q6fEPIFaVoA.min.css">www.shape.com...min.css</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Time: 468.75 ms</div>
+                        <div>Success: 100% | TTFB: 441.82 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/static/4.14.0/cache/eNqdVt2aoyAMfaHl8yH2dl8iQlSmCA5gO337DYh_U4biXLQm4ZwkkBhpnAcveTOC9gob7lwTLPineV2QI_TIJgUcB6ME2hxoRCuFBN1ILfBrQ8QlkHqnGDErdA0342Q0au8aC1KxuxRoIjxKJXwLLmXMGQi3x9ohZG6OS2uiO-IhRY_0HFD2g_87gO7xn3QeNdqsseCrV6YFRSwQkQzHM6rFvbrVcJc9rRndzF4q6Z-MTEe5QO6MHemEECwfWFCOcoE3onOh3C3ocBJntS7ZZWMx112so3azUo5bRB3pZ7XOhTNcgor02CObmqtInlfmhN5ScV-tASuqOrVT-CVbhdSvJfzBbaRlw_zUfp0xniq2PArtl8eVyxKxS0k28RJVSX1zJ6WOLowX4AY2a3lH61KBstaCQxpMyvTpUQqMD6fQhxwT5cVSONgr7NfYYMmehmmSs92XYG6AidrpPTA9GTea5pj_rpfaMU5i9vGg0f-kLbTWgGjO6pXIy4hfnCYfH4_6-FvkwiE6b2fuZ4tiixq_Xst_gbigwtn3ssttakSqYIJNlp72yc5OfwB3sqd8GIcpNHRd13vDCSf57cnOYj19fzUOjnLGKxXMHG84skuJ0Y_R6d2ooLtY8V6suaSv51n9PX9EDyel4Kp90uQKLeo2uXR6K_wCFGY_GEtlMcrLqbQr761s53CqJ4VJj2PFtSdFaCoinVJaxlNtlmu09EGlmWXTbZGQ7Gj9jZNDN-c8vXNRGf7Qvq2l3uF2Hlt3lK_No8GPKv5do3FQysz-sOlkufL-pidrleG3pY8numJ9zsbXVGB11yGKFvjtkMz3peJ9P1yuWbj1xwx2tURyn_Na9zS7Fkst5y1Y08J9AS9iqT7IY0NY5NJyllcLfE4XOroFOb9Lb9Dx7z-EZkkm.min.css">
+                    <div class="resource-type css">C</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/static/4.14.0/cache/eNqdVt2aoyAMfaHl8yH2dl8iQlSmCA5gO337DYh_U4biXLQm4ZwkkBhpnAcveTOC9gob7lwTLPineV2QI_TIJgUcB6ME2hxoRCuFBN1ILfBrQ8QlkHqnGDErdA0342Q0au8aC1KxuxRoIjxKJXwLLmXMGQi3x9ohZG6OS2uiO-IhRY_0HFD2g_87gO7xn3QeNdqsseCrV6YFRSwQkQzHM6rFvbrVcJc9rRndzF4q6Z-MTEe5QO6MHemEECwfWFCOcoE3onOh3C3ocBJntS7ZZWMx112so3azUo5bRB3pZ7XOhTNcgor02CObmqtInlfmhN5ScV-tASuqOrVT-CVbhdSvJfzBbaRlw_zUfp0xniq2PArtl8eVyxKxS0k28RJVSX1zJ6WOLowX4AY2a3lH61KBstaCQxpMyvTpUQqMD6fQhxwT5cVSONgr7NfYYMmehmmSs92XYG6AidrpPTA9GTea5pj_rpfaMU5i9vGg0f-kLbTWgGjO6pXIy4hfnCYfH4_6-FvkwiE6b2fuZ4tiixq_Xst_gbigwtn3ssttakSqYIJNlp72yc5OfwB3sqd8GIcpNHRd13vDCSf57cnOYj19fzUOjnLGKxXMHG84skuJ0Y_R6d2ooLtY8V6suaSv51n9PX9EDyel4Kp90uQKLeo2uXR6K_wCFGY_GEtlMcrLqbQr761s53CqJ4VJj2PFtSdFaCoinVJaxlNtlmu09EGlmWXTbZGQ7Gj9jZNDN-c8vXNRGf7Qvq2l3uF2Hlt3lK_No8GPKv5do3FQysz-sOlkufL-pidrleG3pY8numJ9zsbXVGB11yGKFvjtkMz3peJ9P1yuWbj1xwx2tURyn_Na9zS7Fkst5y1Y08J9AS9iqT7IY0NY5NJyllcLfE4XOroFOb9Lb9Dx7z-EZkkm.min.css">www.shape.com...min.css</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Time: 158.17 ms</div>
+                        <div>Success: 100% | TTFB: 133.04 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/static/4.14.0/cache/eNqdVlGaoyAMvtDyeYh53UtEiJotQpdgZ3r7DUirTl2q8yJJ-P8ASYg0HCGSbkZw0WKjmZtkwV_N6wSN0KO6WtA4eGsw7IFGDGQIXEPO4NcTkaeA3ELxZrLIjfbj1Tt0kZsAZNWNDPoMz1IN3wKXHWsFhpe1FoiYm_XUY6ML4pNMjzIOSP0QPwZwPf4mjugw7BorvnrrW7DCApPJsI7RUdyrWwc36mXOu2aKZCnelZjWcoXc-TBKhBCCHlRS1nKFNyJzSncLLkViqx7b7HywvNdFPEbtJmtZB0SX6Vv1mAv2msBmeq6Rp7qXkX1enZNqy-ZztR6COVSpncUvai1KvdbwK7eZtrvM_8qv8z5KxuahUn77uHpaMnZOyVM8RbXkLrxRjtGNjwZ4UJOjGwYuCdq1VhxKY7K-L0NtYfxkizHtsVBeLJXAnmG_rg1B7KWZFnm3-gqMB7hKOb0HllFp76SPxe96rRxzJ1Z_PqX136ViHsKZ1ea2Pjua2eLvQBQefkqv3Ko_548YYaNUXLV3qdMUEH7KtZM_4CegMMXBBxW9t5GutVPFGKid0o3YKIoijgd-cqWhSc2E8rcWpFpbf-JkuX27nt65OLj8qhm0QbKpwzS2vJYrZI5h0nEKaJ4VOcTR5s85Wn4Ezd8KcUal4PTUnbknZVSt9frCy7Nrz8eI0kzKUh31sk2l4ZoidO5IHcJsSP14lc2N_UBhPM7SIZoW9NrV96nqMzC9uVR6DObjL2qNxH-nRzmyQC53NVuOct6CnUzcZvAs1mKMOtdpQE1Bq321wtfyn5egc1ykN-j8-QeFhYr4.min.css">
+                    <div class="resource-type css">C</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/static/4.14.0/cache/eNqdVlGaoyAMvtDyeYh53UtEiJotQpdgZ3r7DUirTl2q8yJJ-P8ASYg0HCGSbkZw0WKjmZtkwV_N6wSN0KO6WtA4eGsw7IFGDGQIXEPO4NcTkaeA3ELxZrLIjfbj1Tt0kZsAZNWNDPoMz1IN3wKXHWsFhpe1FoiYm_XUY6ML4pNMjzIOSP0QPwZwPf4mjugw7BorvnrrW7DCApPJsI7RUdyrWwc36mXOu2aKZCnelZjWcoXc-TBKhBCCHlRS1nKFNyJzSncLLkViqx7b7HywvNdFPEbtJmtZB0SX6Vv1mAv2msBmeq6Rp7qXkX1enZNqy-ZztR6COVSpncUvai1KvdbwK7eZtrvM_8qv8z5KxuahUn77uHpaMnZOyVM8RbXkLrxRjtGNjwZ4UJOjGwYuCdq1VhxKY7K-L0NtYfxkizHtsVBeLJXAnmG_rg1B7KWZFnm3-gqMB7hKOb0HllFp76SPxe96rRxzJ1Z_PqX136ViHsKZ1ea2Pjua2eLvQBQefkqv3Ko_548YYaNUXLV3qdMUEH7KtZM_4CegMMXBBxW9t5GutVPFGKid0o3YKIoijgd-cqWhSc2E8rcWpFpbf-JkuX27nt65OLj8qhm0QbKpwzS2vJYrZI5h0nEKaJ4VOcTR5s85Wn4Ezd8KcUal4PTUnbknZVSt9frCy7Nrz8eI0kzKUh31sk2l4ZoidO5IHcJsSP14lc2N_UBhPM7SIZoW9NrV96nqMzC9uVR6DObjL2qNxH-nRzmyQC53NVuOct6CnUzcZvAs1mKMOtdpQE1Bq321wtfyn5egc1ykN-j8-QeFhYr4.min.css">www.shape.com...min.css</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Time: 157.31 ms</div>
+                        <div>Success: 100% | TTFB: 136.59 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/static/4.14.0/cache/eNqdVlGaoyAMvtDyeYh53UtEiJodhC7Ednr7jYhVpy6l86JJ-P8EkhhpIgOTbkZwbLHRMTazBX81zws0Qo_qYkHj4K3BcAYaMZAhcA05g18PRFoCchvFm8libLQfL96h49gEIKuuZNAneJJK-BZi3rFWYOIWa4OIudkvrRvdEDcyPcp7QOoH_hjA9fibIqPDcGos-Oqtb8EKC0wiwz5Htbhntw6u1Muad83EZInvSkx7uUDufBglQwhBD2pW9nKBN2KMc7lbcHMmjmrdZpeDpb1uYh21m6yNOiC6RD-qdS6i1wQ20VOPPNSzipzzypy5t2w6V-shmKpO7Sx-UWtR-rWE37lNtNMw_2u_znuWii2vQvud48plSdilJA_xLaol9xkPSh3deDYQBzU5umKIuUCn1oJDGUzW9_lVCoy3aJHnPWbKk6WQ2HfYz7EhiD0P0yyfdl-GxQEu0k6vgfmttHcyx_i7XmrHNInVn5uM_rt0zCq8E20Z64ujhS3-KrKw-smz8qj-nD8iw0EpuGrv0qdzQuJDLp18hb8BhYkHHxR7b5kupVMxB2qn-Ys4KIoYx4qfXI7QVEQ6bGlpxtpdrtHy-JQODfluIEi1t_7Eyfatn3p65aIy_G70tEF6R4dpbONeLpAjh0nzFNA8-n_g0abHe7QOYTHMo3J39IO9Iotrq3eIpgW9d_V9qXhDm69Dar6npVJsaokU_05r7aJAPu9qsdRyXoKdLFwX8CKWcow6FTWgpqDVuVrga_kFS9Ijb9ILdHoUMOlWnTbfU_cPYVZ0TA.min.css">
+                    <div class="resource-type css">C</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/static/4.14.0/cache/eNqdVlGaoyAMvtDyeYh53UtEiJodhC7Ednr7jYhVpy6l86JJ-P8EkhhpIgOTbkZwbLHRMTazBX81zws0Qo_qYkHj4K3BcAYaMZAhcA05g18PRFoCchvFm8libLQfL96h49gEIKuuZNAneJJK-BZi3rFWYOIWa4OIudkvrRvdEDcyPcp7QOoH_hjA9fibIqPDcGos-Oqtb8EKC0wiwz5Htbhntw6u1Muad83EZInvSkx7uUDufBglQwhBD2pW9nKBN2KMc7lbcHMmjmrdZpeDpb1uYh21m6yNOiC6RD-qdS6i1wQ20VOPPNSzipzzypy5t2w6V-shmKpO7Sx-UWtR-rWE37lNtNMw_2u_znuWii2vQvud48plSdilJA_xLaol9xkPSh3deDYQBzU5umKIuUCn1oJDGUzW9_lVCoy3aJHnPWbKk6WQ2HfYz7EhiD0P0yyfdl-GxQEu0k6vgfmttHcyx_i7XmrHNInVn5uM_rt0zCq8E20Z64ujhS3-KrKw-smz8qj-nD8iw0EpuGrv0qdzQuJDLp18hb8BhYkHHxR7b5kupVMxB2qn-Ys4KIoYx4qfXI7QVEQ6bGlpxtpdrtHy-JQODfluIEi1t_7Eyfatn3p65aIy_G70tEF6R4dpbONeLpAjh0nzFNA8-n_g0abHe7QOYTHMo3J39IO9Iotrq3eIpgW9d_V9qXhDm69Dar6npVJsaokU_05r7aJAPu9qsdRyXoKdLFwX8CKWcow6FTWgpqDVuVrga_kFS9Ijb9ILdHoUMOlWnTbfU_cPYVZ0TA.min.css">www.shape.com...min.css</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Time: 143.64 ms</div>
+                        <div>Success: 100% | TTFB: 123.78 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            
+              <tr>
+                <td>taxonomyScTemplate_nonhtml</td>
+                <td>64</td>
+                <td>22.21</td>
+                <td>95.48</td>
+                <td>110.67</td>
+                <td>100.00%</td>
+                <td class="resource-cards-cell">
+                  <div class="resource-card" title="https://www.shape.com/static/4.14.0/cache/eNqdVluWpCAM3dBwWET_ziYiROUMkjoE67H7iUir1UXTdv1IEu5NAolRzQmSM3qCkDxqw6wXC_7RrxtuggHVxYPBkbzFWANNGJ11ELQLFu8bIm-BCzuF7OyRtaHpQgFDYh3BeXV1FinDs9TCd8AlY6PA8h5rh4hZH7c-E90RN2cHlHVEN4zpY4Qw4F_HCQPGqrHha_DUgRcW2EyG4x2dxb26DXB1g-xR0HNy3qWHEtNRbpB7ipPcEEI0o1qUo9zgTci8lLuDsNzEs3ou2fVgOdddPEftZ-_ZRMSQ6c_qORdMxoHP9Nwjm1qrSJ3X5iy95fO5OoJoT3Vq7_HuOo_Sry38wW2mVcN81349UZKKrUuj_eq4dlkydi3JJv6K6l34x0_KObqlZIFHNQd3xcilQFVrw6EMJk9DWVqB8cYe05JjobxYGhf7G_Zr7AR3CjQ9eB2au1rtwSgG4ZdVGQoypNLCUuJgXd4Jpr6fXoxmKUkF3eA3i9tFAZs4Tx0f5QaZU5xNmiPa7chjmnx-tGhfU1eBLH5VT3wtymTgEWL57AlSHa3vONnbuOrpJxcnw5dL0GmUgaouxOkgNnhGpo-8sgLfpB_Q-dHA5B-KfPLB9bVjJryXaPjALtKtNTSDbFxXd6v4Vt9_vknL8f4Dl0CDAA.min.css">
+                    <div class="resource-type css">C</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/static/4.14.0/cache/eNqdVluWpCAM3dBwWET_ziYiROUMkjoE67H7iUir1UXTdv1IEu5NAolRzQmSM3qCkDxqw6wXC_7RrxtuggHVxYPBkbzFWANNGJ11ELQLFu8bIm-BCzuF7OyRtaHpQgFDYh3BeXV1FinDs9TCd8AlY6PA8h5rh4hZH7c-E90RN2cHlHVEN4zpY4Qw4F_HCQPGqrHha_DUgRcW2EyG4x2dxb26DXB1g-xR0HNy3qWHEtNRbpB7ipPcEEI0o1qUo9zgTci8lLuDsNzEs3ou2fVgOdddPEftZ-_ZRMSQ6c_qORdMxoHP9Nwjm1qrSJ3X5iy95fO5OoJoT3Vq7_HuOo_Sry38wW2mVcN81349UZKKrUuj_eq4dlkydi3JJv6K6l34x0_KObqlZIFHNQd3xcilQFVrw6EMJk9DWVqB8cYe05JjobxYGhf7G_Zr7AR3CjQ9eB2au1rtwSgG4ZdVGQoypNLCUuJgXd4Jpr6fXoxmKUkF3eA3i9tFAZs4Tx0f5QaZU5xNmiPa7chjmnx-tGhfU1eBLH5VT3wtymTgEWL57AlSHa3vONnbuOrpJxcnw5dL0GmUgaouxOkgNnhGpo-8sgLfpB_Q-dHA5B-KfPLB9bVjJryXaPjALtKtNTSDbFxXd6v4Vt9_vknL8f4Dl0CDAA.min.css">www.shape.com...min.css</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Size: 189.23 KB</div>
+                        <div>Success: 100% | TTFB: 96.61 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/static/4.14.0/cache/eNqdVluWpCAM3dBwWET_ziYiRM0ZIHUI1mP3g2ir1UXTdv1IEu5NAolRLQkSGe0hJIfaiOjZgn_06wZ5GFBdHBgc2VmMNZDHSJYgaAoW7xuibAGFncJ2cijasL9wwJBERyCnrmSRC7xILXwHsmZsFFjZY-2QbNbHrc9Ed8SN7IB5HZGGMX2MEAb8S5IwYKwaG74Gxx24zAJbyHC8o7O4V7cBrjTkPQ56SuQoPVQ2HeUGuefo8w0hRDOqWTnKDZ5HkbncHYT5Jp7Vc8kuByu57uI5aj85JyYihkJ_Vs-5EDYErtBLj2xqrSJ1Xpsz95Yr5-oYoj3Vqb3DO3UOc7-28Ae3hVYN81379cwpV2xZGu1Xx7XLUrBLSTbxV1RH4Z88KefolpMFGdUU6IpR1gJVrQ2HeTA5HtalFRhv4jDNOa6UF0vjYn_Dfo2d4M6B_UOWobmr1R6M2ZD566oMhzyk0sxS2cGyvBNMfT-9BM1ckgq6wW8Wt4sZbOLkOznKDbKkOJk0RbTbkcfkXXm0aF9TV4EtflVPfC3WySAjxPWzl5HqaH3Hyd7GVU8_uTgZfr0EncY8UNWFJR3EBs_k6ZNf2QzfpB_Q5dHAlB-KcvKB-toxE97XaPjALvLtrVb-fDnmjP8DJqVxnA.min.css">
+                    <div class="resource-type css">C</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/static/4.14.0/cache/eNqdVluWpCAM3dBwWET_ziYiRM0ZIHUI1mP3g2ir1UXTdv1IEu5NAolRLQkSGe0hJIfaiOjZgn_06wZ5GFBdHBgc2VmMNZDHSJYgaAoW7xuibAGFncJ2cijasL9wwJBERyCnrmSRC7xILXwHsmZsFFjZY-2QbNbHrc9Ed8SN7IB5HZGGMX2MEAb8S5IwYKwaG74Gxx24zAJbyHC8o7O4V7cBrjTkPQ56SuQoPVQ2HeUGuefo8w0hRDOqWTnKDZ5HkbncHYT5Jp7Vc8kuByu57uI5aj85JyYihkJ_Vs-5EDYErtBLj2xqrSJ1Xpsz95Yr5-oYoj3Vqb3DO3UOc7-28Ae3hVYN81379cwpV2xZGu1Xx7XLUrBLSTbxV1RH4Z88KefolpMFGdUU6IpR1gJVrQ2HeTA5HtalFRhv4jDNOa6UF0vjYn_Dfo2d4M6B_UOWobmr1R6M2ZD566oMhzyk0sxS2cGyvBNMfT-9BM1ckgq6wW8Wt4sZbOLkOznKDbKkOJk0RbTbkcfkXXm0aF9TV4EtflVPfC3WySAjxPWzl5HqaH3Hyd7GVU8_uTgZfr0EncY8UNWFJR3EBs_k6ZNf2QzfpB_Q5dHAlB-KcvKB-toxE97XaPjALvLtrVb-fDnmjP8DJqVxnA.min.css">www.shape.com...min.css</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Size: 188.86 KB</div>
+                        <div>Success: 100% | TTFB: 104.94 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/static/4.14.0/cache/eNqdVVuS4yAMvNBSHGJ_5xIyKLZqMUoh8rr9yNgTO2uG8eQnSKK7BUhWrGTI5OwIMQe0TsROEfxj9xs0Qo_mHMDhwMFjqoFGTOQJoqXo8f5ElC2guFLYXwKKdTyeOWLMYhNQMFfyyAVerBa-A1lO7Ax4WXOtEA3b7dbXQVfEjXyPug5I_ZD_DhB7_CDJGDFVgw2tPnAHQVngCxm2b3QUt5eNcKVe9zjaS6ZA-WE0tLUb5BOnUV8IIbnBTM7WbvBGFJnK3UGcXuLVPXbY-WLlrKt5jHq6hCAuIcZCf3WPSQg7glDopUeebq0idV6bM_VWKPfqGJI_1KmngHfqAmq_tvAb2UKrpvmu_U7MWSs2L432q-PaZSnYuSRP81fUQPGfvDjH6J6zBxnMJdIVkywFqkYbgjqYAvfL0kqMNwmYpzMulF2k8bC_Ye9zZ7hz5PEh89Bc3WoPJg0of1mN46hDKk8sowLz8k4y8_30EnRTSSroBn-feidjInv83z0wuZevVAZIy1-QIs02-o7I2lJVpZ8kDqZfHsHmQYebObPkjdngOZ0E-vko_Gn9gC4_DUz5cy837-lUu2bG-5INH9glvrUGWNSN6yw3m2_14FdXT9f7BPX_Vas.min.css">
+                    <div class="resource-type css">C</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/static/4.14.0/cache/eNqdVVuS4yAMvNBSHGJ_5xIyKLZqMUoh8rr9yNgTO2uG8eQnSKK7BUhWrGTI5OwIMQe0TsROEfxj9xs0Qo_mHMDhwMFjqoFGTOQJoqXo8f5ElC2guFLYXwKKdTyeOWLMYhNQMFfyyAVerBa-A1lO7Ax4WXOtEA3b7dbXQVfEjXyPug5I_ZD_DhB7_CDJGDFVgw2tPnAHQVngCxm2b3QUt5eNcKVe9zjaS6ZA-WE0tLUb5BOnUV8IIbnBTM7WbvBGFJnK3UGcXuLVPXbY-WLlrKt5jHq6hCAuIcZCf3WPSQg7glDopUeebq0idV6bM_VWKPfqGJI_1KmngHfqAmq_tvAb2UKrpvmu_U7MWSs2L432q-PaZSnYuSRP81fUQPGfvDjH6J6zBxnMJdIVkywFqkYbgjqYAvfL0kqMNwmYpzMulF2k8bC_Ye9zZ7hz5PEh89Bc3WoPJg0of1mN46hDKk8sowLz8k4y8_30EnRTSSroBn-feidjInv83z0wuZevVAZIy1-QIs02-o7I2lJVpZ8kDqZfHsHmQYebObPkjdngOZ0E-vko_Gn9gC4_DUz5cy837-lUu2bG-5INH9glvrUGWNSN6yw3m2_14FdXT9f7BPX_Vas.min.css">www.shape.com...min.css</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Size: 188.22 KB</div>
+                        <div>Success: 100% | TTFB: 124.46 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/static/4.14.0/cache/eNp9UkFuxCAM_FARb2irqqdKqyofcIhD3RBA2GTV3xf2kmzj7cEIe8ZjbGNZQMjZFaIEtN9spYDDJ6vHDUz8EHPXTcHWdjFjQVhyoih7esP4CzKaKhRICE_KLq05RWxJ1nGZb4dWAX5G7cUZPJqN8PqPrpe1U10gt5jexkLRa1p15DoqwOvHZY-mqQbkHv4cXro9gm6V2uVtw-NIDiyYjEtxJm8g072n0qsTStHMIaXy19US3i9DNw0SKB6lzcEwzBiIRWOxu_8MO1KwdVVxOE1zp5xXfthJk-0cn0VXnwu2jzMGfJ74F1krBks.min.js">
+                    <div class="resource-type js">J</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/static/4.14.0/cache/eNp9UkFuxCAM_FARb2irqqdKqyofcIhD3RBA2GTV3xf2kmzj7cEIe8ZjbGNZQMjZFaIEtN9spYDDJ6vHDUz8EHPXTcHWdjFjQVhyoih7esP4CzKaKhRICE_KLq05RWxJ1nGZb4dWAX5G7cUZPJqN8PqPrpe1U10gt5jexkLRa1p15DoqwOvHZY-mqQbkHv4cXro9gm6V2uVtw-NIDiyYjEtxJm8g072n0qsTStHMIaXy19US3i9DNw0SKB6lzcEwzBiIRWOxu_8MO1KwdVVxOE1zp5xXfthJk-0cn0VXnwu2jzMGfJ74F1krBks.min.js">www.shape.com....min.js</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Size: 95.98 KB</div>
+                        <div>Success: 100% | TTFB: 87.98 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/thmb/SW4p5oZzGgnw6ebArlSTdsHcLYQ=/282x188/filters:no_upscale():max_bytes(150000):strip_icc():focal(749x0:751x2)/Untitleddesign2-bbeac5de962145a0ad027c3f9e26c590.png">
+                    <div class="resource-type img">I</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/thmb/SW4p5oZzGgnw6ebArlSTdsHcLYQ=/282x188/filters:no_upscale():max_bytes(150000):strip_icc():focal(749x0:751x2)/Untitleddesign2-bbeac5de962145a0ad027c3f9e26c590.png">www.shape.com...590.png</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Size: 80.61 KB</div>
+                        <div>Success: 100% | TTFB: 92.49 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td class="resource-cards-cell">
+                  <div class="resource-card" title="https://www.shape.com/static/4.14.0/cache/eNqdVluWpCAM3dBwWET_ziYiRM0ZIHUI1mP3g2ir1UXTdv1IEu5NAolRLQkSGe0hJIfaiOjZgn_06wZ5GFBdHBgc2VmMNZDHSJYgaAoW7xuibAGFncJ2cijasL9wwJBERyCnrmSRC7xILXwHsmZsFFjZY-2QbNbHrc9Ed8SN7IB5HZGGMX2MEAb8S5IwYKwaG74Gxx24zAJbyHC8o7O4V7cBrjTkPQ56SuQoPVQ2HeUGuefo8w0hRDOqWTnKDZ5HkbncHYT5Jp7Vc8kuByu57uI5aj85JyYihkJ_Vs-5EDYErtBLj2xqrSJ1Xpsz95Yr5-oYoj3Vqb3DO3UOc7-28Ae3hVYN81379cwpV2xZGu1Xx7XLUrBLSTbxV1RH4Z88KefolpMFGdUU6IpR1gJVrQ2HeTA5HtalFRhv4jDNOa6UF0vjYn_Dfo2d4M6B_UOWobmr1R6M2ZD566oMhzyk0sxS2cGyvBNMfT-9BM1ckgq6wW8Wt4sZbOLkOznKDbKkOJk0RbTbkcfkXXm0aF9TV4EtflVPfC3WySAjxPWzl5HqaH3Hyd7GVU8_uTgZfr0EncY8UNWFJR3EBs_k6ZNf2QzfpB_Q5dHAlB-KcvKB-toxE97XaPjALvLtrVb-fDnmjP8DJqVxnA.min.css">
+                    <div class="resource-type css">C</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/static/4.14.0/cache/eNqdVluWpCAM3dBwWET_ziYiRM0ZIHUI1mP3g2ir1UXTdv1IEu5NAolRLQkSGe0hJIfaiOjZgn_06wZ5GFBdHBgc2VmMNZDHSJYgaAoW7xuibAGFncJ2cijasL9wwJBERyCnrmSRC7xILXwHsmZsFFjZY-2QbNbHrc9Ed8SN7IB5HZGGMX2MEAb8S5IwYKwaG74Gxx24zAJbyHC8o7O4V7cBrjTkPQ56SuQoPVQ2HeUGuefo8w0hRDOqWTnKDZ5HkbncHYT5Jp7Vc8kuByu57uI5aj85JyYihkJ_Vs-5EDYErtBLj2xqrSJ1Xpsz95Yr5-oYoj3Vqb3DO3UOc7-28Ae3hVYN81379cwpV2xZGu1Xx7XLUrBLSTbxV1RH4Z88KefolpMFGdUU6IpR1gJVrQ2HeTA5HtalFRhv4jDNOa6UF0vjYn_Dfo2d4M6B_UOWobmr1R6M2ZD566oMhzyk0sxS2cGyvBNMfT-9BM1ckgq6wW8Wt4sZbOLkOznKDbKkOJk0RbTbkcfkXXm0aF9TV4EtflVPfC3WySAjxPWzl5HqaH3Hyd7GVU8_uTgZfr0EncY8UNWFJR3EBs_k6ZNf2QzfpB_Q5dHAlB-KcvKB-toxE97XaPjALvLtrVb-fDnmjP8DJqVxnA.min.css">www.shape.com...min.css</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Time: 179.68 ms</div>
+                        <div>Success: 100% | TTFB: 104.94 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/static/4.14.0/cache/eNqlU21uwyAMvdAQ6hn2d5dwwCHeHKiwszQ7_SBt1TStWKX9gmf7PeMPrCgoOTsmPzGKdWk8pohRxWo-Geh7YgJFoxAC5r2VKX6ZjHMmxWw_V_6I2WEr7s1ek0JUxm1OPBV_BKafM0eq5oPx3wLGYw8TqznyFCje9C5dKByGn8WAb6TyFCgNRYphQb-DDd5MPmA5B6Qw6PsAMeAHiWIsLXxmbGgFTh1wYYFfyfXYhzN1a0VwOCzGE3AKDcUI3xSKL0U7aZmeLqaYtvcGuU95FCsI2Q2mgu29wRtRBAKaDmJtwj1sjqBWcznW0b5W2blRa2G362vUfmIWlxHjSr-HzxYpJ2aYYXnwbfQ7EKyxPeOJOsa_Fm9TdevVOAujlt2_jP3R0mALulpw-fFwSjGNZfbJ4x6-sOeSXMllZIC8FrnFDTqNZQVqfKC-EXZ9jrgae0PGDcTeQC40rt9e9Bf1o-TD.min.js">
+                    <div class="resource-type js">J</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/static/4.14.0/cache/eNqlU21uwyAMvdAQ6hn2d5dwwCHeHKiwszQ7_SBt1TStWKX9gmf7PeMPrCgoOTsmPzGKdWk8pohRxWo-Geh7YgJFoxAC5r2VKX6ZjHMmxWw_V_6I2WEr7s1ek0JUxm1OPBV_BKafM0eq5oPx3wLGYw8TqznyFCje9C5dKByGn8WAb6TyFCgNRYphQb-DDd5MPmA5B6Qw6PsAMeAHiWIsLXxmbGgFTh1wYYFfyfXYhzN1a0VwOCzGE3AKDcUI3xSKL0U7aZmeLqaYtvcGuU95FCsI2Q2mgu29wRtRBAKaDmJtwj1sjqBWcznW0b5W2blRa2G362vUfmIWlxHjSr-HzxYpJ2aYYXnwbfQ7EKyxPeOJOsa_Fm9TdevVOAujlt2_jP3R0mALulpw-fFwSjGNZfbJ4x6-sOeSXMllZIC8FrnFDTqNZQVqfKC-EXZ9jrgae0PGDcTeQC40rt9e9Bf1o-TD.min.js">www.shape.com....min.js</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Time: 152.94 ms</div>
+                        <div>Success: 100% | TTFB: 146.88 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/static/4.14.0/cache/eNqdVVuS4yAMvNBSHGJ_5xIyKLZqMUoh8rr9yNgTO2uG8eQnSKK7BUhWrGTI5OwIMQe0TsROEfxj9xs0Qo_mHMDhwMFjqoFGTOQJoqXo8f5ElC2guFLYXwKKdTyeOWLMYhNQMFfyyAVerBa-A1lO7Ax4WXOtEA3b7dbXQVfEjXyPug5I_ZD_DhB7_CDJGDFVgw2tPnAHQVngCxm2b3QUt5eNcKVe9zjaS6ZA-WE0tLUb5BOnUV8IIbnBTM7WbvBGFJnK3UGcXuLVPXbY-WLlrKt5jHq6hCAuIcZCf3WPSQg7glDopUeebq0idV6bM_VWKPfqGJI_1KmngHfqAmq_tvAb2UKrpvmu_U7MWSs2L432q-PaZSnYuSRP81fUQPGfvDjH6J6zBxnMJdIVkywFqkYbgjqYAvfL0kqMNwmYpzMulF2k8bC_Ye9zZ7hz5PEh89Bc3WoPJg0of1mN46hDKk8sowLz8k4y8_30EnRTSSroBn-feidjInv83z0wuZevVAZIy1-QIs02-o7I2lJVpZ8kDqZfHsHmQYebObPkjdngOZ0E-vko_Gn9gC4_DUz5cy837-lUu2bG-5INH9glvrUGWNSN6yw3m2_14FdXT9f7BPX_Vas.min.css">
+                    <div class="resource-type css">C</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/static/4.14.0/cache/eNqdVVuS4yAMvNBSHGJ_5xIyKLZqMUoh8rr9yNgTO2uG8eQnSKK7BUhWrGTI5OwIMQe0TsROEfxj9xs0Qo_mHMDhwMFjqoFGTOQJoqXo8f5ElC2guFLYXwKKdTyeOWLMYhNQMFfyyAVerBa-A1lO7Ax4WXOtEA3b7dbXQVfEjXyPug5I_ZD_DhB7_CDJGDFVgw2tPnAHQVngCxm2b3QUt5eNcKVe9zjaS6ZA-WE0tLUb5BOnUV8IIbnBTM7WbvBGFJnK3UGcXuLVPXbY-WLlrKt5jHq6hCAuIcZCf3WPSQg7glDopUeebq0idV6bM_VWKPfqGJI_1KmngHfqAmq_tvAb2UKrpvmu_U7MWSs2L432q-PaZSnYuSRP81fUQPGfvDjH6J6zBxnMJdIVkywFqkYbgjqYAvfL0kqMNwmYpzMulF2k8bC_Ye9zZ7hz5PEh89Bc3WoPJg0of1mN46hDKk8sowLz8k4y8_30EnRTSSroBn-feidjInv83z0wuZevVAZIy1-QIs02-o7I2lJVpZ8kDqZfHsHmQYebObPkjdngOZ0E-vko_Gn9gC4_DUz5cy837-lUu2bG-5INH9glvrUGWNSN6yw3m2_14FdXT9f7BPX_Vas.min.css">www.shape.com...min.css</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Time: 132.20 ms</div>
+                        <div>Success: 100% | TTFB: 124.46 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/static/4.14.0/cache/eNqdVluWpCAM3dBwWET_ziYiROUMkjoE67H7iUir1UXTdv1IEu5NAolRzQmSM3qCkDxqw6wXC_7RrxtuggHVxYPBkbzFWANNGJ11ELQLFu8bIm-BCzuF7OyRtaHpQgFDYh3BeXV1FinDs9TCd8AlY6PA8h5rh4hZH7c-E90RN2cHlHVEN4zpY4Qw4F_HCQPGqrHha_DUgRcW2EyG4x2dxb26DXB1g-xR0HNy3qWHEtNRbpB7ipPcEEI0o1qUo9zgTci8lLuDsNzEs3ou2fVgOdddPEftZ-_ZRMSQ6c_qORdMxoHP9Nwjm1qrSJ3X5iy95fO5OoJoT3Vq7_HuOo_Sry38wW2mVcN81349UZKKrUuj_eq4dlkydi3JJv6K6l34x0_KObqlZIFHNQd3xcilQFVrw6EMJk9DWVqB8cYe05JjobxYGhf7G_Zr7AR3CjQ9eB2au1rtwSgG4ZdVGQoypNLCUuJgXd4Jpr6fXoxmKUkF3eA3i9tFAZs4Tx0f5QaZU5xNmiPa7chjmnx-tGhfU1eBLH5VT3wtymTgEWL57AlSHa3vONnbuOrpJxcnw5dL0GmUgaouxOkgNnhGpo-8sgLfpB_Q-dHA5B-KfPLB9bVjJryXaPjALtKtNTSDbFxXd6v4Vt9_vknL8f4Dl0CDAA.min.css">
+                    <div class="resource-type css">C</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/static/4.14.0/cache/eNqdVluWpCAM3dBwWET_ziYiROUMkjoE67H7iUir1UXTdv1IEu5NAolRzQmSM3qCkDxqw6wXC_7RrxtuggHVxYPBkbzFWANNGJ11ELQLFu8bIm-BCzuF7OyRtaHpQgFDYh3BeXV1FinDs9TCd8AlY6PA8h5rh4hZH7c-E90RN2cHlHVEN4zpY4Qw4F_HCQPGqrHha_DUgRcW2EyG4x2dxb26DXB1g-xR0HNy3qWHEtNRbpB7ipPcEEI0o1qUo9zgTci8lLuDsNzEs3ou2fVgOdddPEftZ-_ZRMSQ6c_qORdMxoHP9Nwjm1qrSJ3X5iy95fO5OoJoT3Vq7_HuOo_Sry38wW2mVcN81349UZKKrUuj_eq4dlkydi3JJv6K6l34x0_KObqlZIFHNQd3xcilQFVrw6EMJk9DWVqB8cYe05JjobxYGhf7G_Zr7AR3CjQ9eB2au1rtwSgG4ZdVGQoypNLCUuJgXd4Jpr6fXoxmKUkF3eA3i9tFAZs4Tx0f5QaZU5xNmiPa7chjmnx-tGhfU1eBLH5VT3wtymTgEWL57AlSHa3vONnbuOrpJxcnw5dL0GmUgaouxOkgNnhGpo-8sgLfpB_Q-dHA5B-KfPLB9bVjJryXaPjALtKtNTSDbFxXd6v4Vt9_vknL8f4Dl0CDAA.min.css">www.shape.com...min.css</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Time: 119.97 ms</div>
+                        <div>Success: 100% | TTFB: 96.61 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div class="resource-card" title="https://www.shape.com/thmb/1a74B-tT93IgvWqldhmWS7JXn5U=/282x188/filters:no_upscale():max_bytes(150000):strip_icc():focal(499x0:501x2)/Halle-Berry-Feature-82bc7769a1c24cebaaf0c54f6f9bc1d6.png">
+                    <div class="resource-type img">I</div>
+                    <div class="resource-info">
+                      <div class="resource-url" data-tooltip="https://www.shape.com/thmb/1a74B-tT93IgvWqldhmWS7JXn5U=/282x188/filters:no_upscale():max_bytes(150000):strip_icc():focal(499x0:501x2)/Halle-Berry-Feature-82bc7769a1c24cebaaf0c54f6f9bc1d6.png">www.shape.com...1d6.png</div>
+                      <div class="resource-stats">
+                        <div>Reqs: 1 | Time: 117.68 ms</div>
+                        <div>Success: 100% | TTFB: 112.88 ms</div>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            
+        </tbody>
+      </table>
+    </div>
+  
+
+    <div class="metrics-section">
+      <div class="resource-type-legend">
+        <div class="resource-type-legend-item" style="margin-right: 1.5rem;">
+          <span class="resource-type js" style="margin-right: 0.5rem;">J</span>
+          <span>JS</span>
+        </div>
+        <div class="resource-type-legend-item" style="margin-right: 1.5rem;">
+          <span class="resource-type css" style="margin-right: 0.5rem;">C</span>
+          <span>CSS</span>
+        </div>
+        <div class="resource-type-legend-item" style="margin-right: 1.5rem;">
+          <span class="resource-type image" style="margin-right: 0.5rem;">I</span>
+          <span>Image</span>
+        </div>
+        <div class="resource-type-legend-item" style="margin-right: 1.5rem;">
+          <span class="resource-type font" style="margin-right: 0.5rem;">F</span>
+          <span>Font</span>
+        </div>
+        <div class="resource-type-legend-item" style="margin-right: 1.5rem;">
+          <span class="resource-type other" style="margin-right: 0.5rem;">O</span>
+          <span>Other</span>
+        </div>
+        <div class="resource-type-legend-item" style="margin-right: 1.5rem;">
+          <span>TTFB: Time to First Byte</span>
+        </div>
+        <div class="resource-type-legend-item">
+          <span>TTLB: Time to Last Byte</span>
+        </div>
+      </div>
+      
+      <div class="metrics-explanation">
+        <h4>Metrics Explanation</h4>
+        
+        <div class="metrics-explanation-grid">
+          <div class="metrics-explanation-item">
+            <h5>TTFB (Time To First Byte)</h5>
+            <p>The time from the start of the request until the first byte of the response is received.</p>
+          </div>
+          
+          <div class="metrics-explanation-item">
+            <h5>TTLB (Time To Last Byte)</h5>
+            <p>The total time from the start of the request until the complete response is received.</p>
+          </div>
+          
+          <div class="metrics-explanation-item">
+            <h5>p90 Time</h5>
+            <p>The 90th percentile response time - 90% of requests complete faster than this value.</p>
+          </div>
+          
+          <div class="metrics-explanation-item">
+            <h5>Success Rate</h5>
+            <p>Percentage of requests that returned a successful HTTP status code (200-399).</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  

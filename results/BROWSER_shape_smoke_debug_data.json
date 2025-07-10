@@ -1,0 +1,953 @@
+{
+  "metrics": {},
+  "lcp": {
+    "taxonomyScTemplate": [
+      428
+    ]
+  },
+  "fcp": {
+    "taxonomyScTemplate": [
+      428
+    ]
+  },
+  "cls": {
+    "taxonomyScTemplate": [
+      0
+    ]
+  },
+  "ttfb": {
+    "taxonomyScTemplate": [
+      110.69999998807907
+    ]
+  },
+  "pageLoadTime": {
+    "taxonomyScTemplate": [
+      528
+    ]
+  },
+  "browser_page_load_success": {
+    "taxonomyScTemplate": {
+      "requests": 1,
+      "passes": 1,
+      "fails": 0
+    }
+  },
+  "serverProcessingTime": {
+    "taxonomyScTemplate": [
+      110.69999998807907
+    ]
+  },
+  "networkTime": {
+    "taxonomyScTemplate": [
+      295.39999997615814
+    ]
+  },
+  "domProcessingTime": {
+    "taxonomyScTemplate": [
+      77.19999998807907
+    ]
+  },
+  "resourceLoadTime": {},
+  "scriptExecutionTime": {
+    "taxonomyScTemplate": [
+      1.4000000357627869
+    ]
+  },
+  "scriptParsingTime": {},
+  "criticalRenderingTime": {},
+  "totalDownloadTime": {
+    "taxonomyScTemplate": [
+      348.30000001192093
+    ]
+  },
+  "criticalPathTime": {
+    "taxonomyScTemplate": [
+      372.5999999642372
+    ]
+  },
+  "parallelDownloadEfficiency": {
+    "taxonomyScTemplate": [
+      100
+    ]
+  },
+  "jsLoadTime": {
+    "taxonomyScTemplate": [
+      11923.600000023842
+    ]
+  },
+  "cssLoadTime": {
+    "taxonomyScTemplate": [
+      1063.9000000357628
+    ]
+  },
+  "imgLoadTime": {
+    "taxonomyScTemplate": [
+      4658.600000023842
+    ]
+  },
+  "fontLoadTime": {
+    "taxonomyScTemplate": [
+      0
+    ]
+  },
+  "otherResourceLoadTime": {
+    "taxonomyScTemplate": [
+      14888.399999797344
+    ]
+  },
+  "protocol_ttfb": {},
+  "protocol_ttlb": {},
+  "protocol_req_success_rate": {},
+  "resource_details": {
+    "js": [
+      {
+        "url": "https://g.3gl.net/jp/7813/v4.0.6/InitialLoadScript.js",
+        "duration": 978,
+        "size": 73092,
+        "status": 200,
+        "transaction": "taxonomyScTemplate",
+        "initiatorType": "script",
+        "tags": {
+          "aut": "shape",
+          "environment": "qa",
+          "group": "",
+          "initiatorType": "script",
+          "scenario": "smoke",
+          "size": "73092",
+          "status": "200",
+          "test_type": "BROWSER",
+          "transaction": "taxonomyScTemplate",
+          "url": "https://g.3gl.net/jp/7813/v4.0.6/InitialLoadScript.js",
+          "url_name": "/lifestyle/fit-getaways"
+        }
+      },
+      {
+        "url": "https://static.chartbeat.com/js/chartbeat_video.js",
+        "duration": 850.1000000238419,
+        "size": 0,
+        "status": 200,
+        "transaction": "taxonomyScTemplate",
+        "initiatorType": "script",
+        "tags": {
+          "aut": "shape",
+          "environment": "qa",
+          "group": "",
+          "initiatorType": "script",
+          "scenario": "smoke",
+          "size": "0",
+          "status": "200",
+          "test_type": "BROWSER",
+          "transaction": "taxonomyScTemplate",
+          "url": "https://static.chartbeat.com/js/chartbeat_video.js",
+          "url_name": "/lifestyle/fit-getaways"
+        }
+      },
+      {
+        "url": "https://cdn.brandmetrics.com/tag/c106e229-c4c9-4c07-8306-2ef6b9d6d9ea/Shape.js",
+        "duration": 652.8000000119209,
+        "size": 0,
+        "status": 200,
+        "transaction": "taxonomyScTemplate",
+        "initiatorType": "script",
+        "tags": {
+          "aut": "shape",
+          "environment": "qa",
+          "group": "",
+          "initiatorType": "script",
+          "scenario": "smoke",
+          "size": "0",
+          "status": "200",
+          "test_type": "BROWSER",
+          "transaction": "taxonomyScTemplate",
+          "url": "https://cdn.brandmetrics.com/tag/c106e229-c4c9-4c07-8306-2ef6b9d6d9ea/Shape.js",
+          "url_name": "/lifestyle/fit-getaways"
+        }
+      },
+      {
+        "url": "https://connect.facebook.net/en_US/fbevents.js",
+        "duration": 615.6999999880791,
+        "size": 72215,
+        "status": 200,
+        "transaction": "taxonomyScTemplate",
+        "initiatorType": "script",
+        "tags": {
+          "aut": "shape",
+          "environment": "qa",
+          "group": "",
+          "initiatorType": "script",
+          "scenario": "smoke",
+          "size": "72215",
+          "status": "200",
+          "test_type": "BROWSER",
+          "transaction": "taxonomyScTemplate",
+          "url": "https://connect.facebook.net/en_US/fbevents.js",
+          "url_name": "/lifestyle/fit-getaways"
+        }
+      },
+      {
+        "url": "https://sb.scorecardresearch.com/cs/6036459/beacon.js",
+        "duration": 604.5,
+        "size": 0,
+        "status": 200,
+        "transaction": "taxonomyScTemplate",
+        "initiatorType": "script",
+        "tags": {
+          "aut": "shape",
+          "environment": "qa",
+          "group": "",
+          "initiatorType": "script",
+          "scenario": "smoke",
+          "size": "0",
+          "status": "200",
+          "test_type": "BROWSER",
+          "transaction": "taxonomyScTemplate",
+          "url": "https://sb.scorecardresearch.com/cs/6036459/beacon.js",
+          "url_name": "/lifestyle/fit-getaways"
+        }
+      },
+      {
+        "url": "https://d30qdagvt44524.cloudfront.net/production/segments?muid=ab07ba00-08e5-4a06-9ea3-71ceed7b3846",
+        "duration": 597.6000000238419,
+        "size": 0,
+        "status": 200,
+        "transaction": "taxonomyScTemplate",
+        "initiatorType": "script",
+        "tags": {
+          "aut": "shape",
+          "environment": "qa",
+          "group": "",
+          "initiatorType": "script",
+          "scenario": "smoke",
+          "size": "0",
+          "status": "200",
+          "test_type": "BROWSER",
+          "transaction": "taxonomyScTemplate",
+          "url": "https://d30qdagvt44524.cloudfront.net/production/segments?muid=ab07ba00-08e5-4a06-9ea3-71ceed7b3846",
+          "url_name": "/lifestyle/fit-getaways"
+        }
+      },
+      {
+        "url": "https://www.googletagmanager.com/gtm.js?id=GTM-P3X3VT7",
+        "duration": 552,
+        "size": 0,
+        "status": 200,
+        "transaction": "taxonomyScTemplate",
+        "initiatorType": "script",
+        "tags": {
+          "aut": "shape",
+          "environment": "qa",
+          "group": "",
+          "initiatorType": "script",
+          "scenario": "smoke",
+          "size": "0",
+          "status": "200",
+          "test_type": "BROWSER",
+          "transaction": "taxonomyScTemplate",
+          "url": "https://www.googletagmanager.com/gtm.js?id=GTM-P3X3VT7",
+          "url_name": "/lifestyle/fit-getaways"
+        }
+      },
+      {
+        "url": "https://ep2.adtrafficquality.google/sodar/sodar2.js",
+        "duration": 501.39999997615814,
+        "size": 0,
+        "status": 200,
+        "transaction": "taxonomyScTemplate",
+        "initiatorType": "script",
+        "tags": {
+          "aut": "shape",
+          "environment": "qa",
+          "group": "",
+          "initiatorType": "script",
+          "scenario": "smoke",
+          "size": "0",
+          "status": "200",
+          "test_type": "BROWSER",
+          "transaction": "taxonomyScTemplate",
+          "url": "https://ep2.adtrafficquality.google/sodar/sodar2.js",
+          "url_name": "/lifestyle/fit-getaways"
+        }
+      },
+      {
+        "url": "https://tags.crwdcntrl.net/lt/c/16576/sync.min.js",
+        "duration": 480.60000002384186,
+        "size": 0,
+        "status": 200,
+        "transaction": "taxonomyScTemplate",
+        "initiatorType": "script",
+        "tags": {
+          "aut": "shape",
+          "environment": "qa",
+          "group": "",
+          "initiatorType": "script",
+          "scenario": "smoke",
+          "size": "0",
+          "status": "200",
+          "test_type": "BROWSER",
+          "transaction": "taxonomyScTemplate",
+          "url": "https://tags.crwdcntrl.net/lt/c/16576/sync.min.js",
+          "url_name": "/lifestyle/fit-getaways"
+        }
+      },
+      {
+        "url": "https://connectid.analytics.yahoo.com/connectId.js",
+        "duration": 477.60000002384186,
+        "size": 0,
+        "status": 200,
+        "transaction": "taxonomyScTemplate",
+        "initiatorType": "script",
+        "tags": {
+          "aut": "shape",
+          "environment": "qa",
+          "group": "",
+          "initiatorType": "script",
+          "scenario": "smoke",
+          "size": "0",
+          "status": "200",
+          "test_type": "BROWSER",
+          "transaction": "taxonomyScTemplate",
+          "url": "https://connectid.analytics.yahoo.com/connectId.js",
+          "url_name": "/lifestyle/fit-getaways"
+        }
+      }
+    ],
+    "css": [
+      {
+        "url": "https://www.googletagmanager.com/gtag/js?id=G-E4CH1QDQV8&l=dataLayer&cx=c",
+        "duration": 498.60000002384186,
+        "size": 0,
+        "status": 200,
+        "transaction": "taxonomyScTemplate",
+        "initiatorType": "link",
+        "tags": {
+          "aut": "shape",
+          "environment": "qa",
+          "group": "",
+          "initiatorType": "link",
+          "scenario": "smoke",
+          "size": "0",
+          "status": "200",
+          "test_type": "BROWSER",
+          "transaction": "taxonomyScTemplate",
+          "url": "https://www.googletagmanager.com/gtag/js?id=G-E4CH1QDQV8&l=dataLayer&cx=c",
+          "url_name": "/lifestyle/fit-getaways"
+        }
+      },
+      {
+        "url": "https://securepubads.g.doubleclick.net/pagead/managed/dict/m202506240101/gpt",
+        "duration": 269,
+        "size": 23623,
+        "status": 200,
+        "transaction": "taxonomyScTemplate",
+        "initiatorType": "link",
+        "tags": {
+          "aut": "shape",
+          "environment": "qa",
+          "group": "",
+          "initiatorType": "link",
+          "scenario": "smoke",
+          "size": "23623",
+          "status": "200",
+          "test_type": "BROWSER",
+          "transaction": "taxonomyScTemplate",
+          "url": "https://securepubads.g.doubleclick.net/pagead/managed/dict/m202506240101/gpt",
+          "url_name": "/lifestyle/fit-getaways"
+        }
+      },
+      {
+        "url": "https://www.shape.com/static/fonts/playfair-display.woff2",
+        "duration": 73.10000002384186,
+        "size": 28944,
+        "status": 200,
+        "transaction": "taxonomyScTemplate",
+        "initiatorType": "link",
+        "tags": {
+          "aut": "shape",
+          "environment": "qa",
+          "group": "",
+          "initiatorType": "link",
+          "scenario": "smoke",
+          "size": "28944",
+          "status": "200",
+          "test_type": "BROWSER",
+          "transaction": "taxonomyScTemplate",
+          "url": "https://www.shape.com/static/fonts/playfair-display.woff2",
+          "url_name": "/lifestyle/fit-getaways"
+        }
+      },
+      {
+        "url": "https://www.shape.com/static/fonts/playfair-display-700.woff2",
+        "duration": 59.19999998807907,
+        "size": 31352,
+        "status": 200,
+        "transaction": "taxonomyScTemplate",
+        "initiatorType": "link",
+        "tags": {
+          "aut": "shape",
+          "environment": "qa",
+          "group": "",
+          "initiatorType": "link",
+          "scenario": "smoke",
+          "size": "31352",
+          "status": "200",
+          "test_type": "BROWSER",
+          "transaction": "taxonomyScTemplate",
+          "url": "https://www.shape.com/static/fonts/playfair-display-700.woff2",
+          "url_name": "/lifestyle/fit-getaways"
+        }
+      },
+      {
+        "url": "https://www.shape.com/static/4.2.0/cache/eNqdVluWpCAM3dBwWET_ziYiRM0ZIHUI1mP3g2ir1UXTdv1IEu5NAolRLQkSGe0hJIfaiOjZgn_06wZ5GFBdHBgc2VmMNZDHSJYgaAoW7xuibAGFncJ2cijasL9wwJBERyCnrmSRC7xILXwHsmZsFFjZY-2QbNbHrc9Ed8SN7IB5HZGGMX2MEAb8S5IwYKwaG74Gxx24zAJbyHC8o7O4V7cBrjTkPQ56SuQoPVQ2HeUGuefo8w0hRDOqWTnKDZ5HkbncHYT5Jp7Vc8kuByu57uI5aj85JyYihkJ_Vs-5EDYErtBLj2xqrSJ1Xpsz95Yr5-oYoj3Vqb3DO3UOc7-28Ae3hVYN81379cwpV2xZGu1Xx7XLUrBLSTbxV1RH4Z88KefolpMFGdUU6IpR1gJVrQ2HeTA5HtalFRhv4jDNOa6UF0vjYn_Dfo2d4M6B_UOWobmr1R6M2ZD566oMhzyk0sxS2cGyvBNMfT-9BM1ckgq6wW8Wt4sZbOLkOznKDbKkOJk0RbTbkcfkXXm0aF9TV4EtflVPfC3WySAjxPWzl5HqaH3Hyd7GVU8_uTgZfr0EncY8UNWFJR3EBs_k6ZNf2QzfpB_Q5dHAlB-KcvKB-toxE97XaPjALvLtrVb-fDnmjP8DJqVxnA.min.css",
+        "duration": 56.60000002384186,
+        "size": 24771,
+        "status": 200,
+        "transaction": "taxonomyScTemplate",
+        "initiatorType": "link",
+        "tags": {
+          "aut": "shape",
+          "environment": "qa",
+          "group": "",
+          "initiatorType": "link",
+          "scenario": "smoke",
+          "size": "24771",
+          "status": "200",
+          "test_type": "BROWSER",
+          "transaction": "taxonomyScTemplate",
+          "url": "https://www.shape.com/static/4.2.0/cache/eNqdVluWpCAM3dBwWET_ziYiRM0ZIHUI1mP3g2ir1UXTdv1IEu5NAolRLQkSGe0hJIfaiOjZgn_06wZ5GFBdHBgc2VmMNZDHSJYgaAoW7xuibAGFncJ2cijasL9wwJBERyCnrmSRC7xILXwHsmZsFFjZY-2QbNbHrc9Ed8SN7IB5HZGGMX2MEAb8S5IwYKwaG74Gxx24zAJbyHC8o7O4V7cBrjTkPQ56SuQoPVQ2HeUGuefo8w0hRDOqWTnKDZ5HkbncHYT5Jp7Vc8kuByu57uI5aj85JyYihkJ_Vs-5EDYErtBLj2xqrSJ1Xpsz95Yr5-oYoj3Vqb3DO3UOc7-28Ae3hVYN81379cwpV2xZGu1Xx7XLUrBLSTbxV1RH4Z88KefolpMFGdUU6IpR1gJVrQ2HeTA5HtalFRhv4jDNOa6UF0vjYn_Dfo2d4M6B_UOWobmr1R6M2ZD566oMhzyk0sxS2cGyvBNMfT-9BM1ckgq6wW8Wt4sZbOLkOznKDbKkOJk0RbTbkcfkXXm0aF9TV4EtflVPfC3WySAjxPWzl5HqaH3Hyd7GVU8_uTgZfr0EncY8UNWFJR3EBs_k6ZNf2QzfpB_Q5dHAlB-KcvKB-toxE97XaPjALvLtrVb-fDnmjP8DJqVxnA.min.css",
+          "url_name": "/lifestyle/fit-getaways"
+        }
+      },
+      {
+        "url": "https://www.shape.com/static/fonts/coresansc65-webfont.woff2",
+        "duration": 54.5,
+        "size": 17216,
+        "status": 200,
+        "transaction": "taxonomyScTemplate",
+        "initiatorType": "link",
+        "tags": {
+          "aut": "shape",
+          "environment": "qa",
+          "group": "",
+          "initiatorType": "link",
+          "scenario": "smoke",
+          "size": "17216",
+          "status": "200",
+          "test_type": "BROWSER",
+          "transaction": "taxonomyScTemplate",
+          "url": "https://www.shape.com/static/fonts/coresansc65-webfont.woff2",
+          "url_name": "/lifestyle/fit-getaways"
+        }
+      },
+      {
+        "url": "https://www.shape.com/static/fonts/coresansc45-webfont.woff2",
+        "duration": 52.89999997615814,
+        "size": 17552,
+        "status": 200,
+        "transaction": "taxonomyScTemplate",
+        "initiatorType": "link",
+        "tags": {
+          "aut": "shape",
+          "environment": "qa",
+          "group": "",
+          "initiatorType": "link",
+          "scenario": "smoke",
+          "size": "17552",
+          "status": "200",
+          "test_type": "BROWSER",
+          "transaction": "taxonomyScTemplate",
+          "url": "https://www.shape.com/static/fonts/coresansc45-webfont.woff2",
+          "url_name": "/lifestyle/fit-getaways"
+        }
+      }
+    ],
+    "img": [
+      {
+        "url": "https://idsync.rlcdn.com/459989.gif?partner_uid=ab07ba00-08e5-4a06-9ea3-71ceed7b3846",
+        "duration": 1346.199999988079,
+        "size": 0,
+        "status": 200,
+        "transaction": "taxonomyScTemplate",
+        "initiatorType": "img",
+        "tags": {
+          "aut": "shape",
+          "environment": "qa",
+          "group": "",
+          "initiatorType": "img",
+          "scenario": "smoke",
+          "size": "0",
+          "status": "200",
+          "test_type": "BROWSER",
+          "transaction": "taxonomyScTemplate",
+          "url": "https://idsync.rlcdn.com/459989.gif?partner_uid=ab07ba00-08e5-4a06-9ea3-71ceed7b3846",
+          "url_name": "/lifestyle/fit-getaways"
+        }
+      },
+      {
+        "url": "https://sync.graph.bluecava.com/ds.png?p=9274e5db-ddcb-11ea-a80b-0242ac110002&segment=4l28r4sz3bl3555wt2hyave1w6u68syw&uid=&CampaignID=302C&Channel=shape&CreativeID=&Placement=5509564&MAID=&Keyword=&Medium=&Source=&PageName=www.shape.com%2Flifestyle%2Ffit-getaways&Event=&Key1=5496366&Key2=5509514&Key3=5509564&Key4=&Key5=",
+        "duration": 1159.7999999523163,
+        "size": 0,
+        "status": 200,
+        "transaction": "taxonomyScTemplate",
+        "initiatorType": "img",
+        "tags": {
+          "aut": "shape",
+          "environment": "qa",
+          "group": "",
+          "initiatorType": "img",
+          "scenario": "smoke",
+          "size": "0",
+          "status": "200",
+          "test_type": "BROWSER",
+          "transaction": "taxonomyScTemplate",
+          "url": "https://sync.graph.bluecava.com/ds.png?p=9274e5db-ddcb-11ea-a80b-0242ac110002&segment=4l28r4sz3bl3555wt2hyave1w6u68syw&uid=&CampaignID=302C&Channel=shape&CreativeID=&Placement=5509564&MAID=&Keyword=&Medium=&Source=&PageName=www.shape.com%2Flifestyle%2Ffit-getaways&Event=&Key1=5496366&Key2=5509514&Key3=5509564&Key4=&Key5=",
+          "url_name": "/lifestyle/fit-getaways"
+        }
+      },
+      {
+        "url": "https://ad.doubleclick.net/favicon.ico?ad=300x250&ad_box_=1&adnet=1&showad=1&size=250x250",
+        "duration": 432.19999998807907,
+        "size": 0,
+        "status": 200,
+        "transaction": "taxonomyScTemplate",
+        "initiatorType": "img",
+        "tags": {
+          "aut": "shape",
+          "environment": "qa",
+          "group": "",
+          "initiatorType": "img",
+          "scenario": "smoke",
+          "size": "0",
+          "status": "200",
+          "test_type": "BROWSER",
+          "transaction": "taxonomyScTemplate",
+          "url": "https://ad.doubleclick.net/favicon.ico?ad=300x250&ad_box_=1&adnet=1&showad=1&size=250x250",
+          "url_name": "/lifestyle/fit-getaways"
+        }
+      },
+      {
+        "url": "https://sb.scorecardresearch.com/b?c1=2&c2=6036459&cs_it=b1&cv=4.13.0%2B2504041036&ns__t=1750800189179&ns_c=UTF-8&cs_cfg=1101110&cs_fpid=ab07ba00-08e5-4a06-9ea3-71ceed7b3846&cs_fpit=lo&cs_fpdm=*null&cs_fpdt=*null&c7=https%3A%2F%2Fwww.shape.com%2Flifestyle%2Ffit-getaways%3FglobeNoTest&c8=Travel%20and%20Retreats&c9=",
+        "duration": 339.4000000357628,
+        "size": 0,
+        "status": 200,
+        "transaction": "taxonomyScTemplate",
+        "initiatorType": "img",
+        "tags": {
+          "aut": "shape",
+          "environment": "qa",
+          "group": "",
+          "initiatorType": "img",
+          "scenario": "smoke",
+          "size": "0",
+          "status": "200",
+          "test_type": "BROWSER",
+          "transaction": "taxonomyScTemplate",
+          "url": "https://sb.scorecardresearch.com/b?c1=2&c2=6036459&cs_it=b1&cv=4.13.0%2B2504041036&ns__t=1750800189179&ns_c=UTF-8&cs_cfg=1101110&cs_fpid=ab07ba00-08e5-4a06-9ea3-71ceed7b3846&cs_fpit=lo&cs_fpdm=*null&cs_fpdt=*null&c7=https%3A%2F%2Fwww.shape.com%2Flifestyle%2Ffit-getaways%3FglobeNoTest&c8=Travel%20and%20Retreats&c9=",
+          "url_name": "/lifestyle/fit-getaways"
+        }
+      },
+      {
+        "url": "https://sli.shape.com/baker?dtstmp=1750800187642",
+        "duration": 320.4000000357628,
+        "size": 0,
+        "status": 200,
+        "transaction": "taxonomyScTemplate",
+        "initiatorType": "img",
+        "tags": {
+          "aut": "shape",
+          "environment": "qa",
+          "group": "",
+          "initiatorType": "img",
+          "scenario": "smoke",
+          "size": "0",
+          "status": "200",
+          "test_type": "BROWSER",
+          "transaction": "taxonomyScTemplate",
+          "url": "https://sli.shape.com/baker?dtstmp=1750800187642",
+          "url_name": "/lifestyle/fit-getaways"
+        }
+      },
+      {
+        "url": "https://pagead2.googlesyndication.com/pagead/gen_204?id=gpt_pgbrk&pvsid=1969051041389925&vrg=202506180101&nw_id=3865&nslots=1&eid=31093084%2C95353384%2C95361094%2C31085776%2C83321073%2C676982961&pub_url=https%3A%2F%2Fwww.shape.com%2Flifestyle%2Ffit-getaways%3FglobeNoTest&qid=COqgpvr-io4DFQCJfwQdpq08iw&iu=3865%2Fddm.shape.com%2Ftier1%2Ftaxonomysc%2FLifestyle&e=0&ret=970x90&req=728x90%7C970x90%7C970x250&bm=0&efh=1&stk=1&ifi=1",
+        "duration": 241.19999998807907,
+        "size": 300,
+        "status": 200,
+        "transaction": "taxonomyScTemplate",
+        "initiatorType": "img",
+        "tags": {
+          "aut": "shape",
+          "environment": "qa",
+          "group": "",
+          "initiatorType": "img",
+          "scenario": "smoke",
+          "size": "300",
+          "status": "200",
+          "test_type": "BROWSER",
+          "transaction": "taxonomyScTemplate",
+          "url": "https://pagead2.googlesyndication.com/pagead/gen_204?id=gpt_pgbrk&pvsid=1969051041389925&vrg=202506180101&nw_id=3865&nslots=1&eid=31093084%2C95353384%2C95361094%2C31085776%2C83321073%2C676982961&pub_url=https%3A%2F%2Fwww.shape.com%2Flifestyle%2Ffit-getaways%3FglobeNoTest&qid=COqgpvr-io4DFQCJfwQdpq08iw&iu=3865%2Fddm.shape.com%2Ftier1%2Ftaxonomysc%2FLifestyle&e=0&ret=970x90&req=728x90%7C970x90%7C970x250&bm=0&efh=1&stk=1&ifi=1",
+          "url_name": "/lifestyle/fit-getaways"
+        }
+      },
+      {
+        "url": "https://ad-delivery.net/px.gif?ch=1&e=0.3847881146930904",
+        "duration": 185.30000001192093,
+        "size": 0,
+        "status": 200,
+        "transaction": "taxonomyScTemplate",
+        "initiatorType": "img",
+        "tags": {
+          "aut": "shape",
+          "environment": "qa",
+          "group": "",
+          "initiatorType": "img",
+          "scenario": "smoke",
+          "size": "0",
+          "status": "200",
+          "test_type": "BROWSER",
+          "transaction": "taxonomyScTemplate",
+          "url": "https://ad-delivery.net/px.gif?ch=1&e=0.3847881146930904",
+          "url_name": "/lifestyle/fit-getaways"
+        }
+      },
+      {
+        "url": "https://ad-delivery.net/px.gif?ch=2",
+        "duration": 185.19999998807907,
+        "size": 0,
+        "status": 200,
+        "transaction": "taxonomyScTemplate",
+        "initiatorType": "img",
+        "tags": {
+          "aut": "shape",
+          "environment": "qa",
+          "group": "",
+          "initiatorType": "img",
+          "scenario": "smoke",
+          "size": "0",
+          "status": "200",
+          "test_type": "BROWSER",
+          "transaction": "taxonomyScTemplate",
+          "url": "https://ad-delivery.net/px.gif?ch=2",
+          "url_name": "/lifestyle/fit-getaways"
+        }
+      },
+      {
+        "url": "https://www.shape.com/thmb/y1JkOipPtIU9uwAtg_AwNlYeaf4=/364x242/filters:no_upscale():max_bytes(150000):strip_icc():format(webp)/Keep-Up-Your-Fitness-Routine-on-the-Road-at-These-Peloton-Friendly-Hotels-The-Standard_London-2000-70312c327c0c4b338b679553244a955f.jpg",
+        "duration": 133.4000000357628,
+        "size": 16132,
+        "status": 200,
+        "transaction": "taxonomyScTemplate",
+        "initiatorType": "img",
+        "tags": {
+          "aut": "shape",
+          "environment": "qa",
+          "group": "",
+          "initiatorType": "img",
+          "scenario": "smoke",
+          "size": "16132",
+          "status": "200",
+          "test_type": "BROWSER",
+          "transaction": "taxonomyScTemplate",
+          "url": "https://www.shape.com/thmb/y1JkOipPtIU9uwAtg_AwNlYeaf4=/364x242/filters:no_upscale():max_bytes(150000):strip_icc():format(webp)/Keep-Up-Your-Fitness-Routine-on-the-Road-at-These-Peloton-Friendly-Hotels-The-Standard_London-2000-70312c327c0c4b338b679553244a955f.jpg",
+          "url_name": "/lifestyle/fit-getaways"
+        }
+      },
+      {
+        "url": "https://www.shape.com/thmb/LN5T2T7hT8ldtuiGVWlAlNdvreY=/364x242/filters:no_upscale():max_bytes(150000):strip_icc():format(webp)/Callie-Gullickson-Courtesy-of-Peleton-2000-3ec90bb4bd9443ab87868cd788c73962.jpg",
+        "duration": 132.80000001192093,
+        "size": 6970,
+        "status": 200,
+        "transaction": "taxonomyScTemplate",
+        "initiatorType": "img",
+        "tags": {
+          "aut": "shape",
+          "environment": "qa",
+          "group": "",
+          "initiatorType": "img",
+          "scenario": "smoke",
+          "size": "6970",
+          "status": "200",
+          "test_type": "BROWSER",
+          "transaction": "taxonomyScTemplate",
+          "url": "https://www.shape.com/thmb/LN5T2T7hT8ldtuiGVWlAlNdvreY=/364x242/filters:no_upscale():max_bytes(150000):strip_icc():format(webp)/Callie-Gullickson-Courtesy-of-Peleton-2000-3ec90bb4bd9443ab87868cd788c73962.jpg",
+          "url_name": "/lifestyle/fit-getaways"
+        }
+      }
+    ],
+    "font": [],
+    "other": [
+      {
+        "url": "https://google-bidout-d.openx.net/w/1.0/pd?plm=5",
+        "duration": 1101.2999999523163,
+        "size": 0,
+        "status": 200,
+        "transaction": "taxonomyScTemplate",
+        "initiatorType": "other",
+        "tags": {
+          "aut": "shape",
+          "environment": "qa",
+          "group": "",
+          "initiatorType": "other",
+          "scenario": "smoke",
+          "size": "0",
+          "status": "200",
+          "test_type": "BROWSER",
+          "transaction": "taxonomyScTemplate",
+          "url": "https://google-bidout-d.openx.net/w/1.0/pd?plm=5",
+          "url_name": "/lifestyle/fit-getaways"
+        }
+      },
+      {
+        "url": "https://rp.liadm.com/j?dtstmp=1750800186888&se=eyJpcHY2IjoiMjYwMToyNDY6NGQ3Zjo4MTMwOjU1MTk6YWJjODpkMmI2OmQ3YjQifQ&duid=9ae72f4c5f1c--01jyhx5fg7n3w4n8drd4fb3wey&tv=9.43.0&pu=https%3A%2F%2Fwww.shape.com%2Flifestyle%2Ffit-getaways%3FglobeNoTest&wpn=prebid&cd=.shape.com&pip6=MjYwMToyNDY6NGQ3Zjo4MTMwOjU1MTk6YWJjODpkMmI2OmQ3YjQ",
+        "duration": 751.6999999880791,
+        "size": 0,
+        "status": 200,
+        "transaction": "taxonomyScTemplate",
+        "initiatorType": "other",
+        "tags": {
+          "aut": "shape",
+          "environment": "qa",
+          "group": "",
+          "initiatorType": "other",
+          "scenario": "smoke",
+          "size": "0",
+          "status": "200",
+          "test_type": "BROWSER",
+          "transaction": "taxonomyScTemplate",
+          "url": "https://rp.liadm.com/j?dtstmp=1750800186888&se=eyJpcHY2IjoiMjYwMToyNDY6NGQ3Zjo4MTMwOjU1MTk6YWJjODpkMmI2OmQ3YjQifQ&duid=9ae72f4c5f1c--01jyhx5fg7n3w4n8drd4fb3wey&tv=9.43.0&pu=https%3A%2F%2Fwww.shape.com%2Flifestyle%2Ffit-getaways%3FglobeNoTest&wpn=prebid&cd=.shape.com&pip6=MjYwMToyNDY6NGQ3Zjo4MTMwOjU1MTk6YWJjODpkMmI2OmQ3YjQ",
+          "url_name": "/lifestyle/fit-getaways"
+        }
+      },
+      {
+        "url": "https://lbs.eu-1-id5-sync.com/lbs/v1",
+        "duration": 665.1000000238419,
+        "size": 0,
+        "status": 200,
+        "transaction": "taxonomyScTemplate",
+        "initiatorType": "other",
+        "tags": {
+          "aut": "shape",
+          "environment": "qa",
+          "group": "",
+          "initiatorType": "other",
+          "scenario": "smoke",
+          "size": "0",
+          "status": "200",
+          "test_type": "BROWSER",
+          "transaction": "taxonomyScTemplate",
+          "url": "https://lbs.eu-1-id5-sync.com/lbs/v1",
+          "url_name": "/lifestyle/fit-getaways"
+        }
+      },
+      {
+        "url": "https://lb.eu-1-id5-sync.com/lb/v1",
+        "duration": 656.8999999761581,
+        "size": 0,
+        "status": 200,
+        "transaction": "taxonomyScTemplate",
+        "initiatorType": "other",
+        "tags": {
+          "aut": "shape",
+          "environment": "qa",
+          "group": "",
+          "initiatorType": "other",
+          "scenario": "smoke",
+          "size": "0",
+          "status": "200",
+          "test_type": "BROWSER",
+          "transaction": "taxonomyScTemplate",
+          "url": "https://lb.eu-1-id5-sync.com/lb/v1",
+          "url_name": "/lifestyle/fit-getaways"
+        }
+      },
+      {
+        "url": "https://id5-sync.com/bounce",
+        "duration": 643.3000000119209,
+        "size": 0,
+        "status": 200,
+        "transaction": "taxonomyScTemplate",
+        "initiatorType": "other",
+        "tags": {
+          "aut": "shape",
+          "environment": "qa",
+          "group": "",
+          "initiatorType": "other",
+          "scenario": "smoke",
+          "size": "0",
+          "status": "200",
+          "test_type": "BROWSER",
+          "transaction": "taxonomyScTemplate",
+          "url": "https://id5-sync.com/bounce",
+          "url_name": "/lifestyle/fit-getaways"
+        }
+      },
+      {
+        "url": "https://aax.amazon-adsystem.com/e/dtb/bid?src=3446&u=https%3A%2F%2Fwww.shape.com%2Flifestyle%2Ffit-getaways%3FglobeNoTest&pid=xrzVBDA5UgDDf&cb=0&ws=1280x720&v=25.617.1852&t=1000&slots=%5B%7B%22sd%22%3A%22leaderboard-flex-1%22%2C%22s%22%3A%5B%22728x90%22%2C%22970x90%22%2C%22970x250%22%5D%2C%22sn%22%3A%22%2F3865%2Fddm.shape.com%2Ftier1%2Ftaxonomysc%2Fdiv-gpt-leaderboard-flex-1%22%2C%22kv%22%3A%7B%7D%2C%22fc%22%3A%22USD%22%2C%22fp%22%3A65%7D%5D&pj=%7B%22tax1%22%3A%22shp_Lifestyle%22%2C%22tax2%22%3A%22shp_TravelandRetreats%22%2C%22si_section%22%3A%22shp_TravelandRetreats%22%2C%22tax0%22%3A%22shp_Homepage%22%2C%22tax3%22%3A%22null%22%2C%22si_pagegroup%22%3A%22Lifestyle%22%2C%22device%22%3A%7B%22sua%22%3A%7B%22mobile%22%3A0%2C%22source%22%3A1%2C%22platform%22%3A%7B%22brand%22%3A%22%22%7D%2C%22browsers%22%3A%5B%5D%7D%7D%7D&sg=%7B%22ortb2%22%3A%7B%22site%22%3A%7B%22ext%22%3A%7B%22data%22%3A%7B%22tax1%22%3A%22shp_Lifestyle%22%2C%22tax2%22%3A%22shp_TravelandRetreats%22%2C%22si_section%22%3A%22shp_TravelandRetreats%22%2C%22tax0%22%3A%22shp_Homepage%22%2C%22tax3%22%3A%22null%22%2C%22si_pagegroup%22%3A%22Lifestyle%22%7D%7D%7D%7D%7D&bb=%5B%5D&schain=1.0%2C1&sm=ca05bd55-1ac5-4e2f-9bf9-f3ff2fbb9087&gdprl=%7B%22status%22%3A%22no-cmp%22%7D&rt=j",
+        "duration": 635,
+        "size": 0,
+        "status": 200,
+        "transaction": "taxonomyScTemplate",
+        "initiatorType": "other",
+        "tags": {
+          "aut": "shape",
+          "environment": "qa",
+          "group": "",
+          "initiatorType": "other",
+          "scenario": "smoke",
+          "size": "0",
+          "status": "200",
+          "test_type": "BROWSER",
+          "transaction": "taxonomyScTemplate",
+          "url": "https://aax.amazon-adsystem.com/e/dtb/bid?src=3446&u=https%3A%2F%2Fwww.shape.com%2Flifestyle%2Ffit-getaways%3FglobeNoTest&pid=xrzVBDA5UgDDf&cb=0&ws=1280x720&v=25.617.1852&t=1000&slots=%5B%7B%22sd%22%3A%22leaderboard-flex-1%22%2C%22s%22%3A%5B%22728x90%22%2C%22970x90%22%2C%22970x250%22%5D%2C%22sn%22%3A%22%2F3865%2Fddm.shape.com%2Ftier1%2Ftaxonomysc%2Fdiv-gpt-leaderboard-flex-1%22%2C%22kv%22%3A%7B%7D%2C%22fc%22%3A%22USD%22%2C%22fp%22%3A65%7D%5D&pj=%7B%22tax1%22%3A%22shp_Lifestyle%22%2C%22tax2%22%3A%22shp_TravelandRetreats%22%2C%22si_section%22%3A%22shp_TravelandRetreats%22%2C%22tax0%22%3A%22shp_Homepage%22%2C%22tax3%22%3A%22null%22%2C%22si_pagegroup%22%3A%22Lifestyle%22%2C%22device%22%3A%7B%22sua%22%3A%7B%22mobile%22%3A0%2C%22source%22%3A1%2C%22platform%22%3A%7B%22brand%22%3A%22%22%7D%2C%22browsers%22%3A%5B%5D%7D%7D%7D&sg=%7B%22ortb2%22%3A%7B%22site%22%3A%7B%22ext%22%3A%7B%22data%22%3A%7B%22tax1%22%3A%22shp_Lifestyle%22%2C%22tax2%22%3A%22shp_TravelandRetreats%22%2C%22si_section%22%3A%22shp_TravelandRetreats%22%2C%22tax0%22%3A%22shp_Homepage%22%2C%22tax3%22%3A%22null%22%2C%22si_pagegroup%22%3A%22Lifestyle%22%7D%7D%7D%7D%7D&bb=%5B%5D&schain=1.0%2C1&sm=ca05bd55-1ac5-4e2f-9bf9-f3ff2fbb9087&gdprl=%7B%22status%22%3A%22no-cmp%22%7D&rt=j",
+          "url_name": "/lifestyle/fit-getaways"
+        }
+      },
+      {
+        "url": "https://securepubads.g.doubleclick.net/gampad/ads?pvsid=1969051041389925&correlator=1998664453000413&eid=31093084%2C95353384%2C95361094%2C31085776%2C83321073&output=ldjh&gdfp_req=1&vrg=202506180101&ptt=17&impl=fif&iu_parts=3865%2Cddm.shape.com%2Ctier1%2Ctaxonomysc%2CLifestyle&enc_prev_ius=0%2F1%2F2%2F3%2F4&prev_iu_szs=728x90%7C970x90%7C970x250&ifi=1&didk=2434992226&dids=leaderboard-flex-1&adfs=3098781848&sfv=1-0-45&eri=1&sc=1&cookie_enabled=1&abxe=1&dt=1750800187914&lmt=1750800187&adxs=269&adys=160&biw=1265&bih=720&scr_x=0&scr_y=0&btvi=0&ucis=1&oid=2&u_his=2&u_h=720&u_w=1280&u_ah=720&u_aw=1280&u_cd=24&u_sd=1&u_tz=-300&dmc=8&bc=31&nvt=1&uach=WyIiLCIiLCIiLCIiLCIiLG51bGwsMCxudWxsLCIiLG51bGwsMF0.&uas=3&url=https%3A%2F%2Fwww.shape.com%2Flifestyle%2Ffit-getaways%3FglobeNoTest&vis=1&psz=1265x-1&msz=1265x-1&fws=516&ohw=1265&topics=1&tps=1&htps=10&a3p=EjQKCnB1YmNpZC5vcmcSJDRjNjA1NDY4LWYyNTgtNGNkMS1hZTNmLTQzN2M0ZTY1NjBkOFgBEsUBCgp1aWRhcGkuY29tErQBQWdBQUVvSHMwQ1RGNGlPbmFMc0F4VGZKQkcyUllXclhIbFF5d0JSdStqNmVhb3ptVXZVRDRmOVpHdUZxN0wrbVZGZFM1dTFjT3Nxam5kdG1Tbmw1OXd4TDNlL3pKaUlpbExWeHEyaEU5dEFnU3lQQTdaeVZ3NGloVEpGczJKN0tDeDBzc3RUeXRMZWpjWURSVi82SjAwcjVjOXRSdy91bFAzc2tNenZBUWdmU0xYeUNrQT09WAESHQoOZXNwLmNyaXRlby5jb20YjIDLnvoySABSAghkEj4KBW9wZW54EixleUpwSWpvaWIyUnBiSGhNSzFaVGRtMHpjV2hQWWpGQllVZ3ZRVDA5SW4wPRiTg8ue-jJIAA..&nt=1&psd=WzMxLFtdLG51bGwsM10.&dlt=1750800186624&idt=746&ppid=ab07ba00-08e5-4a06-9ea3-71ceed7b3846&prev_scp=floor_id%3D0b13524086ed45b28a7f7765ad7502ce%26floor%3D65%26pc%3D1%26leaid%3D250694%26docId%3D5509564%26viewtype%3Dtaxonomy%26type%3Dtaxonomysc%26tax1%3Dshp_Lifestyle%26tax2%3Dshp_TravelandRetreats%26t%3D140%26au%3D250694%26tier%3DL%26jny%3D0%26leuid%3D153546959002053%26id%3D5509564%26adconsent%3Dy%26srid%3DjjrZm%26slot%3Dleaderboard-flex-1%26amznbid%3D1%26amznp%3D1%26vid%3D0&cust_params=ugc%3D0%26hgt%3D720%26wdth%3D1280%26abtest%3Dlcid1%26tax0%3DShape%26rid%3Dnb7b06746364849e69a349951c5900d7b21%26sid%3Dnb7b06746364849e69a349951c5900d7b21%26w%3DextraLarge%26ab%3D%26CFTL%3Dno_label%26pv%3D1%26muid%3Dab07ba00-08e5-4a06-9ea3-71ceed7b3846&adks=3031036622&frm=20&eoidce=1&pbbce=1&td=1&egid=56861&tan=259f6027-ef6b-4aa0-ada3-5d5fe989ece2&tdf=2",
+        "duration": 632.1999999880791,
+        "size": 9499,
+        "status": 200,
+        "transaction": "taxonomyScTemplate",
+        "initiatorType": "other",
+        "tags": {
+          "aut": "shape",
+          "environment": "qa",
+          "group": "",
+          "initiatorType": "other",
+          "scenario": "smoke",
+          "size": "9499",
+          "status": "200",
+          "test_type": "BROWSER",
+          "transaction": "taxonomyScTemplate",
+          "url": "https://securepubads.g.doubleclick.net/gampad/ads?pvsid=1969051041389925&correlator=1998664453000413&eid=31093084%2C95353384%2C95361094%2C31085776%2C83321073&output=ldjh&gdfp_req=1&vrg=202506180101&ptt=17&impl=fif&iu_parts=3865%2Cddm.shape.com%2Ctier1%2Ctaxonomysc%2CLifestyle&enc_prev_ius=0%2F1%2F2%2F3%2F4&prev_iu_szs=728x90%7C970x90%7C970x250&ifi=1&didk=2434992226&dids=leaderboard-flex-1&adfs=3098781848&sfv=1-0-45&eri=1&sc=1&cookie_enabled=1&abxe=1&dt=1750800187914&lmt=1750800187&adxs=269&adys=160&biw=1265&bih=720&scr_x=0&scr_y=0&btvi=0&ucis=1&oid=2&u_his=2&u_h=720&u_w=1280&u_ah=720&u_aw=1280&u_cd=24&u_sd=1&u_tz=-300&dmc=8&bc=31&nvt=1&uach=WyIiLCIiLCIiLCIiLCIiLG51bGwsMCxudWxsLCIiLG51bGwsMF0.&uas=3&url=https%3A%2F%2Fwww.shape.com%2Flifestyle%2Ffit-getaways%3FglobeNoTest&vis=1&psz=1265x-1&msz=1265x-1&fws=516&ohw=1265&topics=1&tps=1&htps=10&a3p=EjQKCnB1YmNpZC5vcmcSJDRjNjA1NDY4LWYyNTgtNGNkMS1hZTNmLTQzN2M0ZTY1NjBkOFgBEsUBCgp1aWRhcGkuY29tErQBQWdBQUVvSHMwQ1RGNGlPbmFMc0F4VGZKQkcyUllXclhIbFF5d0JSdStqNmVhb3ptVXZVRDRmOVpHdUZxN0wrbVZGZFM1dTFjT3Nxam5kdG1Tbmw1OXd4TDNlL3pKaUlpbExWeHEyaEU5dEFnU3lQQTdaeVZ3NGloVEpGczJKN0tDeDBzc3RUeXRMZWpjWURSVi82SjAwcjVjOXRSdy91bFAzc2tNenZBUWdmU0xYeUNrQT09WAESHQoOZXNwLmNyaXRlby5jb20YjIDLnvoySABSAghkEj4KBW9wZW54EixleUpwSWpvaWIyUnBiSGhNSzFaVGRtMHpjV2hQWWpGQllVZ3ZRVDA5SW4wPRiTg8ue-jJIAA..&nt=1&psd=WzMxLFtdLG51bGwsM10.&dlt=1750800186624&idt=746&ppid=ab07ba00-08e5-4a06-9ea3-71ceed7b3846&prev_scp=floor_id%3D0b13524086ed45b28a7f7765ad7502ce%26floor%3D65%26pc%3D1%26leaid%3D250694%26docId%3D5509564%26viewtype%3Dtaxonomy%26type%3Dtaxonomysc%26tax1%3Dshp_Lifestyle%26tax2%3Dshp_TravelandRetreats%26t%3D140%26au%3D250694%26tier%3DL%26jny%3D0%26leuid%3D153546959002053%26id%3D5509564%26adconsent%3Dy%26srid%3DjjrZm%26slot%3Dleaderboard-flex-1%26amznbid%3D1%26amznp%3D1%26vid%3D0&cust_params=ugc%3D0%26hgt%3D720%26wdth%3D1280%26abtest%3Dlcid1%26tax0%3DShape%26rid%3Dnb7b06746364849e69a349951c5900d7b21%26sid%3Dnb7b06746364849e69a349951c5900d7b21%26w%3DextraLarge%26ab%3D%26CFTL%3Dno_label%26pv%3D1%26muid%3Dab07ba00-08e5-4a06-9ea3-71ceed7b3846&adks=3031036622&frm=20&eoidce=1&pbbce=1&td=1&egid=56861&tan=259f6027-ef6b-4aa0-ada3-5d5fe989ece2&tdf=2",
+          "url_name": "/lifestyle/fit-getaways"
+        }
+      },
+      {
+        "url": "https://fastlane.rubiconproject.com/a/api/fastlane.json?account_id=7499&site_id=426796&zone_id=2442224&size_id=2&alt_size_ids=55%2C57&eid_pubcid.org=4c605468-f258-4cd1-ae3f-437c4e6560d8%5E1%5E%5E%5E%5E%5E&rf=https%3A%2F%2Fwww.shape.com%2Flifestyle%2Ffit-getaways%3FglobeNoTest&kw=tax1%3Dshp_Lifestyle%2Ctax2%3Dshp_TravelandRetreats%2Ctax0%3Dshp_Homepage%2Cpc%3D1&tg_i.domain=shape.com&tg_i.page=https%3A%2F%2Fwww.shape.com%2Flifestyle%2Ffit-getaways%3FglobeNoTest&tg_i.tax1=shp_Lifestyle&tg_i.tax2=shp_TravelandRetreats&tg_i.tax0=shp_Homepage&tg_i.pc=1&tg_i.documentLang=en&tg_i.mobile=0&tg_i.pbadslot=%2F3865%2Fddm.shape.com%2Ftier1%2Ftaxonomysc%2Fdiv-gpt-leaderboard-flex-1&tk_flint=pbjs_lite_v9.43.0&l_pb_bid_id=34be0eaa47035a8&p_screen_res=1280x720&rp_secure=1&rp_hard_floor=0.65&p_site.mobile=0&rp_maxbids=1&p_gpid=%2F3865%2Fddm.shape.com%2Ftier1%2Ftaxonomysc%2Fdiv-gpt-leaderboard-flex-1&m_ch_mobile=%3F0&slots=1&rand=0.16040796573559757",
+        "duration": 522.6999999880791,
+        "size": 0,
+        "status": 200,
+        "transaction": "taxonomyScTemplate",
+        "initiatorType": "other",
+        "tags": {
+          "aut": "shape",
+          "environment": "qa",
+          "group": "",
+          "initiatorType": "other",
+          "scenario": "smoke",
+          "size": "0",
+          "status": "200",
+          "test_type": "BROWSER",
+          "transaction": "taxonomyScTemplate",
+          "url": "https://fastlane.rubiconproject.com/a/api/fastlane.json?account_id=7499&site_id=426796&zone_id=2442224&size_id=2&alt_size_ids=55%2C57&eid_pubcid.org=4c605468-f258-4cd1-ae3f-437c4e6560d8%5E1%5E%5E%5E%5E%5E&rf=https%3A%2F%2Fwww.shape.com%2Flifestyle%2Ffit-getaways%3FglobeNoTest&kw=tax1%3Dshp_Lifestyle%2Ctax2%3Dshp_TravelandRetreats%2Ctax0%3Dshp_Homepage%2Cpc%3D1&tg_i.domain=shape.com&tg_i.page=https%3A%2F%2Fwww.shape.com%2Flifestyle%2Ffit-getaways%3FglobeNoTest&tg_i.tax1=shp_Lifestyle&tg_i.tax2=shp_TravelandRetreats&tg_i.tax0=shp_Homepage&tg_i.pc=1&tg_i.documentLang=en&tg_i.mobile=0&tg_i.pbadslot=%2F3865%2Fddm.shape.com%2Ftier1%2Ftaxonomysc%2Fdiv-gpt-leaderboard-flex-1&tk_flint=pbjs_lite_v9.43.0&l_pb_bid_id=34be0eaa47035a8&p_screen_res=1280x720&rp_secure=1&rp_hard_floor=0.65&p_site.mobile=0&rp_maxbids=1&p_gpid=%2F3865%2Fddm.shape.com%2Ftier1%2Ftaxonomysc%2Fdiv-gpt-leaderboard-flex-1&m_ch_mobile=%3F0&slots=1&rand=0.16040796573559757",
+          "url_name": "/lifestyle/fit-getaways"
+        }
+      },
+      {
+        "url": "https://hbopenbid.pubmatic.com/translator?source=prebid-client",
+        "duration": 521.0999999642372,
+        "size": 0,
+        "status": 200,
+        "transaction": "taxonomyScTemplate",
+        "initiatorType": "other",
+        "tags": {
+          "aut": "shape",
+          "environment": "qa",
+          "group": "",
+          "initiatorType": "other",
+          "scenario": "smoke",
+          "size": "0",
+          "status": "200",
+          "test_type": "BROWSER",
+          "transaction": "taxonomyScTemplate",
+          "url": "https://hbopenbid.pubmatic.com/translator?source=prebid-client",
+          "url_name": "/lifestyle/fit-getaways"
+        }
+      },
+      {
+        "url": "https://htlb.casalemedia.com/openrtb/pbjs?s=426174",
+        "duration": 519.3999999761581,
+        "size": 0,
+        "status": 200,
+        "transaction": "taxonomyScTemplate",
+        "initiatorType": "other",
+        "tags": {
+          "aut": "shape",
+          "environment": "qa",
+          "group": "",
+          "initiatorType": "other",
+          "scenario": "smoke",
+          "size": "0",
+          "status": "200",
+          "test_type": "BROWSER",
+          "transaction": "taxonomyScTemplate",
+          "url": "https://htlb.casalemedia.com/openrtb/pbjs?s=426174",
+          "url_name": "/lifestyle/fit-getaways"
+        }
+      }
+    ],
+    "html": []
+  },
+  "top_5_slowest_protocol_resources": {},
+  "top_5_slowest_browser_resources": {},
+  "all_browser_resources": [],
+  "browser_mantle_first_ad_load": {
+    "taxonomyScTemplate": [
+      2217
+    ]
+  },
+  "browser_mantle_first_ad_render": {
+    "taxonomyScTemplate": [
+      2217
+    ]
+  },
+  "browser_mantle_first_ad_request": {
+    "taxonomyScTemplate": [
+      1570
+    ]
+  },
+  "browser_mantle_first_ad_response": {
+    "taxonomyScTemplate": [
+      2203
+    ]
+  },
+  "browser_mantle_gtm_loaded": {},
+  "browser_mantle_gpt_loaded": {
+    "taxonomyScTemplate": [
+      1025
+    ]
+  },
+  "browser_mantle_scroll_depth": {
+    "taxonomyScTemplate": [
+      1671.5
+    ]
+  },
+  "browser_mantle_content_depth_px": {},
+  "browser_mantle_third_party_fired": {
+    "taxonomyScTemplate": [
+      2228
+    ]
+  },
+  "browser_mantle_deferred_fired": {
+    "taxonomyScTemplate": [
+      2229
+    ]
+  },
+  "browser_mantle_video_player_loaded": {},
+  "browser_mantle_ad_refresh_rate": {},
+  "browser_mantle_ad_bidder_amount": {},
+  "browser_mantle_first_scroll": {
+    "taxonomyScTemplate": [
+      3667
+    ]
+  },
+  "browser_mantle_adsrendered": {
+    "taxonomyScTemplate": [
+      1
+    ]
+  },
+  "browser_mantle_adsviewable": {
+    "taxonomyScTemplate": [
+      1
+    ]
+  }
+}

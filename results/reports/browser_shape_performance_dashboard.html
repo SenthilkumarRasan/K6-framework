@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K6 Performance Dashboard: shape custom-tps</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.2.1/dist/chartjs-plugin-zoom.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #22c55e;
+            --warning-color: #f97316;
+            --danger-color: #ef4444;
+            --bg-color: #f8fafc;
+            --text-color: #475569;
+            --slate-50: #f8fafc;
+            --slate-100: #f1f5f9;
+            --slate-200: #e2e8f0;
+            --slate-300: #cbd5e1;
+            --slate-400: #94a3b8;
+            --slate-500: #64748b;
+            --slate-600: #475569;
+            --slate-700: #334155;
+            --slate-800: #1e293b;
+            --slate-900: #0f172a;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9; /* Use lighter gray background */
+            color: var(--text-color);
+            line-height: 1.5;
+        }
+        
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            width: 240px;
+            background-color: var(--slate-800);
+            color: var(--slate-50);
+            padding: 1.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sidebar-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            color: white;
+            padding: 0 0.5rem;
+        }
+        
+        .sidebar-nav {
+            list-style: none;
+        }
+        
+        .sidebar-nav-item {
+            margin-bottom: 0.25rem;
+        }
+        
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            color: var(--slate-300);
+            text-decoration: none;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+        }
+        
+        .sidebar-link:hover,
+        .sidebar-link.active {
+            background-color: var(--slate-700);
+            color: white;
+        }
+        
+        .content {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+        
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+        }
+        
+        .dashboard-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--slate-800);
+            margin-bottom: 1rem;
+        }
+        
+        .info-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .info-card {
+            background-color: white;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .info-title {
+            color: var(--slate-500);
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .info-value {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--slate-800);
+        }
+        
+        .dashboard-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .info-block {
+            background-color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .info-label {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.25rem;
+        }
+
+        .info-value {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #111827;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+        
+        .card-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--slate-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--slate-800);
+            margin: 0;
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        .metrics-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+        
+        .metrics-table th {
+            background-color: #4f46e5;
+            color: white;
+            text-align: left;
+            padding: 0.75rem 1rem;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        
+        .metrics-table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--slate-200);
+            background-color: white;
+        }
+        
+        .metrics-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .metrics-table tbody tr:hover td {
+            background-color: var(--slate-50);
+        }
+        
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        
+        .badge.success {
+            background-color: rgba(34, 197, 94, 0.1);
+            color: var(--secondary-color);
+        }
+        
+        .badge.warning {
+            background-color: rgba(249, 115, 22, 0.1);
+            color: var(--warning-color);
+        }
+        
+        .badge.danger {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 1rem;
+        }
+        
+        .legend-container {
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+            gap: 0.5rem;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            font-size: 0.75rem;
+            color: var(--slate-600);
+        }
+        
+        .legend-color {
+            width: 16px;
+            height: 8px;
+            border-radius: 4px;
+            margin-right: 4px;
+        }
+        
+        .legend-color.color-blue {
+            background-color: var(--primary-color);
+        }
+        
+        .legend-color.color-green {
+            background-color: var(--secondary-color);
+        }
+        
+        .legend-color.color-orange {
+            background-color: var(--warning-color);
+        }
+        
+        .legend-color.color-red {
+            background-color: var(--danger-color);
+        }
+        
+        .actions {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            background-color: white;
+            border: 1px solid var(--slate-300);
+            color: var(--slate-700);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover {
+            background-color: var(--slate-50);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #4f46e5;
+            border-color: #4f46e5;
+        }
+        
+        .zoom-buttons {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 0.25rem;
+            z-index: 10;
+        }
+        
+        .zoom-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: white;
+            border: 1px solid var(--slate-200);
+            color: var(--slate-600);
+            cursor: pointer;
+            font-size: 1rem;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s;
+        }
+        
+        .zoom-btn:hover {
+            background-color: var(--slate-50);
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        footer {
+            text-align: center;
+            padding: 1rem;
+            color: var(--slate-500);
+            font-size: 0.75rem;
+            border-top: 1px solid var(--slate-200);
+            margin-top: 2rem;
+        }
+
+        /* SLA Thresholds and Metrics */
+        .metric-section {
+            background-color: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 1rem;
+        }
+
+        .sla-thresholds-section {
+            background-color: #f9fafb;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .sla-thresholds-section h3 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.75rem;
+        }
+
+        .threshold-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.75rem;
+            font-size: 0.8125rem;
+        }
+
+        .threshold-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .threshold-good {
+            color: #16a34a;
+        }
+
+        .threshold-warn {
+            color: #ea580c;
+        }
+
+        .threshold-danger {
+            color: #dc2626;
+        }
+
+        /* Metric table coloring */
+        .metrics-table .success {
+            color: #16a34a;
+            font-weight: 500;
+        }
+
+        .metrics-table .warning {
+            color: #ea580c;
+            font-weight: 500;
+        }
+
+        .metrics-table .danger {
+            color: #dc2626;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-title">K6 Dashboard</div>
+            <ul class="sidebar-nav">
+                <li class="sidebar-nav-item">
+                    <a href="#overview" class="sidebar-link active">
+                        <span>Overview</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="#ttlb-metrics" class="sidebar-link">
+                        <span>TTLB Metrics</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="#ttfb-metrics" class="sidebar-link">
+                        <span>TTFB Metrics</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="#response-time-charts" class="sidebar-link">
+                        <span>Response Time Charts</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="#tps-vus" class="sidebar-link">
+                        <span>TPS & VUs</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="#errors" class="sidebar-link">
+                        <span>Errors</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="content">
+            <!-- Header -->
+            <div class="dashboard-header" id="overview">
+                <h1 class="dashboard-title">K6 Performance Dashboard: shape custom-tps</h1>
+                <div class="actions">
+                    <span>Last 24 Hours</span>
+                    <button class="btn btn-primary">Refresh</button>
+                </div>
+            </div>
+
+            <!-- Dashboard Info -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Dashboard Info</h2>
+                </div>
+                <div class="card-body">
+                    
+    <div class="dashboard-header-section">
+      <h2>Dashboard Info</h2>
+      <div class="dashboard-info-grid">
+        <div class="info-block">
+          <div class="info-label">Test Type</div>
+          <div class="info-value">BROWSER</div>
+        </div>
+        <div class="info-block">
+          <div class="info-label">Duration</div>
+          <div class="info-value">NaNm NaNs</div>
+        </div>
+        <div class="info-block">
+          <div class="info-label">Total Requests</div>
+          <div class="info-value">0</div>
+        </div>
+        <div class="info-block">
+          <div class="info-label">Failed Requests</div>
+          <div class="info-value">0</div>
+        </div>
+        <div class="info-block">
+          <div class="info-label">Avg RPS</div>
+          <div class="info-value">0.00</div>
+        </div>
+        <div class="info-block">
+          <div class="info-label">Avg Response Time</div>
+          <div class="info-value">0.00ms</div>
+        </div>
+      </div>
+    </div>
+  
+                </div>
+            </div>
+            
+            <!-- TTLB SLA Thresholds Section -->
+            <div id="ttlb-metrics">
+                
+    <div class="metric-section">
+      <h2 class="section-title">Page Load Time (LCP)</h2>
+      
+        <div class="sla-thresholds-section">
+          <h3>SLA Thresholds</h3>
+          <div class="threshold-grid">
+            <span class="threshold-good">Below warn threshold</span>
+            <span class="threshold-warn">Between warn and danger</span>
+            <span class="threshold-danger">Above danger threshold</span>
+          </div>
+        </div>
+      
+      <table class="metrics-table">
+        <thead>
+          <tr>
+            <th>TRANSACTION</th>
+            <th>COUNT</th>
+            <th>FAILS</th>
+            <th>FAIL RATE</th>
+            <th>AVG (MS)</th>
+            <th>MIN (MS)</th>
+            <th>MED (MS)</th>
+            <th>P90 (MS)</th>
+            <th>P95 (MS)</th>
+            <th>P99 (MS)</th>
+            <th>MAX (MS)</th>
+          </tr>
+        </thead>
+        <tbody>
+  
+      <tr>
+        <td>taxonomyScTemplate</td>
+        <td>1</td>
+        <td>0</td>
+        <td>0</td>
+        <td class="success">412.00</td>
+        <td>412.00</td>
+        <td class="success">412.00</td>
+        <td class="success">412.00</td>
+        <td>412.00</td>
+        <td>412.00</td>
+        <td>412.00</td>
+      </tr>
+    
+        </tbody>
+      </table>
+    </div>
+  
+            </div>
+
+            <!-- TTFB Section -->
+            <div id="ttfb-metrics">
+                
+    <div class="metric-section">
+      <h2 class="section-title">Server Time (TTFB)</h2>
+      
+        <div class="sla-thresholds-section">
+          <h3>SLA Thresholds for TTFB</h3>
+          <div class="threshold-grid">
+            <div class="threshold-item">
+              <span>AVG Response Time:</span>
+              <span class="threshold-good">✓ WARN: 300ms</span>
+              <span class="threshold-danger">✗ DANGER: 500ms</span>
+            </div>
+            <div class="threshold-item">
+              <span>MEDIAN Response Time:</span>
+              <span class="threshold-good">✓ WARN: 250ms</span>
+              <span class="threshold-danger">✗ DANGER: 400ms</span>
+            </div>
+            <div class="threshold-item">
+              <span>P90 Response Time:</span>
+              <span class="threshold-good">✓ WARN: 500ms</span>
+              <span class="threshold-danger">✗ DANGER: 800ms</span>
+            </div>
+          </div>
+        </div>
+      
+      <table class="metrics-table">
+        <thead>
+          <tr>
+            <th>TRANSACTION</th>
+            <th>COUNT</th>
+            <th>FAILS</th>
+            <th>FAIL RATE</th>
+            <th>AVG (MS)</th>
+            <th>MIN (MS)</th>
+            <th>MED (MS)</th>
+            <th>P90 (MS)</th>
+            <th>P95 (MS)</th>
+            <th>P99 (MS)</th>
+            <th>MAX (MS)</th>
+          </tr>
+        </thead>
+        <tbody>
+  
+      <tr>
+        <td>taxonomyScTemplate</td>
+        <td>1</td>
+        <td>0</td>
+        <td>0</td>
+        <td class="success">118.00</td>
+        <td>118.00</td>
+        <td class="success">118.00</td>
+        <td class="success">118.00</td>
+        <td>118.00</td>
+        <td>118.00</td>
+        <td>118.00</td>
+      </tr>
+    
+        </tbody>
+      </table>
+    </div>
+  
+            </div>
+
+            <div id="fcp-metrics">
+                
+    <div class="metric-section">
+      <h2 class="section-title">FCP Metrics</h2>
+      
+      <table class="metrics-table">
+        <thead>
+          <tr>
+            <th>TRANSACTION</th>
+            <th>COUNT</th>
+            <th>FAILS</th>
+            <th>FAIL RATE</th>
+            <th>AVG (MS)</th>
+            <th>MIN (MS)</th>
+            <th>MED (MS)</th>
+            <th>P90 (MS)</th>
+            <th>P95 (MS)</th>
+            <th>P99 (MS)</th>
+            <th>MAX (MS)</th>
+          </tr>
+        </thead>
+        <tbody>
+  
+      <tr>
+        <td>taxonomyScTemplate</td>
+        <td>1</td>
+        <td>0</td>
+        <td>0</td>
+        <td class="success">412.00</td>
+        <td>412.00</td>
+        <td class="success">412.00</td>
+        <td class="success">412.00</td>
+        <td>412.00</td>
+        <td>412.00</td>
+        <td>412.00</td>
+      </tr>
+    
+        </tbody>
+      </table>
+    </div>
+  
+            </div>
+
+            <div id="cls-metrics">
+                
+    <div class="metric-section">
+      <h2 class="section-title">CLS Metrics</h2>
+      
+      <table class="metrics-table">
+        <thead>
+          <tr>
+            <th>TRANSACTION</th>
+            <th>COUNT</th>
+            <th>FAILS</th>
+            <th>FAIL RATE</th>
+            <th>AVG (MS)</th>
+            <th>MIN (MS)</th>
+            <th>MED (MS)</th>
+            <th>P90 (MS)</th>
+            <th>P95 (MS)</th>
+            <th>P99 (MS)</th>
+            <th>MAX (MS)</th>
+          </tr>
+        </thead>
+        <tbody>
+  
+      <tr>
+        <td>taxonomyScTemplate</td>
+        <td>1</td>
+        <td>0</td>
+        <td>0</td>
+        <td class="">0.00</td>
+        <td>0.00</td>
+        <td class="">0.00</td>
+        <td class="">0.00</td>
+        <td>0.00</td>
+        <td>0.00</td>
+        <td>0.00</td>
+      </tr>
+    
+        </tbody>
+      </table>
+    </div>
+  
+            </div>
+            
+            <!-- Response Time Charts Section -->
+            <div id="response-time-charts">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Response Time by Transaction</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="responseTimeChart"></canvas>
+                            <div class="zoom-buttons">
+                                <button class="zoom-btn" onclick="resetZoomChart('responseTimeChart')">↺</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- TPS & VUs Section -->
+            <div id="tps-vus">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Overall API Transactions Per Second</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="tpsChart"></canvas>
+                            <div class="zoom-buttons">
+                                <button class="zoom-btn" onclick="resetZoomChart('tpsChart')">↺</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Virtual Users</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="vuChart"></canvas>
+                            <div class="zoom-buttons">
+                                <button class="zoom-btn" onclick="resetZoomChart('vuChart')">↺</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Errors Section -->
+            <div id="errors">
+                <div class="card">
+              <div class="card-header">
+                <h2 class="card-title">Errors</h2>
+              </div>
+              <div class="card-body">
+                <p class="text-success">No errors were recorded during this test run.</p>
+              </div>
+            </div>
+            </div>
+            
+            <footer>
+                Generated on 7/9/2025, 1:47:56 AM
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        // Helper function to reset zoom on charts
+        function resetZoomChart(chartId) {
+            const chart = window.charts[chartId];
+            if (chart) {
+                chart.resetZoom();
+            }
+        }
+        
+        // Helper function to create gradient backgrounds
+        function createGradient(ctx, chartArea, colorStops) {
+            const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+            
+            for (let i = 0; i < colorStops.length; i++) {
+                gradient.addColorStop(colorStops[i].stop, colorStops[i].color);
+            }
+            
+            return gradient;
+        }
+        
+        // Initialize charts with data
+        document.addEventListener('DOMContentLoaded', function() {
+            // Store chart instances to access them later for zoom reset
+            window.charts = {};
+            
+            
+    // Response Time by Transaction Chart
+    const responseTimeCtx = document.getElementById('responseTimeChart').getContext('2d');
+    const responseTimeChart = new Chart(responseTimeCtx, {
+      type: 'bar',
+      data: {
+        labels: ["taxonomyScTemplate"],
+        datasets: [
+          {
+            label: 'Avg',
+            data: [118],
+            backgroundColor: 'rgba(99, 102, 241, 0.6)',
+            borderColor: 'rgba(99, 102, 241, 1)',
+            borderWidth: 1
+          },
+          {
+            label: 'p90',
+            data: [118],
+            backgroundColor: 'rgba(249, 115, 22, 0.6)',
+            borderColor: 'rgba(249, 115, 22, 1)',
+            borderWidth: 1
+          },
+          {
+            label: 'p95',
+            data: [118],
+            backgroundColor: 'rgba(220, 38, 38, 0.6)',
+            borderColor: 'rgba(220, 38, 38, 1)',
+            borderWidth: 1
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          title: {
+            display: true,
+            text: 'Response Time by Transaction'
+          },
+          tooltip: {
+            mode: 'index',
+            intersect: false
+          },
+          zoom: {
+            pan: {
+              enabled: true,
+              mode: 'xy'
+            },
+            zoom: {
+              wheel: {
+                enabled: true
+              },
+              pinch: {
+                enabled: true
+              },
+              mode: 'xy'
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: 'Time (ms)'
+            }
+          }
+        }
+      }
+    });
+    window.charts.responseTimeChart = responseTimeChart;
+    
+    // VU Chart
+    const vuChartCtx = document.getElementById('vuChart').getContext('2d');
+    const vuChart = new Chart(vuChartCtx, {
+      type: 'line',
+      data: {
+        datasets: [{
+          label: 'VUs',
+          data: [{"x":"2025-07-09T06:46:56.646Z","y":1},{"x":"2025-07-09T06:47:02.646Z","y":1},{"x":"2025-07-09T06:47:08.646Z","y":1},{"x":"2025-07-09T06:47:14.646Z","y":1},{"x":"2025-07-09T06:47:20.646Z","y":1},{"x":"2025-07-09T06:47:26.646Z","y":1},{"x":"2025-07-09T06:47:32.646Z","y":1},{"x":"2025-07-09T06:47:38.646Z","y":1},{"x":"2025-07-09T06:47:44.646Z","y":1},{"x":"2025-07-09T06:47:50.646Z","y":1}],
+          borderColor: 'rgba(99, 102, 241, 1)',
+          backgroundColor: 'rgba(99, 102, 241, 0.1)',
+          borderWidth: 2,
+          tension: 0.1,
+          fill: true,
+          stepped: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          intersect: false,
+          mode: 'index'
+        },
+        plugins: {
+          title: {
+            display: true,
+            text: 'Virtual Users'
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return context.dataset.label + ': ' + context.parsed.y + ' VUs';
+              }
+            }
+          },
+          zoom: {
+            pan: {
+              enabled: true,
+              mode: 'x'
+            },
+            zoom: {
+              wheel: {
+                enabled: true
+              },
+              pinch: {
+                enabled: true
+              },
+              mode: 'x'
+            }
+          }
+        },
+        scales: {
+          x: {
+            type: 'time',
+            time: {
+              unit: 'minute',
+              tooltipFormat: 'HH:mm:ss'
+            },
+            title: {
+              display: true,
+              text: 'Time'
+            }
+          },
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: 'Virtual Users'
+            }
+          }
+        }
+      }
+    });
+    window.charts.vuChart = vuChart;
+    
+        });
+    </script>
+</body>
+</html>
