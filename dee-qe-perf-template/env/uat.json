@@ -1,0 +1,11 @@
+{
+    "d1flex": {
+        "baseURL": "https://b811181118.flex-uat-customer.online-banking-services.com",
+        "uibaseURL": "https://b811181118.flex-uat-customer.online-banking-services.com/cuflex",
+        "userName": "",
+        "password": "#0",
+        "tokenBaseURL": "https://nga-uat.online-banking-services.com",
+        "tokenURL": "https://nga-uat.online-banking-services.com/nga/auth/v2/authentication/wizard/login",
+        "organizationId": "BPS200000003"
+    }
+}

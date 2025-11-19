@@ -1,0 +1,57 @@
+name: DEE-QE-PERF-TEMPLATE-WORKFLOW
+on:
+  push:
+    branches: '**' # All branches
+jobs:
+  execute_test:                            # job name
+    runs-on: ubuntu-latest-2-8             # runner
+    env:
+      NPM_AUTH_SECRET: ${{ secrets.SVC_BPF_INT_FIS_ARTIFACTORY_TOKEN}}
+      ENVIRONMENT: "qa"        # Set a default
+      WORKLOAD: "smoke"       # Set a default
+    steps:                                 # steps for the jobs
+    - name: Checkout repository            # step name
+      uses: actions/checkout@v4 
+    - name: npm token
+      run: |
+        echo "//artifactory.fis.dev/artifactory/api/npm/deeqe-npm-dev/:_authToken=${{secrets.SVC_BPF_ID_TOKEN}}" > .npmrc
+        echo "email = svc-bpf-internal@fisglobal.com" >> .npmrc
+        echo "always-auth = true" >> .npmrc
+        echo "registry=https://artifactory.fis.dev/artifactory/api/npm/deeqe-npm-dev/" >> .npmrc
+    - name: Clean Install
+      uses: Banking-Solutions-Digital/panda-npm-action@v1
+      with:
+        execute-ci: true
+    - name: Run lint 
+      run: npm run lint
+    - name: Run Checkmarx SAST Scan
+      uses: Banking-Solutions-Digital/panda-checkmarx-sast-action@v1
+      with:
+        checkmarx_project_name: "CxServer/SP/FIS/BankingSolutions/Banking Solutions Development/Digital Quality Enablement/qe-perf-libs_dev"
+        checkmarx_username: ${{ secrets.CHECKMARX_USERNAME_SVC }}
+        checkmarx_password: ${{ secrets.CHECKMARX_PASSWORD_SVC }}
+        exclude_paths: "node_modules,dist"
+        exclude_files: "tests/*.js"
+    - name: Run k6 tests using Docker container
+      run: |
+        # Ensure results directory exists
+        mkdir -p ${{ github.workspace }}/results
+        # Ensure results folder is writable
+        chmod -R 777 ${{ github.workspace }}/results
+        for file in tests/*1.js; do
+          echo "Running $file"
+          docker run --rm \
+            -v ${{ github.workspace }}:/repo \
+            -w /repo \
+            -e ENVIRONMENT=${{ env.ENVIRONMENT }} \
+            -e WORKLOAD=${{ env.WORKLOAD }} \
+            grafana/k6:latest run \
+            --out json=results/$(basename "$file" .js).json tests/$(basename "$file")
+        done
+    - name: Upload reports
+      uses: actions/upload-artifact@v4   # pre-built action to upload-artifacts
+      if: ${{ !cancelled() }}            # conditions
+      with:
+        name: reports                    # name of artifacts
+        path: results              # directory of file to be archived
+        retention-days: 7

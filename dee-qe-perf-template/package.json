@@ -1,0 +1,27 @@
+{
+  "name": "dee-qe-perf-template",
+  "version": "1.0.0",
+  "description": "K6 based Performance Test framework template",
+  "main": "index.js",
+  "type": "module",
+  "directories": {
+    "test": "tests"
+  },
+  "dependencies": {
+    "dee-qe-perf-libs": "^1.0.1"
+  },
+  "scripts": {
+    "postinstall": "node copy-libs.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@eslint/js": "^9.20.0",
+    "eslint": "^9.20.1",
+    "eslint-plugin-k6-linting-rules": "^1.0.2",
+    "globals": "^16.2.0"
+  }
+}

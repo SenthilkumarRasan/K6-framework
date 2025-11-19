@@ -1,0 +1,752 @@
+/**
+ * Central Performance Data Processor for k6
+ *
+ * This script is the single source of truth for processing k6 test output.
+ * It reads the raw JSON output and the summary JSON from a k6 run,
+ * consolidates the data, calculates all necessary statistics, and produces
+ * a clean, intermediate JSON file that can be used by any number of 
+ * downstream report generators.
+ */
+
+/** eslint-env node */
+/** @global require, module */
+
+import fs from 'fs';
+import process from 'process';
+
+/**
+ * Utility function to check if a file is large (>100MB)
+ * @param {string} filePath - Path to the file to check
+ * @param {number} thresholdMB - Size threshold in MB
+ * @returns {boolean} - True if file is larger than threshold
+ */
+export function isLargeFile(filePath, thresholdMB = 100) {
+  try {
+    const stats = fs.statSync(filePath);
+    const fileSizeMB = stats.size / (1024 * 1024);
+    return fileSizeMB > thresholdMB;
+  } catch (error) {
+    console.warn(`Could not check file size: ${error.message}`);
+    return false;
+  }
+}
+
+/**
+ * Process a large JSON lines file in batches to avoid memory issues
+ * @param {string} filePath - Path to the JSON lines file
+ * @param {number} batchSize - Number of lines to process in each batch
+ * @param {Function} processLineFn - Function to process each line
+ */
+function processLargeJsonLinesFile(filePath, batchSize, processLineFn) {
+  const fileContent = fs.readFileSync(filePath, 'utf8');
+  const lines = fileContent.trim().split('\n');
+  const totalLines = lines.length;
+
+  console.log(`Processing ${totalLines} lines in batches of ${batchSize}`);
+
+  // Process in batches
+  for (let i = 0; i < totalLines; i += batchSize) {
+    const endIndex = Math.min(i + batchSize, totalLines);
+    const batch = lines.slice(i, endIndex);
+
+    batch.forEach((line, lineIndex) => {
+      try {
+        const parsedLine = JSON.parse(line);
+        processLineFn(parsedLine, i + lineIndex);
+      } catch (error) {
+        console.error(`Error parsing line ${i + lineIndex}: ${error.message}`);
+      }
+    });
+
+    // Log progress for large files
+    if (totalLines > 10000 && (i + batchSize) % 10000 === 0) {
+      console.log(`Processed ${Math.min(i + batchSize, totalLines)} of ${totalLines} lines (${((Math.min(i + batchSize, totalLines) / totalLines) * 100).toFixed(1)}%)`);
+    }
+  }
+}
+
+/**
+ * Calculate statistics for an array of values
+ * @param {Array<number>} values - Array of numeric values
+ * @returns {Object} - Object containing min, max, avg, med, p90, p95, p99, count
+ */
+function calculateStats(values) {
+  if (!values || !Array.isArray(values) || values.length === 0) {
+    // Return null for all stats if no data is available, count is correctly 0
+    console.error('[WARNING] No metric values available to calculate statistics');
+    return { min: null, max: null, avg: null, med: null, p90: null, p95: null, p99: null, count: 0 };
+  }
+
+  // Process in batches for large arrays to avoid stack overflow
+  const batchSize = 10000;
+  let min = Infinity;
+  let max = -Infinity;
+  let sum = 0;
+
+  // Calculate min, max, sum in batches
+  for (let i = 0; i < values.length; i += batchSize) {
+    const endIndex = Math.min(i + batchSize, values.length);
+    const batch = values.slice(i, endIndex);
+
+    for (const value of batch) {
+      if (value < min) min = value;
+      if (value > max) max = value;
+      sum += value;
+    }
+  }
+
+  // Sort values for percentiles - be careful with large arrays
+  const sortedValues = [...values].sort((a, b) => a - b);
+
+  const count = values.length;
+  const avg = sum / count;
+  const med = sortedValues[Math.floor(count / 2)];
+  const p90 = sortedValues[Math.floor(count * 0.9)];
+  const p95 = sortedValues[Math.floor(count * 0.95)];
+  const p99 = sortedValues[Math.floor(count * 0.99)];
+
+  return {
+    min,
+    max,
+    avg,
+    med,
+    p90,
+    p95,
+    p99,
+    count
+  };
+}
+
+// Main function to process the data
+function processK6Data(rawMetricsPath, summaryPath, outputPath, testInfo, options = {}) {
+  // Default options
+  const { filterNonHtml = testInfo.testType === 'PROTOCOL' } = options;
+ 
+  console.log('Starting central data processing with advanced chart data extraction...');
+
+  try {
+    // Check if we're dealing with large files
+    const isLargeRawFile = isLargeFile(rawMetricsPath);
+    if (isLargeRawFile) {
+      console.log('Large raw metrics file detected (>100MB). Using memory-efficient processing.');
+    }
+
+    // Read and parse the summary file (usually small)
+    const summaryData = fs.readFileSync(summaryPath, 'utf8');
+    const summary = JSON.parse(summaryData);
+
+    // For collecting raw metrics
+    const rawMetrics = [];
+
+    // Process raw metrics file in batches if it's large
+    if (isLargeRawFile) {
+      const BATCH_SIZE = 10000; // Adjust based on memory constraints
+      processLargeJsonLinesFile(rawMetricsPath, BATCH_SIZE, (parsedLine) => {
+        rawMetrics.push(parsedLine);
+      });
+    } else {
+      // For smaller files, standard processing is fine
+      const rawData = fs.readFileSync(rawMetricsPath, 'utf8');
+      const lines = rawData.trim().split('\n');
+
+      lines.forEach((line) => {
+        if (line.trim()) {
+          try {
+            const parsedLine = JSON.parse(line);
+            rawMetrics.push(parsedLine);
+          } catch (error) {
+            console.warn(`Error parsing line: ${error.message}`);
+          }
+        }
+      });
+    }
+
+    console.log(`Processed ${rawMetrics.length} raw metrics`);
+
+    // Extract transactions
+    console.log('Extracting transactions with batch processing...');
+    if (filterNonHtml) {
+      console.log('Filtering out _nonhtml transactions for performance report');
+    }
+    const transactions = extractTransactions(rawMetrics, { filterNonHtml, isBrowser: (testInfo && testInfo.testType === 'BROWSER') });
+
+    // Extract detailed data for charts with batch processing
+    console.log('Extracting detailed data for charts with batch processing...');
+    const detailedData = extractDetailedData(rawMetrics);
+
+    // Calculate total failed requests
+    let totalFailedRequests = 0;
+    Object.values(transactions).forEach(tx => {
+      totalFailedRequests += tx.failed || 0;
+    });
+
+    // Extract summary metrics
+    const summaryMetrics = extractSummaryMetrics(summary, rawMetrics, totalFailedRequests, testInfo);
+
+    // Combine all data into a single result object
+    const result = {
+      summary: summaryMetrics,
+      transactions: transactions,
+      detailedData: detailedData,
+      errors: detailedData.errors,
+      webVitals: detailedData.webVitals || { ttfb: { values: [], byTransaction: {} }, lcp: { values: [], byTransaction: {} } },
+      rawMetricsPath,
+      summaryPath,
+      outputPath
+    };
+
+    // Critical: Map the raw data points from detailed data to transactions structure
+    // This ensures the dashboard can find the raw data for charts
+    // For browser tests, always assume BROWSER type even if testInfo is missing/incomplete
+    // This ensures our dashboard works consistently with or without complete test info
+    const isBrowser = testInfo && testInfo.testType === 'BROWSER';
+
+    if (isBrowser && detailedData.chartData) {
+      const ttfbByTx = detailedData.chartData.ttfbByTx || {};
+      const respTimeByTx = detailedData.chartData.responseTimeByTx || {};
+
+      console.log('Raw data mapping for transactions:');
+      console.log(`Available TTFB transaction keys: ${Object.keys(ttfbByTx).join(', ')}`);
+      console.log(`Available LCP transaction keys: ${Object.keys(respTimeByTx).join(', ')}`);
+
+      // For each transaction in webVitals, ensure it has raw time-series data
+      // This is critical for charts to work properly
+      const txNames = Array.from(new Set([
+        ...Object.keys(result.webVitals?.ttfb?.byTransaction || {}),
+        ...Object.keys(result.webVitals?.lcp?.byTransaction || {})
+      ]));
+
+      console.log(`Web vitals transaction keys: ${txNames.join(', ')}`);
+
+      // For each transaction, ensure it has rawData structure
+      txNames.forEach(txName => {
+        if (!result.transactions[txName]) {
+          // Create the transaction if it doesn't exist
+          result.transactions[txName] = {
+            name: txName,
+            requests: 0,
+            failures: 0,
+            duration: { min: 0, max: 0, avg: 0, med: 0, p90: 0, p95: 0, count: 0 }
+          };
+        }
+
+        // Map raw time-series data for charts
+        result.transactions[txName].rawData = {
+          ttfb: ttfbByTx[txName] || [],
+          lcp: respTimeByTx[txName] || []
+        };
+
+        // IMPORTANT: Never create synthetic data points when raw data is missing
+        // Simply log a warning to indicate the issue
+        if (result.transactions[txName].rawData.ttfb.length === 0 &&
+          result.webVitals?.ttfb?.byTransaction[txName]) {
+          console.warn(`[WARNING] No raw time-series TTFB data for ${txName}, chart may be incomplete - never using fallbacks`);
+        }
+
+        if (result.transactions[txName].rawData.lcp.length === 0 &&
+          result.webVitals?.lcp?.byTransaction[txName]) {
+          console.warn(`[WARNING] No raw time-series LCP data for ${txName}, chart may be incomplete - never using fallbacks`);
+        }
+
+        console.log(`Transaction ${txName} mapped with ${result.transactions[txName].rawData.ttfb.length} TTFB pts and ${result.transactions[txName].rawData.lcp.length} LCP pts`);
+      });
+    }
+
+    fs.writeFileSync(outputPath, JSON.stringify(result, null, 2));
+    console.log(`Central data processing complete. Output written to ${outputPath}`);
+  } catch (error) {
+    console.error(`Error processing K6 data: ${error.message}`);
+    console.error(error.stack);
+    throw error; // Re-throw to allow calling code to handle the error
+  }
+}
+
+/**
+ * Extract summary metrics from the k6 summary JSON
+ * @param {Object} summary - The k6 summary JSON
+ * @param {Array} metrics - Array of raw metrics
+ * @param {number} totalFailedRequests - Total number of failed requests
+ * @param {Object} testInfo - Additional test information
+ * @returns {Object} - Object containing summary metrics
+ */
+function extractSummaryMetrics(summary, metrics, totalFailedRequests, testInfo) {
+  const firstMetric = metrics.find(m => m.data && m.data.time);
+  const lastMetric = metrics.slice().reverse().find(m => m.data && m.data.time);
+
+  const startTime = firstMetric ? new Date(firstMetric.data.time).toLocaleString() : 'N/A';
+  const endTime = lastMetric ? new Date(lastMetric.data.time).toLocaleString() : 'N/A';
+
+  // Extract VU information
+  let maxVUs = 0;
+  if (summary && summary.metrics && summary.metrics.vus) {
+    maxVUs = summary.metrics.vus.max;
+  }
+
+  // Calculate test duration
+  let durationSeconds = 0;
+  if (firstMetric && lastMetric) {
+    const start = new Date(firstMetric.data.time).getTime();
+    const end = new Date(lastMetric.data.time).getTime();
+    durationSeconds = (end - start) / 1000;
+  }
+
+  // Count total requests
+  let totalRequests = 0;
+  if (summary && summary.metrics && summary.metrics.http_reqs) {
+    totalRequests = summary.metrics.http_reqs.count;
+  } else {
+    // If not in summary, count from transactions
+    Object.values(metrics).forEach(tx => {
+      if (tx.type === 'Point' && tx.metric === 'http_reqs') {
+        totalRequests++;
+      }
+    });
+  }
+
+  const httpReqDuration = summary.metrics.http_req_duration;
+  const avgResponseTime = httpReqDuration ? httpReqDuration.avg : 0;
+  const avgRps = totalRequests && durationSeconds ? totalRequests / durationSeconds : 0;
+
+  return {
+    testInfo: testInfo || {
+      testType: 'API',
+      aut: 'unknown',
+      scenario: 'unknown'
+    },
+    startTime,
+    endTime,
+    testRunDuration: durationSeconds,
+    maxVUs,
+    totalRequests,
+    failedRequests: totalFailedRequests,
+    successRate: totalRequests > 0 ? ((totalRequests - totalFailedRequests) / totalRequests * 100).toFixed(2) : '0.00',
+    avgResponseTime,
+    avgRps
+  };
+}
+
+/**
+ * Extract transactions from metrics array with batch processing
+ * @param {Array} metrics - Array of raw metrics
+ * @param {Object} options - Processing options
+ * @param {boolean} options.filterNonHtml - If true, filter out _nonhtml transactions
+ * @returns {Object} - Object containing transaction data
+ */
+function extractTransactions(metrics, options = {}) {
+  const { filterNonHtml = false, isBrowser = false } = options;
+  console.log(`Processing ${metrics.length} metrics in batches of 10000 for transaction extraction`);
+
+  // Initialize data structures
+  const transactions = {};
+  const requestIds = new Map();
+
+  // Process in batches of 10000 to avoid memory issues
+  const BATCH_SIZE = 10000;
+
+  for (let i = 0; i < metrics.length; i += BATCH_SIZE) {
+    const endIndex = Math.min(i + BATCH_SIZE, metrics.length);
+    const batch = metrics.slice(i, endIndex);
+
+    for (const metric of batch) {
+      if (!metric.data || !metric.data.tags) continue;
+
+      const tags = metric.data.tags;
+      const txName = tags.transaction || tags.name || 'unknown';
+
+      // Additional filtering rules
+      // 1. For browser tests: only keep page-level metrics (with transaction tag and NO resource_type tag)
+      // 2. For API/Protocol: optionally filter out *_nonhtml when flag set
+      if (isBrowser) {
+        // Browser metrics we want have transaction tag but NO resource_type tag
+        if (tags.resource_type) {
+          continue; // Skip resources (JS, CSS, fonts, etc)
+        }
+
+        // Also check that we have the transaction tag (template name)
+        if (!tags.transaction) {
+          continue; // Skip metrics without a template name
+        }
+      } else if (filterNonHtml && txName.endsWith('_nonhtml')) {
+        continue; // Normal API/PROTOCOL filtering unchanged
+      }
+
+      // For browser tests, make sure we use the template name from the transaction tag
+      // This ensures our transactions are grouped by template (taxonomyScTemplate, etc.) not by URL
+      const transactionKey = isBrowser && tags.transaction ? tags.transaction : txName;
+
+      // Initialize transaction if not exists
+      if (!transactions[transactionKey]) {
+        transactions[transactionKey] = {
+          name: transactionKey, // Use the template name as displayed name
+          requests: 0,
+          failures: 0,
+          failed: 0,
+          successful: 0,
+          requestIds: 0,
+          statusCodes: {},
+          successRate: '0.00'
+        };
+      }
+
+      // Track HTTP requests
+      if (metric.metric === 'http_reqs' && metric.type === 'Point') {
+        transactions[transactionKey].requests++;
+
+        // Track unique request IDs to avoid double counting
+        const requestId = `${tags.method}-${tags.url}-${metric.data.time}`;
+        if (!requestIds.has(requestId)) {
+          requestIds.set(requestId, transactionKey);
+          // Update to use Set for requestIds if it exists, otherwise count numerically
+          if (transactions[transactionKey].requestIds instanceof Set) {
+            transactions[transactionKey].requestIds.add(requestId);
+          } else {
+            transactions[transactionKey].requestIds++;
+          }
+        }
+      }
+
+      // Track HTTP request status codes
+      if (metric.metric === 'http_req_failed' && metric.type === 'Point') {
+        const failed = metric.data.value === 1;
+        const status = tags.status || 'unknown';
+
+        // Track status code - handle both Map and plain object implementations
+        if (transactions[transactionKey].statusCodes instanceof Map) {
+          if (!transactions[transactionKey].statusCodes.has(status)) {
+            transactions[transactionKey].statusCodes.set(status, 1);
+          } else {
+            transactions[transactionKey].statusCodes.set(
+              status,
+              transactions[transactionKey].statusCodes.get(status) + 1
+            );
+          }
+        } else {
+          // Plain object implementation
+          if (!transactions[transactionKey].statusCodes[status]) {
+            transactions[transactionKey].statusCodes[status] = 1;
+          } else {
+            transactions[transactionKey].statusCodes[status] += 1;
+          }
+        }
+
+        // Update failure count
+        if (failed) {
+          transactions[transactionKey].failures++;
+          transactions[transactionKey].failed++;
+        } else {
+          transactions[transactionKey].successful++;
+        }
+      }
+
+      // Track checks that failed
+      if (metric.metric === 'checks' && metric.type === 'Point' && metric.data.value === 0) {
+        transactions[transactionKey].failures++;
+      }
+    }
+
+    // Calculate success rate for each transaction
+    for (const key of Object.keys(transactions)) {
+      const tx = transactions[key];
+      const total = tx.successful + tx.failed;
+      tx.successRate = total === 0 ? '0.00' : ((tx.successful / total) * 100).toFixed(2);
+    }
+  }
+
+  // Process and finalize transaction data
+  for (const txName in transactions) {
+    const tx = transactions[txName];
+
+    // Log if we have a very large number of unique request IDs
+    // Check if requestIds is a Set or a number counter
+    if (tx.requestIds instanceof Set && tx.requestIds.size > 1000) {
+      console.warn(`Transaction ${tx.name} has ${tx.requestIds.size} unique request IDs. This may indicate a problem with request tracking.`);
+    }
+
+    // Handle statusCodes safely - support both Map and plain object formats
+    if (tx.statusCodes instanceof Map) {
+      // Log if we have a large number of status codes
+      if (tx.statusCodes.size > 20) {
+        console.warn(`Transaction ${tx.name} has ${tx.statusCodes.size} different status codes. This may indicate inconsistent API behavior.`);
+      }
+
+      // Convert status codes map to object for easier JSON serialization
+      const statusCodesObj = {};
+      tx.statusCodes.forEach((count, code) => {
+        statusCodesObj[code] = count;
+      });
+      tx.statusCodes = statusCodesObj;
+    } else {
+      // Already an object - check if it has a reasonable number of keys
+      const statusCodeCount = Object.keys(tx.statusCodes).length;
+      if (statusCodeCount > 20) {
+        console.warn(`Transaction ${tx.name} has ${statusCodeCount} different status codes. This may indicate inconsistent API behavior.`);
+      }
+    }
+
+    // Determine success/failure counts
+    // Use failures count regardless of status codes availability
+    tx.failed = tx.failures;
+    tx.successful = tx.requests - tx.failures;
+
+    // Log when status codes are missing for debugging purposes
+    if (Object.keys(tx.statusCodes).length === 0) {
+      console.log(`No status codes available for transaction ${txName}, using failure count from checks`);
+    }
+
+    // Calculate success rate
+    tx.successRate = tx.requests > 0 ? ((tx.successful / tx.requests) * 100).toFixed(2) : '0.00';
+
+    // Log request ID breakdown for debugging
+    console.log(`Request ID breakdown for ${txName}:`);
+    console.log(`Transaction '${txName}' raw http_reqs metric count: ${tx.requests}`);
+    console.log(`Using http_reqs metric count (${tx.requests}) for ${txName} instead of unique IDs count (${tx.requestIds.size})`);
+
+    // Clean up the Set to reduce memory usage
+    tx.requestIds = tx.requestIds.size;
+  }
+
+  console.log(`Extracted data for ${Object.keys(transactions).length} unique transactions`);
+  return transactions;
+}
+
+/**
+ * Extract detailed data for charts with batch processing
+ * @param {Array} metrics - Array of raw metrics
+ * @returns {Object} - Object containing detailed data for charts
+ */
+function extractDetailedData(metrics) {
+  console.log(`Processing ${metrics.length} metrics for detailed data extraction...`);
+
+  // For browser tests, also extract core web vitals
+  // These will be populated during metric processing
+  const webVitals = {
+    ttfb: { values: [], byTransaction: {} },
+    lcp: { values: [], byTransaction: {} },
+  };
+
+  const responseTimeByTx = {};
+  const ttfbByTx = {}; // Add TTFB tracking
+  const requestsPerSecond = {};
+  const activeVUs = [];
+  const errors = new Map();
+  const errorLimit = 100;
+
+  for (const metric of metrics) {
+    if (!metric.data || !metric.data.tags) continue;
+
+    const tags = metric.data.tags;
+    const timestamp = metric.data.time;
+    const txName = tags.transaction || tags.name || 'unknown';
+    const second = Math.floor(new Date(timestamp).getTime() / 1000) * 1000;
+
+    // Initialize data structures if they don't exist
+    if (!responseTimeByTx[txName]) responseTimeByTx[txName] = [];
+    if (!ttfbByTx[txName]) ttfbByTx[txName] = []; // Initialize TTFB tracking
+    if (!requestsPerSecond[second]) requestsPerSecond[second] = 0;
+
+    // Track response times (TTLB)
+    if (metric.metric === 'http_req_duration' && metric.type === 'Point') {
+      responseTimeByTx[txName].push({ time: timestamp, value: metric.data.value });
+    }
+
+    // Track TTFB (http_req_waiting)
+    if (metric.metric === 'http_req_waiting' && metric.type === 'Point') {
+      ttfbByTx[txName].push({ time: timestamp, value: metric.data.value });
+    }
+
+    // Track browser-specific core web vitals
+    // TTFB for browser tests (browser_ttfb)
+    if (metric.metric === 'browser_ttfb' && metric.type === 'Point') {
+      // Add to global TTFB values list
+      webVitals.ttfb.values.push(metric.data.value);
+
+      // Initialize transaction in byTransaction if not exists
+      if (!webVitals.ttfb.byTransaction[txName]) {
+        webVitals.ttfb.byTransaction[txName] = [];
+      }
+
+      // Add this TTFB value to the transaction's array
+      webVitals.ttfb.byTransaction[txName].push(metric.data.value);
+
+      // CRITICAL: Also add raw data point with timestamp for charts
+      if (!ttfbByTx[txName]) {
+        ttfbByTx[txName] = [];
+      }
+
+      // Add time-series data point for charts
+      ttfbByTx[txName].push({
+        time: timestamp,
+        value: metric.data.value
+      });
+    }
+
+    // LCP for browser tests (browser_page_load_time)
+    if (metric.metric === 'browser_page_load_time' && metric.type === 'Point') {
+      // Add to global LCP values list
+      webVitals.lcp.values.push(metric.data.value);
+
+      // Initialize transaction in byTransaction if not exists
+      if (!webVitals.lcp.byTransaction[txName]) {
+        webVitals.lcp.byTransaction[txName] = [];
+      }
+
+      // Add this LCP value to the transaction's array
+      webVitals.lcp.byTransaction[txName].push(metric.data.value);
+
+      // CRITICAL: Also add raw data point with timestamp for charts
+      if (!responseTimeByTx[txName]) {
+        responseTimeByTx[txName] = [];
+      }
+
+      // Add time-series data point for charts
+      responseTimeByTx[txName].push({
+        time: timestamp,
+        value: metric.data.value
+      });
+    }
+
+    // Track requests per second
+    if (metric.metric === 'http_reqs' && metric.type === 'Point') {
+      requestsPerSecond[second]++;
+    }
+
+    // Track active VUs
+    if (metric.metric === 'vus' && metric.type === 'Point') {
+      activeVUs.push({ time: timestamp, value: metric.data.value });
+    }
+
+    // Track errors
+    if (metric.metric === 'http_req_failed' && metric.data.value === 1) {
+      const errorKey = `${txName}-${tags.error_code || 'unknown'}`;
+      if (!errors.has(errorKey) && errors.size < errorLimit) {
+        errors.set(errorKey, { transaction: txName, error: tags.error, count: 1 });
+      } else if (errors.has(errorKey)) {
+        errors.get(errorKey).count++;
+      }
+    }
+  }
+
+  // --- Final Data Transformation ---
+
+  // Sort time-series data
+  activeVUs.sort((a, b) => new Date(a.time) - new Date(b.time));
+  for (const txName in responseTimeByTx) {
+    responseTimeByTx[txName].sort((a, b) => new Date(a.time) - new Date(b.time));
+  }
+
+  // Convert requestsPerSecond to a sorted array
+  const requestsPerSecondSeries = Object.entries(requestsPerSecond)
+    .map(([time, value]) => ({ time: parseInt(time), value }))
+    .sort((a, b) => a.time - b.time);
+
+  // Calculate overall response time percentiles from all transactions
+  const allResponseTimes = Object.values(responseTimeByTx).flat().map(d => d.value);
+  const overallPercentiles = calculateStats(allResponseTimes);
+
+  const chartData = {
+    responseTimeByTx,
+    ttfbByTx, // Add TTFB data to the chart data
+    requestsPerSecond: requestsPerSecondSeries,
+    activeVUs,
+    overallPercentiles: {
+      p90: overallPercentiles.p90,
+      p95: overallPercentiles.p95,
+      p99: overallPercentiles.p99,
+    },
+  };
+
+  console.log(`Finished extracting detailed data. Found ${requestsPerSecondSeries.length} RPS data points and ${activeVUs.length} VU data points.`);
+
+  // Process the web vitals data (calculate stats for each transaction)
+  // Only for browser tests with non-empty web vitals data
+  if (webVitals.ttfb.values.length > 0 || webVitals.lcp.values.length > 0) {
+    console.log(`Processing web vitals data: ${webVitals.ttfb.values.length} TTFB values and ${webVitals.lcp.values.length} LCP values`);
+
+    // Calculate stats for each transaction's TTFB values
+    Object.keys(webVitals.ttfb.byTransaction).forEach(txName => {
+      const values = webVitals.ttfb.byTransaction[txName];
+      if (values && values.length > 0) {
+        const sortedValues = [...values].sort((a, b) => a - b);
+        webVitals.ttfb.byTransaction[txName] = {
+          min: sortedValues[0],
+          max: sortedValues[sortedValues.length - 1],
+          avg: sortedValues.reduce((a, b) => a + b, 0) / sortedValues.length,
+          med: sortedValues[Math.floor(sortedValues.length / 2)],
+          p90: sortedValues[Math.floor(sortedValues.length * 0.9)],
+          p95: sortedValues[Math.floor(sortedValues.length * 0.95)],
+          p99: sortedValues[Math.floor(sortedValues.length * 0.99)],
+          count: sortedValues.length
+        };
+      }
+    });
+
+    // Calculate stats for each transaction's LCP values
+    Object.keys(webVitals.lcp.byTransaction).forEach(txName => {
+      const values = webVitals.lcp.byTransaction[txName];
+      if (values && values.length > 0) {
+        const sortedValues = [...values].sort((a, b) => a - b);
+        webVitals.lcp.byTransaction[txName] = {
+          min: sortedValues[0],
+          max: sortedValues[sortedValues.length - 1],
+          avg: sortedValues.reduce((a, b) => a + b, 0) / sortedValues.length,
+          med: sortedValues[Math.floor(sortedValues.length / 2)],
+          p90: sortedValues[Math.floor(sortedValues.length * 0.9)],
+          p95: sortedValues[Math.floor(sortedValues.length * 0.95)],
+          p99: sortedValues[Math.floor(sortedValues.length * 0.99)],
+          count: sortedValues.length
+        };
+      }
+    });
+  }
+
+  return {
+    chartData,
+    errors: Array.from(errors.values()),
+    webVitals  // Include web vitals in the return
+  };
+}
+
+// Main execution block
+if (import.meta.url === import.meta.main) {
+  const argv = process.argv;
+
+  if (argv.length < 8) {
+    console.error('Usage: node performancedataprocessor.js <raw-metrics.json> <summary.json> <output.json> <test-type> <aut> <scenario> [--filter-nonhtml]');
+    process.exit(1);
+  }
+
+  const rawMetricsPath = argv[2];
+  const summaryPath = argv[3];
+  const outputPath = argv[4];
+  const testType = argv[5];
+  const aut = argv[6];
+  const scenario = argv[7];
+
+  // Check for filtering option
+  const filterNonHtml = argv.includes('--filter-nonhtml');
+
+  const testInfo = {
+    testType,
+    aut,
+    scenario
+  };
+
+  // Use an immediately invoked async function to handle async operations
+  (async () => {
+    try {
+      await processK6Data(rawMetricsPath, summaryPath, outputPath, testInfo, { filterNonHtml });
+    } catch (error) {
+      console.error(`Error processing K6 data: ${error.message}`);
+      process.exit(1);
+    }
+  })();
+}
+
+// Export functions for testing
+export {
+  processK6Data,
+  extractTransactions,
+  extractDetailedData,
+  processLargeJsonLinesFile,
+  calculateStats
+};

@@ -1,0 +1,21 @@
+{
+    "d1flex": {
+    "baseURL": "https://hzn1118.flex-prf.online-banking-services.com",
+        "uibaseURL": "https://hzn1118.flex-prf.online-banking-services.com/cuflex",
+        "userName": "",
+        "password": "",
+        "tokenBaseURL": "https://nga-uat.online-banking-services.com",
+        "tokenURL": "https://nga-uat.online-banking-services.com/nga/auth-perf/v2/authentication/wizard/login",
+        "organizationId": "P111111118"
+    },
+
+    "d1flex_kong": {
+        "baseURL": "https://uat-online-banking-services.fisglobal.com",
+        "uibaseURL": "https://hzn1118.flex-prf.online-banking-services.com/cuflex",
+        "userName": "",
+        "password": "",
+        "tokenBaseURL": "https://uat-online-banking-services.fisglobal.com",
+        "tokenURL": "https://uat-online-banking-services.fisglobal.com/nga/auth-perf/v2/authentication/wizard/login",
+        "organizationId": "P111111118"
+    }
+}

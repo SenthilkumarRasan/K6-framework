@@ -1,0 +1,46 @@
+name: DEE-QE-PERF-LIBS-PUBLISH-WORKFLOW
+on:
+  push:
+    tags:
+      - '*'
+jobs:
+  execute_test:                            # job name
+    runs-on: ubuntu-latest-2-8             # runner
+    env:
+      NPM_AUTH_SECRET: ${{ secrets.SVC_BPF_INT_FIS_ARTIFACTORY_TOKEN}}
+    steps:                                 # steps for the jobs
+    - name: Checkout repository            # step name
+      uses: actions/checkout@v4            # pre-built action to checkout code
+    - name: npm token
+      run: |
+        echo "//artifactory.fis.dev/artifactory/api/npm/aaa-npm-dev/:_authToken=${{secrets.SVC_BPF_ID_TOKEN}}" > .npmrc
+        echo "email = svc-bpf-internal@fisglobal.com" >> .npmrc
+        echo "always-auth = true" >> .npmrc
+        echo "registry=https://artifactory.fis.dev/artifactory/api/npm/aaa-npm-dev/" >> .npmrc
+    - name: Clean Install
+      uses: Banking-Solutions-Digital/panda-npm-action@v1
+      with:
+        execute-ci: true
+    - name: Run lint
+      run: npm run lint
+    - name: Run Tests
+      uses: Banking-Solutions-Digital/panda-npm-action@v1
+      with:
+        execute-test: false
+    - name: Upload reports
+      uses: actions/upload-artifact@v4   # pre-built action to upload-artifacts
+      if: ${{ !cancelled() }}            # conditions
+      with:
+        name: reports                    # name of artifacts
+        path: results              # directory of file to be archived
+        retention-days: 7      
+    - name: Publish to Artifactory
+      uses: Banking-Solutions-Digital/panda-npm-action@v1
+      with:
+        execute-publish: true
+        node-version: "20.17.0"
+        npm-publish-options: "--verbose"        
+        npm-publish-registry-email: "svc-bpf-internal@fisglobal.com"
+        npm-publish-registry-pass: ${{ secrets.SVCBPF_NPM_PASS_SECRET }}
+        npm-publish-registry-url: https://artifactory.fis.dev/artifactory/api/npm/deeqe-npm-snapshot-local
+        npm-publish-registry-user: "svc-bpf-internal"

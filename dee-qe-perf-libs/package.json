@@ -1,0 +1,26 @@
+{
+  "name": "dee-qe-perf-libs",
+  "version": "1.0.1",
+  "author": "DEE QE Enablement Team",
+  "license": "FIS",
+  "keywords": [
+    "utils",
+    "performance",
+    "k6"
+  ],
+  "description": "K6 based Performance Test common libraries",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"No test specified yet\" && exit 1",
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.20.0",
+    "eslint": "^9.20.1",
+    "eslint-plugin-k6-linting-rules": "^1.0.2",
+    "globals": "^16.0.0"
+  }
+}

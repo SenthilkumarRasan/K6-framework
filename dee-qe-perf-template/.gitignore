@@ -1,0 +1,9 @@
+.DS_Store
+/node_modules
+/utils
+/temp
+summary.html
+testdata/*secret*.csv
+testdata/*private*.csv
+testdata/secure/
+env/credentials*.json

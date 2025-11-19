@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en" style="scroll-behavior: smooth;">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K6 Browser Performance Report Template</title>
+    <!-- Tailwind CSS CDN for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Font: Inter for a clean, professional look -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles for the report to override/enhance Tailwind */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* Light blue-gray background */
+            color: #334155; /* Darker text for readability */
+        }
+
+        /* Enhanced Section Title Style */
+        .section-title {
+            color: #111827;
+            font-size: 22px;
+            font-weight: 700;
+            margin: 48px 0 16px 0;
+            position: relative;
+            display: inline-block;
+            padding-bottom: 8px;
+        }
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 4px;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6);
+            border-radius: 4px;
+        }
+
+        /* Modern Table Styling */
+        .custom-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-bottom: 32px;
+            font-size: 14px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .custom-table th {
+            color: #fff;
+            padding: 14px 16px;
+            text-align: left;
+            font-weight: 600;
+            letter-spacing: 0.025em;
+        }
+
+        /* Table header gradient styles for different table types */
+        .overall-summary-table th { background: linear-gradient(to right, #4338ca, #4f46e5); } /* subtle indigo */
+        .core-web-vitals-table th { background: linear-gradient(to right, #065f46, #047857); } /* subtle green */
+        .mantle-metrics-table th { background: linear-gradient(to right, #b45309, #d97706); } /* subtle amber */
+        .transaction-stats-table th { background: linear-gradient(to right, #991b1b, #b91c1c); } /* subtle red */
+        .top-resources-table th { background: linear-gradient(to right, #6b21a8, #7e22ce); } /* subtle purple */
+
+        .custom-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #e5e7eb;
+            background-color: #fff;
+            transition: background-color 0.2s ease;
+        }
+        .custom-table tr:nth-child(even) td {
+            background-color: #f9fafb;
+        }
+        .custom-table tr:hover td {
+            background-color: #eef2ff !important;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        /* Add data visualization with bars for numeric cells */
+        .custom-table td:nth-child(n+2) {
+            position: relative;
+        }
+
+        .custom-table td:nth-child(n+2)::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            height: 3px;
+            width: 0;
+            background: linear-gradient(to right, #3b82f6, #10b981);
+            opacity: 0.5;
+            transition: width 0.3s ease;
+        }
+
+        /* Show the bars on hover */
+        .custom-table tr:hover td:nth-child(n+2)::before {
+            width: calc(100% * var(--data-percent, 0.5));
+        }
+
+        /* Resource Icons */
+        .resource-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            margin-right: 8px;
+            vertical-align: middle;
+            border-radius: 6px;
+            color: white;
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .resource-icon:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+        }
+        .resource-icon.js { background: linear-gradient(135deg, #f7df1e, #eac100); color: #323330; }
+        .resource-icon.css { background: linear-gradient(135deg, #2965f1, #2050d3); }
+        .resource-icon.img { background: linear-gradient(135deg, #4ade80, #22c55e); }
+        .resource-icon.font { background: linear-gradient(135deg, #fb923c, #ea580c); }
+        .resource-icon.html { background: linear-gradient(135deg, #e34c26, #c53d1e); }
+        .resource-icon.other { background: linear-gradient(135deg, #94a3b8, #64748b); }
+
+        /* Resource Details Hover Card */
+        .resource-details {
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s ease;
+        }
+        .resource-details:hover {
+            background-color: #f0f9ff;
+            border-color: #bfdbfe;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+            transform: translateY(-2px);
+        }
+        .resource-details strong {
+            color: #1e40af;
+        }
+        .resource-details small {
+            display: block;
+            margin-top: 4px;
+            color: #64748b;
+        }
+
+        /* Metrics Explanation */
+        .metrics-explanation {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            background-color: #f5f7ff;
+            border-left: 4px solid #4338ca;
+        }
+        .metrics-explanation h4 {
+            margin-top: 0;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+        .metrics-explanation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+        .metrics-explanation-item h5 {
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+            color: #4338ca;
+            font-weight: 600;
+        }
+        .metrics-explanation-item p {
+            margin: 0;
+            color: #4b5563;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        /* Summary Stats */
+        .summary-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .summary-stat-card {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            border-left: 4px solid;
+            transition: transform 0.2s ease;
+        }
+        .summary-stat-card:hover {
+            transform: translateY(-2px);
+        }
+        .summary-stat-card.primary { border-color: #4f46e5; }
+        .summary-stat-card.success { border-color: #22c55e; }
+        .summary-stat-card.warning { border-color: #eab308; }
+        .summary-stat-card.danger { border-color: #ef4444; }
+
+        .summary-stat-value {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: #1f2937;
+            line-height: 1;
+        }
+        .summary-stat-label {
+            font-size: 0.9rem;
+            color: #6b7280;
+            margin-top: 0.5rem;
+            font-weight: 500;
+        }
+
+        /* Resource Type Legend */
+        .resource-type-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: #f9fafb;
+            border-radius: 0.5rem;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .resource-type-legend-item {
+            display: flex;
+            align-items: center;
+            font-size: 0.85rem;
+            color: #4b5563;
+        }
+        .resource-type-legend-item .resource-type {
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Main Dashboard Container -->
+    <div class="flex flex-1 flex-col lg:flex-row">
+
+        <!-- Sidebar -->
+        <aside class="w-full lg:w-64 bg-slate-800 text-white p-6 lg:p-8 shadow-lg rounded-br-lg lg:rounded-tr-none lg:rounded-br-none">
+            <div class="text-2xl font-bold mb-8 text-indigo-300">K6 Report</div>
+            <nav>
+                <ul>
+                    <li class="mb-4">
+                        <a href="#overview-section" class="flex items-center p-3 rounded-lg hover:bg-slate-700 transition-colors duration-200 text-indigo-200 font-medium">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m0 0l7 7m-7-7v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001 1h3m0-10v10a1 1 0 01-1 1h-3"></path></svg>
+                            Overview
+                        </a>
+                    </li>
+                    <li class="mb-4">
+                        <a href="#web-vitals-section" class="flex items-center p-3 rounded-lg hover:bg-slate-700 transition-colors duration-200 text-slate-300">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-1.25-3M15 10V5a3 3 0 00-3-3H9a3 3 0 00-3 3v5m6 0h.01M12 12h-.01"></path></svg>
+                            Web Vitals
+                        </a>
+                    </li>
+                    <li class="mb-4">
+                        <a href="#mantle-metrics-section" class="flex items-center p-3 rounded-lg hover:bg-slate-700 transition-colors duration-200 text-slate-300">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M18 14V6M6 14v8"></path></svg>
+                            Mantle Metrics
+                        </a>
+                    </li>
+                    <li class="mb-4">
+                        <a href="#detailed-analysis-section" class="flex items-center p-3 rounded-lg hover:bg-slate-700 transition-colors duration-200 text-slate-300">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                            Detailed Analysis
+                        </a>
+                    </li>
+                    <li class="mb-4">
+                        <a href="#network-section" class="flex items-center p-3 rounded-lg hover:bg-slate-700 transition-colors duration-200 text-slate-300">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10m-4-10l-8 4m8-4l-8 4m0 0l-8 4m8-4l-8 4"></path></svg>
+                            Network
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 p-6 lg:p-8">
+            <!-- Header Section -->
+            <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 pb-4 border-b border-slate-200">
+                <h1 class="text-3xl font-extrabold text-slate-800 mb-4 sm:mb-0">Browser Performance Report</h1>
+                <div class="text-sm text-slate-600">
+                    <p><strong>Run Start Time:</strong> <span id="runStartTime"></span></p>
+                    <p><strong>Run End Time:</strong> <span id="runEndTime"></span></p>
+                    <p><strong>Base URL:</strong> <a id="baseURL" href="#" class="text-indigo-600 hover:underline"></a></p>
+                    <p><strong>Test Type:</strong> <span id="testType"></span></p>
+                    <p><strong>AUT:</strong> <span id="aut"></span></p>
+                    <p><strong>Scenario:</strong> <span id="scenario"></span></p>
+                </div>
+            </header>
+
+            <!-- Overall Performance Summary -->
+            <section id="overview-section" class="mb-8">
+                <h2 class="section-title">Overall Performance Summary</h2>
+                <div class="summary-stats-grid">
+                    <div class="summary-stat-card primary">
+                        <div class="summary-stat-value" id="totalTransactions"></div>
+                        <div class="summary-stat-label">Total Transactions</div>
+                    </div>
+                    <div class="summary-stat-card success">
+                        <div class="summary-stat-value" id="totalResourceRequests"></div>
+                        <div class="summary-stat-label">Total Resource Requests</div>
+                    </div>
+                    <div class="summary-stat-card warning">
+                        <div class="summary-stat-value" id="totalPageLoadTime"></div>
+                        <div class="summary-stat-label">Total Page Load Time</div>
+                    </div>
+                    <div class="summary-stat-card primary">
+                        <div class="summary-stat-value" id="serverProcessingTtfb"></div>
+                        <div class="summary-stat-label">Server Processing (TTFB)</div>
+                    </div>
+                    <div class="summary-stat-card primary">
+                        <div class="summary-stat-value" id="clientSideProcessing"></div>
+                        <div class="summary-stat-label">Client-Side Processing</div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="custom-table overall-summary-table">
+                        <thead>
+                            <tr>
+                                <th>Component</th>
+                                <th>Avg (ms)</th>
+                                <th>Median (ms)</th>
+                                <th>p90 (ms)</th>
+                                <th>% of Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="overallSummaryTableBody">
+                            <!-- Dynamic content will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Core Web Vitals -->
+            <section id="web-vitals-section" class="mb-8">
+                <h2 class="section-title">Core Web Vitals</h2>
+                <div class="overflow-x-auto">
+                    <table class="custom-table core-web-vitals-table">
+                        <thead>
+                            <tr>
+                                <th rowspan="2">Transaction</th>
+                                <th rowspan="2">Requests</th>
+                                <th colspan="2">FCP (ms)</th>
+                                <th colspan="2">LCP (ms)</th>
+                                <th colspan="2">CLS</th>
+                                <th colspan="2">TTFB (ms)</th>
+                            </tr>
+                            <tr>
+                                <th>Median</th>
+                                <th>p90</th>
+                                <th>Median</th>
+                                <th>p90</th>
+                                <th>Median</th>
+                                <th>p90</th>
+                                <th>Median</th>
+                                <th>p90</th>
+                            </tr>
+                        </thead>
+                        <tbody id="coreWebVitalsTableBody">
+                            <!-- Dynamic content will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Mantle Custom Metrics -->
+            <section id="mantle-metrics-section" class="mb-8">
+                <h2 class="section-title">Mantle Custom Metrics</h2>
+                <div class="overflow-x-auto">
+                    <table class="custom-table mantle-metrics-table">
+                        <thead>
+                            <tr>
+                                <th rowspan="2">Transaction</th>
+                                <th rowspan="2">Requests</th>
+                                <th colspan="2">Mantle First Ad Render (ms)</th>
+                                <th colspan="2">Mantle First Ad Request (ms)</th>
+                                <th colspan="2">Mantle First Ad Response (ms)</th>
+                                <th colspan="2">Mantle GPT Loaded (ms)</th>
+                                <th colspan="2">Mantle Scroll Depth (%)</th>
+                                <th colspan="2">Mantle Third Party Fired (ms)</th>
+                                <th colspan="2">Mantle Deferred Fired (ms)</th>
+                                <th colspan="2">Mantle First Scroll (ms)</th>
+                                <th colspan="2">Mantle Ads Rendered (count)</th>
+                            </tr>
+                            <tr>
+                                <th>Avg</th><th>p90</th>
+                                <th>Avg</th><th>p90</th>
+                                <th>Avg</th><th>p90</th>
+                                <th>Avg</th><th>p90</th>
+                                <th>Min</th><th>Max</th>
+                                <th>Avg</th><th>p90</th>
+                                <th>Avg</th><th>p90</th>
+                                <th>Avg</th><th>p90</th>
+                                <th>Min</th><th>Max</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mantleMetricsTableBody">
+                            <!-- Dynamic content will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Detailed Performance Analysis -->
+            <section id="detailed-analysis-section" class="mb-8">
+                <h2 class="section-title">Detailed Performance Analysis</h2>
+                <div class="overflow-x-auto">
+                    <table class="custom-table transaction-stats-table">
+                        <thead>
+                            <tr>
+                                <th>Transaction</th><th>Requests</th>
+                                <th colspan="2">Server Processing Time</th>
+                                <th colspan="2">Network Transfer Time</th>
+                                <th colspan="2">DOM Processing Time</th>
+                                <th colspan="2">Script Execution Time</th>
+                                <th colspan="2">Script Parsing Time</th>
+                                <th colspan="2">JavaScript Load Time</th>
+                                <th colspan="2">CSS Load Time</th>
+                                <th colspan="2">Image Load Time</th>
+                                <th colspan="2">Font Load Time</th>
+                                <th colspan="2">Other Resources Load Time</th>
+                                <th colspan="2">Total Page Load Time</th>
+                            </tr>
+                            <tr>
+                                <th></th><th>Count</th>
+                                <th>Avg (ms)</th><th>p90 (ms)</th>
+                                <th>Avg (ms)</th><th>p90 (ms)</th>
+                                <th>Avg (ms)</th><th>p90 (ms)</th>
+                                <th>Avg (ms)</th><th>p90 (ms)</th>
+                                <th>Avg (ms)</th><th>p90 (ms)</th>
+                                <th>Avg (ms)</th><th>p90 (ms)</th>
+                                <th>Avg (ms)</th><th>p90 (ms)</th>
+                                <th>Avg (ms)</th><th>p90 (ms)</th>
+                                <th>Avg (ms)</th><th>p90 (ms)</th>
+                                <th>Avg (ms)</th><th>p90 (ms)</th>
+                                <th>Avg (ms)</th><th>p90 (ms)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detailedAnalysisTableBody">
+                            <!-- Dynamic content will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Network Resource Analysis -->
+            <section id="network-section" class="mb-8">
+                <h2 class="section-title">Network Resource Analysis</h2>
+                <div class="overflow-x-auto">
+                    <table class="custom-table top-resources-table">
+                        <thead>
+                            <tr>
+                                <th>Transaction</th>
+                                <th>Total Requests</th>
+                                <th>Avg Size</th>
+                                <th>Avg Time</th>
+                                <th>p90 Time</th>
+                                <th>Success Rate</th>
+                                <th>Top 5 Resources (By Avg Size)</th>
+                                <th>Top 5 Resources (By Avg Time)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="networkAnalysisTableBody">
+                            <!-- Dynamic content will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="resource-type-legend">
+                    <div class="resource-type-legend-item">
+                        <span class="resource-type js">J</span>
+                        <span>JS</span>
+                    </div>
+                    <div class="resource-type-legend-item">
+                        <span class="resource-type css">C</span>
+                        <span>CSS</span>
+                    </div>
+                    <div class="resource-type-legend-item">
+                        <span class="resource-type img">I</span>
+                        <span>Image</span>
+                    </div>
+                    <div class="resource-type-legend-item">
+                        <span class="resource-type font">F</span>
+                        <span>Font</span>
+                    </div>
+                    <div class="resource-type-legend-item">
+                        <span class="resource-type other">O</span>
+                        <span>Other</span>
+                    </div>
+                    <div class="resource-type-legend-item">
+                        <span>TTFB: Time to First Byte</span>
+                    </div>
+                    <div class="resource-type-legend-item">
+                        <span>TTLB: Time to Last Byte</span>
+                    </div>
+                </div>
+
+                <div class="metrics-explanation">
+                    <h4>Metrics Explanation</h4>
+                    <div class="metrics-explanation-grid">
+                        <div class="metrics-explanation-item">
+                            <h5>TTFB (Time To First Byte)</h5>
+                            <p>The time from the start of the request until the first byte of the response is received.</p>
+                        </div>
+                        <div class="metrics-explanation-item">
+                            <h5>TTLB (Time To Last Byte)</h5>
+                            <p>The total time from the start of the request until the complete response is received.</p>
+                        </div>
+                        <div class="metrics-explanation-item">
+                            <h5>p90 Time</h5>
+                            <p>The 90th percentile response time - 90% of requests complete faster than this value.</p>
+                        </div>
+                        <div class="metrics-explanation-item">
+                            <h5>Success Rate</h5>
+                            <p>Percentage of requests that returned a successful HTTP status code (200-399).</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        /**
+         * Renders the K6 Browser Performance Report with dynamic data.
+         * @param {object} data - The data object containing report details and metrics.
+         * @param {object} data.reportInfo - General information about the report.
+         * @param {string} data.reportInfo.runStartTime - Start time of the test run.
+         * @param {string} data.reportInfo.runEndTime - End time of the test run.
+         * @param {string} data.reportInfo.baseURL - Base URL of the application under test.
+         * @param {string} data.reportInfo.testType - Type of the test (e.g., "BROWSER").
+         * @param {string} data.reportInfo.aut - Application Under Test.
+         * @param {string} data.reportInfo.scenario - Test scenario name.
+         * @param {object} data.summaryMetrics - Key performance indicator summary.
+         * @param {number} data.summaryMetrics.totalTransactions - Total number of browser transactions.
+         * @param {number} data.summaryMetrics.totalResourceRequests - Total number of resource requests (JS, CSS, images, etc.).
+         * @param {string} data.summaryMetrics.totalPageLoadTime - Total page load time (e.g., "709.00ms").
+         * @param {string} data.summaryMetrics.serverProcessingTtfb - Server processing time (TTFB) (e.g., "107.20ms").
+         * @param {string} data.summaryMetrics.clientSideProcessing - Client-side processing time (e.g., "601.80ms").
+         * @param {Array<object>} data.overallSummaryTable - Data for the overall summary table.
+         * @param {string} data.overallSummaryTable[].component - Name of the component (e.g., "Total Page Load Time").
+         * @param {number} data.overallSummaryTable[].avg - Average time in ms.
+         * @param {number} data.overallSummaryTable[].median - Median time in ms.
+         * @param {number} data.overallSummaryTable[].p90 - 90th percentile time in ms.
+         * @param {string} data.overallSummaryTable[].percentOfTotal - Percentage of total (e.g., "100.0%").
+         * @param {Array<object>} data.coreWebVitals - Array of objects for Core Web Vitals per transaction.
+         * @param {string} data.coreWebVitals[].transaction - Name of the transaction.
+         * @param {number} data.coreWebVitals[].requests - Number of requests.
+         * @param {number} data.coreWebVitals[].fcpMedian - First Contentful Paint Median.
+         * @param {number} data.coreWebVitals[].fcpP90 - First Contentful Paint 90th Percentile.
+         * @param {number} data.coreWebVitals[].lcpMedian - Largest Contentful Paint Median.
+         * @param {number} data.coreWebVitals[].lcpP90 - Largest Contentful Paint 90th Percentile.
+         * @param {number} data.coreWebVitals[].clsMedian - Cumulative Layout Shift Median.
+         * @param {number} data.coreWebVitals[].clsP90 - Cumulative Layout Shift 90th Percentile.
+         * @param {number} data.coreWebVitals[].ttfbMedian - Time To First Byte Median.
+         * @param {number} data.coreWebVitals[].ttfbP90 - Time To First Byte 90th Percentile.
+         * @param {Array<object>} data.mantleMetrics - Array of objects for Mantle Custom Metrics per transaction.
+         * @param {string} data.mantleMetrics[].transaction - Name of the transaction.
+         * @param {number} data.mantleMetrics[].requests - Number of requests.
+         * @param {number} data.mantleMetrics[].mantleFirstAdRenderAvg - Avg Mantle First Ad Render.
+         * @param {number} data.mantleMetrics[].mantleFirstAdRenderP90 - p90 Mantle First Ad Render.
+         * @param {number} data.mantleMetrics[].mantleFirstAdRequestAvg - Avg Mantle First Ad Request.
+         * @param {number} data.mantleMetrics[].mantleFirstAdRequestP90 - p90 Mantle First Ad Request.
+         * @param {number} data.mantleMetrics[].mantleFirstAdResponseAvg - Avg Mantle First Ad Response.
+         * @param {number} data.mantleMetrics[].mantleFirstAdResponseP90 - p90 Mantle First Ad Response.
+         * @param {number} data.mantleMetrics[].mantleGptLoadedAvg - Avg Mantle GPT Loaded.
+         * @param {number} data.mantleMetrics[].mantleGptLoadedP90 - p90 Mantle GPT Loaded.
+         * @param {number} data.mantleMetrics[].mantleScrollDepthMin - Min Mantle Scroll Depth.
+         * @param {number} data.mantleMetrics[].mantleScrollDepthMax - Max Mantle Scroll Depth.
+         * @param {number} data.mantleMetrics[].mantleThirdPartyFiredAvg - Avg Mantle Third Party Fired.
+         * @param {number} data.mantleMetrics[].mantleThirdPartyFiredP90 - p90 Mantle Third Party Fired.
+         * @param {number} data.mantleMetrics[].mantleDeferredFiredAvg - Avg Mantle Deferred Fired.
+         * @param {number} data.mantleMetrics[].mantleDeferredFiredP90 - p90 Mantle Deferred Fired.
+         * @param {number} data.mantleMetrics[].mantleFirstScrollAvg - Avg Mantle First Scroll.
+         * @param {number} data.mantleMetrics[].mantleFirstScrollP90 - p90 Mantle First Scroll.
+         * @param {number} data.mantleMetrics[].mantleAdsRenderedMin - Min Mantle Ads Rendered.
+         * @param {number} data.mantleMetrics[].mantleAdsRenderedMax - Max Mantle Ads Rendered.
+         * @param {Array<object>} data.detailedAnalysis - Array of objects for Detailed Performance Analysis per transaction.
+         * @param {string} data.detailedAnalysis[].transaction - Name of the transaction.
+         * @param {number} data.detailedAnalysis[].requestsCount - Number of requests.
+         * @param {number} data.detailedAnalysis[].serverProcessingAvg - Avg Server Processing Time.
+         * @param {number} data.detailedAnalysis[].serverProcessingP90 - p90 Server Processing Time.
+         * @param {number} data.detailedAnalysis[].networkTransferAvg - Avg Network Transfer Time.
+         * @param {number} data.detailedAnalysis[].networkTransferP90 - p90 Network Transfer Time.
+         * @param {number} data.detailedAnalysis[].domProcessingAvg - Avg DOM Processing Time.
+         * @param {number} data.detailedAnalysis[].domProcessingP90 - p90 DOM Processing Time.
+         * @param {number} data.detailedAnalysis[].scriptExecutionAvg - Avg Script Execution Time.
+         * @param {number} data.detailedAnalysis[].scriptExecutionP90 - p90 Script Execution Time.
+         * @param {string|number} data.detailedAnalysis[].scriptParsingAvg - Avg Script Parsing Time (can be N/A).
+         * @param {string|number} data.detailedAnalysis[].scriptParsingP90 - p90 Script Parsing Time (can be N/A).
+         * @param {number} data.detailedAnalysis[].javaScriptLoadAvg - Avg JavaScript Load Time.
+         * @param {number} data.detailedAnalysis[].javaScriptLoadP90 - p90 JavaScript Load Time.
+         * @param {number} data.detailedAnalysis[].cssLoadAvg - Avg CSS Load Time.
+         * @param {number} data.detailedAnalysis[].cssLoadP90 - p90 CSS Load Time.
+         * @param {number} data.detailedAnalysis[].imageLoadAvg - Avg Image Load Time.
+         * @param {number} data.detailedAnalysis[].imageLoadP90 - p90 Image Load Time.
+         * @param {number} data.detailedAnalysis[].fontLoadAvg - Avg Font Load Time.
+         * @param {number} data.detailedAnalysis[].fontLoadP90 - p90 Font Load Time.
+         * @param {number} data.detailedAnalysis[].otherResourcesLoadAvg - Avg Other Resources Load Time.
+         * @param {number} data.detailedAnalysis[].otherResourcesLoadP90 - p90 Other Resources Load Time.
+         * @param {number} data.detailedAnalysis[].totalPageLoadAvg - Avg Total Page Load Time.
+         * @param {number} data.detailedAnalysis[].totalPageLoadP90 - p90 Total Page Load Time.
+         * @param {Array<object>} data.networkAnalysis - Array of objects for Network Resource Analysis per transaction.
+         * @param {string} data.networkAnalysis[].transaction - Name of the transaction.
+         * @param {number} data.networkAnalysis[].totalRequests - Total requests for this transaction.
+         * @param {string} data.networkAnalysis[].avgSize - Average size (e.g., "8.8 KB").
+         * @param {number} data.networkAnalysis[].avgTime - Average time in ms.
+         * @param {number} data.networkAnalysis[].p90Time - 90th percentile time in ms.
+         * @param {string} data.networkAnalysis[].successRate - Success rate (e.g., "100.0%").
+         * @param {Array<object>} data.networkAnalysis[].top5ResourcesBySize - Top 5 resources by average size.
+         * @param {string} data.networkAnalysis[].top5ResourcesBySize[].title - Resource title.
+         * @param {string} data.networkAnalysis[].top5ResourcesBySize[].type - Resource type (js, css, img, font, html, other).
+         * @param {number} data.networkAnalysis[].top5ResourcesBySize[].reqs - Number of requests.
+         * @param {string} data.networkAnalysis[].top5ResourcesBySize[].avgTime - Average time with unit.
+         * @param {string} data.networkAnalysis[].top5ResourcesBySize[].avgSize - Average size with unit.
+         * @param {string} data.networkAnalysis[].top5ResourcesBySize[].success - Success rate with unit.
+         * @param {Array<object>} data.networkAnalysis[].top5ResourcesByTime - Top 5 resources by average time.
+         * @param {string} data.networkAnalysis[].top5ResourcesByTime[].title - Resource title.
+         * @param {string} data.networkAnalysis[].top5ResourcesByTime[].type - Resource type (js, css, img, font, html, other).
+         * @param {number} data.networkAnalysis[].top5ResourcesByTime[].reqs - Number of requests.
+         * @param {string} data.networkAnalysis[].top5ResourcesByTime[].avgTime - Average time with unit.
+         * @param {string} data.networkAnalysis[].top5ResourcesByTime[].avgSize - Average size with unit.
+         * @param {string} data.networkAnalysis[].top5ResourcesByTime[].success - Success rate with unit.
+         */
+        function renderReport(data) {
+            // Update Report Info
+            document.getElementById('runStartTime').textContent = data.reportInfo.runStartTime;
+            document.getElementById('runEndTime').textContent = data.reportInfo.runEndTime;
+            document.getElementById('baseURL').textContent = data.reportInfo.baseURL;
+            document.getElementById('baseURL').href = data.reportInfo.baseURL;
+            document.getElementById('testType').textContent = data.reportInfo.testType;
+            document.getElementById('aut').textContent = data.reportInfo.aut;
+            document.getElementById('scenario').textContent = data.reportInfo.scenario;
+
+            // Update Summary KPI Cards
+            document.getElementById('totalTransactions').textContent = data.summaryMetrics.totalTransactions;
+            document.getElementById('totalResourceRequests').textContent = data.summaryMetrics.totalResourceRequests;
+            document.getElementById('totalPageLoadTime').innerHTML = data.summaryMetrics.totalPageLoadTime;
+            document.getElementById('serverProcessingTtfb').innerHTML = data.summaryMetrics.serverProcessingTtfb;
+            document.getElementById('clientSideProcessing').innerHTML = data.summaryMetrics.clientSideProcessing;
+
+            // Populate Overall Summary Table
+            const overallSummaryTableBody = document.getElementById('overallSummaryTableBody');
+            overallSummaryTableBody.innerHTML = ''; // Clear existing content
+            data.overallSummaryTable.forEach(row => {
+                const dataPercent = (row.avg / data.summaryMetrics.totalPageLoadTime.replace('ms', '')).toFixed(3); // Normalize by total page load time
+                const newRow = `
+                    <tr style="--data-percent: ${dataPercent};">
+                        <td>${row.component}</td>
+                        <td>${row.avg}</td>
+                        <td>${row.median}</td>
+                        <td>${row.p90}</td>
+                        <td>${row.percentOfTotal}</td>
+                    </tr>
+                `;
+                overallSummaryTableBody.insertAdjacentHTML('beforeend', newRow);
+            });
+
+            // Populate Core Web Vitals Table
+            const coreWebVitalsTableBody = document.getElementById('coreWebVitalsTableBody');
+            coreWebVitalsTableBody.innerHTML = ''; // Clear existing content
+            data.coreWebVitals.forEach(item => {
+                const dataPercent = (item.ttfbAvg / 500).toFixed(2); // Example normalization for TTFB
+                const row = `
+                    <tr style="--data-percent: ${dataPercent};">
+                        <td>${item.transaction}</td>
+                        <td>${item.requests}</td>
+                        <td>${item.fcpMedian}</td>
+                        <td>${item.fcpP90}</td>
+                        <td>${item.lcpMedian}</td>
+                        <td>${item.lcpP90}</td>
+                        <td>${item.clsMedian}</td>
+                        <td>${item.clsP90}</td>
+                        <td>${item.ttfbMedian}</td>
+                        <td>${item.ttfbP90}</td>
+                    </tr>
+                `;
+                coreWebVitalsTableBody.insertAdjacentHTML('beforeend', row);
+            });
+
+            // Populate Mantle Custom Metrics Table
+            const mantleMetricsTableBody = document.getElementById('mantleMetricsTableBody');
+            mantleMetricsTableBody.innerHTML = ''; // Clear existing content
+            data.mantleMetrics.forEach(item => {
+                const dataPercent = (item.mantleFirstAdRenderAvg / 3000).toFixed(2); // Example normalization
+                const row = `
+                    <tr style="--data-percent: ${dataPercent};">
+                        <td>${item.transaction}</td>
+                        <td>${item.requests}</td>
+                        <td>${item.mantleFirstAdRenderAvg}</td><td>${item.mantleFirstAdRenderP90}</td>
+                        <td>${item.mantleFirstAdRequestAvg}</td><td>${item.mantleFirstAdRequestP90}</td>
+                        <td>${item.mantleFirstAdResponseAvg}</td><td>${item.mantleFirstAdResponseP90}</td>
+                        <td>${item.mantleGptLoadedAvg}</td><td>${item.mantleGptLoadedP90}</td>
+                        <td>${item.mantleScrollDepthMin}</td><td>${item.mantleScrollDepthMax}</td>
+                        <td>${item.mantleThirdPartyFiredAvg}</td><td>${item.mantleThirdPartyFiredP90}</td>
+                        <td>${item.mantleDeferredFiredAvg}</td><td>${item.mantleDeferredFiredP90}</td>
+                        <td>${item.mantleFirstScrollAvg}</td><td>${item.mantleFirstScrollP90}</td>
+                        <td>${item.mantleAdsRenderedMin}</td><td>${item.mantleAdsRenderedMax}</td>
+                    </tr>
+                `;
+                mantleMetricsTableBody.insertAdjacentHTML('beforeend', row);
+            });
+
+            // Populate Detailed Performance Analysis Table
+            const detailedAnalysisTableBody = document.getElementById('detailedAnalysisTableBody');
+            detailedAnalysisTableBody.innerHTML = ''; // Clear existing content
+            data.detailedAnalysis.forEach(item => {
+                const dataPercent = (item.totalPageLoadAvg / 10000).toFixed(2); // Example normalization
+                const row = `
+                    <tr style="--data-percent: ${dataPercent};">
+                        <td>${item.transaction}</td>
+                        <td>${item.requestsCount}</td>
+                        <td>${item.serverProcessingAvg}</td><td>${item.serverProcessingP90}</td>
+                        <td>${item.networkTransferAvg}</td><td>${item.networkTransferP90}</td>
+                        <td>${item.domProcessingAvg}</td><td>${item.domProcessingP90}</td>
+                        <td>${item.scriptExecutionAvg}</td><td>${item.scriptExecutionP90}</td>
+                        <td>${item.scriptParsingAvg}</td><td>${item.scriptParsingP90}</td>
+                        <td>${item.javaScriptLoadAvg}</td><td>${item.javaScriptLoadP90}</td>
+                        <td>${item.cssLoadAvg}</td><td>${item.cssLoadP90}</td>
+                        <td>${item.imageLoadAvg}</td><td>${item.imageLoadP90}</td>
+                        <td>${item.fontLoadAvg}</td><td>${item.fontLoadP90}</td>
+                        <td>${item.otherResourcesLoadAvg}</td><td>${item.otherResourcesLoadP90}</td>
+                        <td>${item.totalPageLoadAvg}</td><td>${item.totalPageLoadP90}</td>
+                    </tr>
+                `;
+                detailedAnalysisTableBody.insertAdjacentHTML('beforeend', row);
+            });
+
+            // Populate Network Resource Analysis Table
+            const networkAnalysisTableBody = document.getElementById('networkAnalysisTableBody');
+            networkAnalysisTableBody.innerHTML = ''; // Clear existing content
+            data.networkAnalysis.forEach(item => {
+                const top5BySizeHtml = item.top5ResourcesBySize.map(resource => `
+                    <div class="resource-details" title="${resource.url || ''}">
+                        <span class="resource-icon ${resource.type}">${resource.type.charAt(0).toUpperCase()}</span>
+                        <strong>${resource.title}</strong><br>
+                        <small>Reqs: ${resource.reqs} | Avg Time: ${resource.avgTime} | Avg Size: ${resource.avgSize} | Success: ${resource.success}</small>
+                    </div>
+                `).join('');
+
+                const top5ByTimeHtml = item.top5ResourcesByTime.map(resource => `
+                    <div class="resource-details" title="${resource.url || ''}">
+                        <span class="resource-icon ${resource.type}">${resource.type.charAt(0).toUpperCase()}</span>
+                        <strong>${resource.title}</strong><br>
+                        <small>Reqs: ${resource.reqs} | Avg Time: ${resource.avgTime} | Avg Size: ${resource.avgSize} | Success: ${resource.success}</small>
+                    </div>
+                `).join('');
+
+                const dataPercent = (item.avgTime / 1000).toFixed(2); // Example normalization
+                const row = `
+                    <tr style="--data-percent: ${dataPercent};">
+                        <td>${item.transaction}</td>
+                        <td>${item.totalRequests}</td>
+                        <td>${item.avgSize}</td>
+                        <td>${item.avgTime}</td>
+                        <td>${item.p90Time}</td>
+                        <td>${item.successRate}</td>
+                        <td class="resource-cards-cell">${top5BySizeHtml}</td>
+                        <td class="resource-cards-cell">${top5ByTimeHtml}</td>
+                    </tr>
+                `;
+                networkAnalysisTableBody.insertAdjacentHTML('beforeend', row);
+            });
+        }
+
+        // Example Usage: Call renderReport with your dynamic data
+        document.addEventListener('DOMContentLoaded', function() {
+            const exampleData = {
+                reportInfo: {
+                    runStartTime: "7/2/2025, 6:37:52 AM",
+                    runEndTime: "7/2/2025, 6:37:57 AM",
+                    baseURL: "https://www.shape.com",
+                    testType: "BROWSER",
+                    aut: "shape",
+                    scenario: "smoke"
+                },
+                summaryMetrics: {
+                    totalTransactions: 1,
+                    totalResourceRequests: 37,
+                    totalPageLoadTime: "709.00ms",
+                    serverProcessingTtfb: "107.20ms",
+                    clientSideProcessing: "601.80ms",
+                },
+                overallSummaryTable: [
+                    {
+                        component: "Total Page Load Time",
+                        avg: 709.00,
+                        median: 709.00,
+                        p90: 709.00,
+                        percentOfTotal: "100.0%"
+                    },
+                    {
+                        component: "Server Processing (TTFB)",
+                        avg: 107.20,
+                        median: 107.20,
+                        p90: 107.20,
+                        percentOfTotal: "15.1%"
+                    },
+                    {
+                        component: "Client-Side Processing",
+                        avg: 601.80,
+                        median: 601.80,
+                        p90: 601.80,
+                        percentOfTotal: "84.9%"
+                    }
+                ],
+                coreWebVitals: [
+                    {
+                        transaction: "taxonomyScTemplate",
+                        requests: 1,
+                        fcpMedian: 388.00,
+                        fcpP90: 388.00,
+                        lcpMedian: 388.00,
+                        lcpP90: 388.00,
+                        clsMedian: 0.0000,
+                        clsP90: 0.0000,
+                        ttfbMedian: 107.20,
+                        ttfbP90: 107.20,
+                    }
+                ],
+                mantleMetrics: [
+                    {
+                        transaction: "taxonomyScTemplate",
+                        requests: 1,
+                        mantleFirstAdRenderAvg: 2734.00,
+                        mantleFirstAdRenderP90: 2734.00,
+                        mantleFirstAdRequestAvg: 1645.00,
+                        mantleFirstAdRequestP90: 1645.00,
+                        mantleFirstAdResponseAvg: 2724.00,
+                        mantleFirstAdResponseP90: 2724.00,
+                        mantleGptLoadedAvg: 870.00,
+                        mantleGptLoadedP90: 870.00,
+                        mantleScrollDepthMin: 1673.00,
+                        mantleScrollDepthMax: 1673.00,
+                        mantleThirdPartyFiredAvg: 2744.00,
+                        mantleThirdPartyFiredP90: 2744.00,
+                        mantleDeferredFiredAvg: 2744.00,
+                        mantleDeferredFiredP90: 2744.00,
+                        mantleFirstScrollAvg: 3704.00,
+                        mantleFirstScrollP90: 3704.00,
+                        mantleAdsRenderedMin: 1.00,
+                        mantleAdsRenderedMax: 1.00,
+                    }
+                ],
+                detailedAnalysis: [
+                    {
+                        transaction: "taxonomyScTemplate",
+                        requestsCount: 1,
+                        serverProcessingAvg: 107.20,
+                        serverProcessingP90: 107.20,
+                        networkTransferAvg: 278.00,
+                        networkTransferP90: 278.00,
+                        domProcessingAvg: 70.00,
+                        domProcessingP90: 70.00,
+                        scriptExecutionAvg: 1.60,
+                        scriptExecutionP90: 1.60,
+                        scriptParsingAvg: "N/A",
+                        scriptParsingP90: "N/A",
+                        javaScriptLoadAvg: 9641.40,
+                        javaScriptLoadP90: 9641.40,
+                        cssLoadAvg: 1015.90,
+                        cssLoadP90: 1015.90,
+                        imageLoadAvg: 2603.00,
+                        imageLoadP90: 2603.00,
+                        fontLoadAvg: 0.00,
+                        fontLoadP90: 0.00,
+                        otherResourcesLoadAvg: 15974.60,
+                        otherResourcesLoadP90: 15974.60,
+                        totalPageLoadAvg: 709.00,
+                        totalPageLoadP90: 709.00,
+                    }
+                ],
+                networkAnalysis: [
+                    {
+                        transaction: "taxonomyScTemplate",
+                        totalRequests: 37,
+                        avgSize: "8.8 KB",
+                        avgTime: 400.31,
+                        p90Time: 670.50,
+                        successRate: "100.0%",
+                        top5ResourcesBySize: [
+                            {
+                                url: "https://connect.facebook.net/en_US/fbevents.js",
+                                title: "fbevents.js",
+                                type: "js",
+                                reqs: 1,
+                                avgTime: "388.3ms",
+                                avgSize: "76735.0KB",
+                                success: "100%"
+                            },
+                            {
+                                url: "https://g.3gl.net/jp/7813/v4.0.6/InitialLoadScript.js",
+                                title: "InitialLoadS...",
+                                type: "js",
+                                reqs: 1,
+                                avgTime: "419.7ms",
+                                avgSize: "73092.0KB",
+                                success: "100%"
+                            },
+                            {
+                                url: "https://www.shape.com/static/fonts/playfair-display-700.woff2",
+                                title: "playfair-dis...",
+                                type: "font",
+                                reqs: 1,
+                                avgTime: "50.8ms",
+                                avgSize: "31352.0KB",
+                                success: "100%"
+                            },
+                            {
+                                url: "https://www.shape.com/static/fonts/playfair-display.woff2",
+                                title: "playfair-dis...",
+                                type: "font",
+                                reqs: 1,
+                                avgTime: "50.4ms",
+                                avgSize: "28944.0KB",
+                                success: "100%"
+                            },
+                            {
+                                url: "https://securepubads.g.doubleclick.net/pagead/managed/dict/m202507010101/gpt",
+                                title: "m20250701010...",
+                                type: "js", // Assuming this is JS, adjust if needed
+                                reqs: 1,
+                                avgTime: "276.9ms",
+                                avgSize: "24123.0KB",
+                                success: "100%"
+                            },
+                        ],
+                        top5ResourcesByTime: [
+                            {
+                                url: "https://securepubads.g.doubleclick.net/gampad/ads?...", // Truncated for brevity
+                                title: "gampad/ads",
+                                type: "other",
+                                reqs: 1,
+                                avgTime: "1078.4ms",
+                                avgSize: "4.4KB",
+                                success: "100%"
+                            },
+                            {
+                                url: "https://google-bidout-d.openx.net/w/1.0/pd?plm=5",
+                                title: "1.0/pd",
+                                type: "other",
+                                reqs: 1,
+                                avgTime: "950.4ms",
+                                avgSize: "0.0KB",
+                                success: "100%"
+                            },
+                            {
+                                url: "https://aax.amazon-adsystem.com/e/dtb/bid?src=3446&u=...", // Truncated for brevity
+                                title: "dtb/bid",
+                                type: "other",
+                                reqs: 1,
+                                avgTime: "814.9ms",
+                                avgSize: "0.0KB",
+                                success: "100%"
+                            },
+                            {
+                                url: "https://gum.criteo.com/sid/json?origin=prebid&topUrl=...", // Truncated for brevity
+                                title: "sid/json",
+                                type: "other",
+                                reqs: 1,
+                                avgTime: "670.5ms",
+                                avgSize: "0.0KB",
+                                success: "100%"
+                            },
+                            {
+                                url: "https://aim-tag.hcn.health/js/client.js?dl=aimDataLayer",
+                                title: "client.js",
+                                type: "js",
+                                reqs: 1,
+                                avgTime: "627.9ms",
+                                avgSize: "0.0KB",
+                                success: "100%"
+                            },
+                        ]
+                    }
+                ]
+            };
+
+            // Call the render function with the example data
+            renderReport(exampleData);
+        });
+    </script>
+</body>
+</html>

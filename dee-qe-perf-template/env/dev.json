@@ -1,0 +1,12 @@
+{
+    "bpf":
+    {
+        "baseURL": "https://bpf-platform-secure-gateway-bpf-integration-sit.apps.useast-2-lev-2.mcp.fisdev.local/rest/prcs/customeraccount/base/customers",
+        "tokenBaseURL": "https://infinity.dev.fiscloudservices.com/idp/DOPF-DEV/rest/1.0/",
+        "apiKey": "d1platform-dev-key",
+        "loginName": "",
+        "password": ""
+
+    }
+    
+}

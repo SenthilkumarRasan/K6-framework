@@ -1,0 +1,15 @@
+{
+  "getuser":
+  {
+    "userId": "1008118-passuser",
+    "params": {
+      "headers": {
+        "organization-id": "cc547",
+        "uuid": "79dac01d-cbd0-4ffd-a8c4-90701fad8e37",
+        "channel": "DIG_BEB_EXT_WEB",
+        "Cookie": "b5fcbc99ebce8cf3f497408518db2e01=1ece5a6490e49f4f10ce50547e572c58"
+      },
+      "timeout": 30000
+    }
+  }
+}
